@@ -369,7 +369,7 @@ class Mongo(object):
 
 DEFAULT_PIPELINE_TYPE = 'mongo'
         
-def generate_pipeline(self,**args):
+def generate_pipeline(**args):
     """
     生成pipeline对象
     """
@@ -381,7 +381,7 @@ def generate_pipeline(self,**args):
     if not pipeline_type in option_type:
         raise TypeError('不支持该类型pipeline，目前只支持mongo')
     else:
-        eval_str = option_tyoe[pipeline_type] + '(**args)'
+        eval_str = option_type[pipeline_type] + '(**args)'
         pipeline_obj = eval(eval_str)
 
     return pipeline_obj

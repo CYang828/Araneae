@@ -1,16 +1,14 @@
 #*-*coding:utf8*-*
-import sys
 import types
-from gevent.pool import Pool
+import gevent.pool as GEV
 
-import Araneae.scheduler
+import Araneae.db as DB
+import Araneae.data as DT
 import Araneae.dna.rule as PR
+import Araneae.scheduler as SCH
+import Araneae.extractor as EXT 
+import Araneae.net.request as REQ 
 import Araneae.dna.chromesome as CHM 
-
-from Araneae.data import Data
-from Araneae.db import generate_pipeline
-from Araneae.extractor import response2dom
-from Araneae.net.request import Request,json2request
 
 """
 `spider.py` -- 爬虫组件
@@ -51,8 +49,8 @@ class BaseSpider(object):
         self.__name = chromesome.get('SPIDER_NAME')
         self.__running_type = chromesome.running_type
 
-        self.__pool = Pool(chromesome.getint('CONCURRENT_REQUESTS'))
-        self.__scheduler = getattr(Araneae.scheduler,chromesome.scheduler)()
+        self.__pool = GEV.Pool(chromesome.getint('CONCURRENT_REQUESTS'))
+        self.__scheduler = getattr(SCH,chromesome.scheduler)()
 
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
             self.__rpc = self.__scheduler
@@ -61,7 +59,7 @@ class BaseSpider(object):
             pass
                 
         if chromesome.lasting:
-            self.__data_pipeline = generate_pipeline(**chromesome.lasting)
+            self.__data_pipeline = DB.generate_pipeline(**chromesome.lasting)
 
     def first_urls(self,first_urls):
         """
@@ -186,9 +184,9 @@ class BaseSpider(object):
             self._fetch_request_or_data(request_or_data)
         
     def _fetch_request_or_data(self,request_or_data):
-        if isinstance(request_or_data,Request):
+        if isinstance(request_or_data,REQ.Request):
             self.push_master(r_or_d)
-        elif isinstance(request_or_data,Data):
+        elif isinstance(request_or_data,DT.Data):
             self.push_data_pipeline(r_or_d)
 
     def _join(self):
@@ -201,13 +199,13 @@ class RuleLinkSpider(BaseSpider):
     def first_urls(self,first_urls):
         for first_url in first_urls:
             if isinstance(first_url,str):
-                yield Request(first_url,callback = 'first_parse')
+                yield REQ.Request(first_url,callback = 'first_parse')
             elif isinstance(fisrt_url,dict):
-                yield json2request(first_url)
+                yield REQ.json2request(first_url)
 
     def first_parse(self,response):
         first_page_rule = self.get_page_rule(0)
-        print first_page_rule.field
+        self.page_rule_parse(first_page_rule,response)
 
     def parse(self,response):
         pass
@@ -216,7 +214,21 @@ class RuleLinkSpider(BaseSpider):
     def walk(self):
         self.scheduler_pull()
 
-    #返回一个Reqeust对象，或者Request的对象列表,返回的Request自动发送到scheduler
+    #返回一个Request对象，或者Request的对象列表,返回的Request自动发送到scheduler
 
-    def __page_rule_parse(self,page_rule,response):
-        pass
+    def page_rule_parse(self,page_rule,response):
+        """
+        PageRule规则解析
+        """
+        response_dom = EXT.response2dom(response)
+
+        if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
+            url_extractor = EXT.UrlExtractor(response_dom,**page_rule.extract_url_element)
+            print url_extractor.urls
+        elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
+            pass
+        elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
+            #没有继续抽出的规则
+            pass
+
+

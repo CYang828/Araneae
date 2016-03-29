@@ -2,6 +2,8 @@
 
 from collections import deque
 
+from Araneae.dupefilter import SingletonDupeFilter
+
 class BaseScheduler(object):
 
     def pull(self):
@@ -17,13 +19,20 @@ class SingletonScheduler(BaseScheduler):
     
     def __init__(self):
         self._queue = deque([])
-        self._dupefilter = set([])
+        self._dupefilter = SingletonDupeFilter()
        
     def push(self,data):
-        self._queue.append(data)
+        if not self._dupefilter.exist():
+            self._queue.append(data)
+            return True
+        else:
+            return False
 
     def pull(self):
         return self._queue.popleft()
+
+    def full(self):
+        pass
 
 class RedisScheduler(BaseScheduler):
     pass

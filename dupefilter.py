@@ -2,7 +2,7 @@
 
 import hashlib
 
-class BaseDupeFilter(self):
+class BaseDupeFilter(object):
 
     def exist(self,key):
         raise NotImplementedError('去重器必须实现exist方法')
@@ -20,7 +20,7 @@ class SingletonDupeFilter(BaseDupeFilter):
     def exist(self,key):
         key = hashlib.md5(key).hexdigest()
 
-        return True if key in self._set: else False
+        return True if key in self._set else False
 
     def put(self,key):
         key = hashlib.md5(key).hexdigest()

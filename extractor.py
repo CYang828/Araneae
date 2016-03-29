@@ -1,25 +1,28 @@
 #*-*coding:utf8*-*
 
 import re
-import lxml
-
-from lxml import etree
-#from lxml.cssselect import CSSSelector
+import lxml.html
+import lxml.html.soupparser
 
 class BaseExtractor(object):
     __dom = None
 
 class UrlExtractor(BaseExtractor):
 
-    def __init__(self,dom,allow = None,deny = None):
+    def __init__(self,dom,**args):
         self.__dom = dom
-        self._allow_regex = [re.compile(regex) for regex in allow]
-        self._deny_regex = [re.compile(regex) for regex in deny]
-        self._urls = None
-        self._allow_urls = None
+        self._allow_regex = [re.compile(regex) for regex in args.get('allow',[])]
+        self._deny_regex = [re.compile(regex) for regex in args.get('deny',[])]
+        self._headers = args.get('headers',None)
+        self._cookies = args.get('cookies',None)
+        self._method = args.get('method','GET')
+        self._body = args.get('body',None)
+
+        self._urls = []
+        self._allow_urls = []
         self._extract_urls()
-        self._allow_urls()
-        self._deny_urls()
+        self._extract_allow_urls()
+        self._extract_deny_urls()
 
     def __call__(self):
         return self._allow_urls
@@ -28,9 +31,9 @@ class UrlExtractor(BaseExtractor):
         return self._allow_urls
 
     def _extract_urls(self):
-        self._urls = self.__dom.xpath('//a/@herf')
+        self._urls = self.__dom.xpath('//a//@href')
 
-    def _allow_urls(self):
+    def _extract_allow_urls(self):
         allow_urls_tmp = self._urls
 
         for allow in self._allow_regex:
@@ -38,7 +41,7 @@ class UrlExtractor(BaseExtractor):
 
         self._allow_urls = allow_urls_tmp
 
-    def _deny_urls(self):
+    def _extract_deny_urls(self):
         allow_urls_tmp = self._allow_urls
 
         for deny in self._deny_regex:
@@ -115,4 +118,9 @@ class DataExtractor(BaseExtractor):
         return self._css_result
 
 def response2dom(response):
-    return etree.fromstring(response.text)
+    try:
+        dom = lxml.html.fromstring(response.text)
+    except UnicodeDecodeError:
+        dom = lxml.html.soupparser.fromstring(response.text)
+
+    return dom

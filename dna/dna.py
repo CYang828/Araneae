@@ -1,9 +1,8 @@
 #*-*coding:utf8*-*
 
 import Araneae.dna.spider as SPD
+import Araneae.utils.setting as SET
 import Araneae.dna.chromesome as CHM
-
-from Araneae.utils.setting import Setting
 
 SPIDER_TYPE = { 
                 'RuleLink'      :   (   'RuleLinkChromesome'        ,   'RuleLinkSpider'        ),
@@ -11,7 +10,7 @@ SPIDER_TYPE = {
                 'DeepPriority'  :   (   'DeepPriorityChromesome'    ,   'DeepPrioritySpider'    ),
               }
 
-class DNA(Setting):
+class DNA(SET.Setting):
 
     __spider_obj = None
 

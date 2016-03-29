@@ -11,7 +11,7 @@ import urllib
 import hashlib
 import requests
 
-import utils
+import Araneae.utils.http as utils_http
 
 DEFAULT_TIMEOUT = 2
 
@@ -30,8 +30,8 @@ class Request(object):
         if not url:
             raise TypeError
 
-        self._url = utils.http.revise_url(url)
-        self._method = utils.http.validate_method(args.get('method','GET')) 
+        self._url = utils_http.revise_url(url)
+        self._method = utils_http.validate_method(args.get('method','GET')) 
         self._headers = args.get('headers',None)
         self._body = args.get('body',None)
         self._cookies = args.get('cookies',None)
@@ -39,7 +39,7 @@ class Request(object):
         self._timeout = args.get('timeout',DEFAULT_TIMEOUT)
 
         self._json = ''
-        self._json()
+        self._sequence_json()
 
     def fetch(self):
         """
@@ -58,7 +58,7 @@ class Request(object):
         return self._callback
 
     #这个是用来放到mq中的
-    def _json(self):
+    def _sequence_json(self):
         request_json = {}
         request_json['url'] = self._url
 
@@ -70,16 +70,12 @@ class Request(object):
             request_json['body'] = self._body
         if self._cookies:
             request_json['cookies'] = self._cookies
-        if self._rule:
-            request_json['rule'] = self._rule
-        if self._did:
-            request_json['did'] = self._did
         if self._callback:
             request_json['callback'] = self._callback
 
         self._json = json.dumps(request_json)
 
-def json_to_request(self,request_json):
+def json2request(request_json):
     """
     将json转成Request对象
     """

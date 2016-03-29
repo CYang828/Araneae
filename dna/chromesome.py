@@ -2,8 +2,8 @@
 
 import re
 
-from Araneae.dna.rule import PageRule
-from Araneae.utils.setting import Setting
+import Araneae.dna.rule as PR
+import Araneae.utils.setting as SET
 
 RUNNING_TYPE_SINGLETON = 1
 RUNNING_TYPE_DISTRIBUTED = 2
@@ -12,7 +12,7 @@ SCHEDULER_SINGLETON = 'SingletonScheduler'
 SCHEDULER_REDIS = 'RedisScheduler'
 SCHEDULER_RABBITMQ = 'RabbitMqScheduler'
 
-class BaseChromesome(Setting):
+class BaseChromesome(SET.Setting):
     """
     每个chromesome必须存在spider_name和first_url
     """
@@ -101,7 +101,7 @@ class RuleLinkChromesome(BaseChromesome):
 
         page_sort_tmp = sorted(page_sort_tmp.iteritems(),key = lambda i:i[0])
 
-        self.__page_rules = [PageRule(self._attributes[sort_tmp_item[1]]) for sort_tmp_item in page_sort_tmp]
+        self.__page_rules = [PR.PageRule(self._attributes[sort_tmp_item[1]]) for sort_tmp_item in page_sort_tmp]
 
        
 class BroadPriorityChromesome(BaseChromesome):

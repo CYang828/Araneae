@@ -14,10 +14,12 @@ LASTING         =   {
 PAGE1           =   {
                         'extract_urls':
                         {
-                            'allow':'',
-                            'deny':'',
-                            'cookies':None,#如果不指定，沿用上一页后的http头
-                            'headers':None,
+                            'allow':'d',
+                            'deny':'d',
+                            'headers':{'name':'zhangchunyang'},
+                            'cookies':{'user':'zhangchunyang'},#如果不指定，沿用上一页后的http头
+                            'method':'GET',
+                            #'body':
                         },
                         'format_urls':
                         {

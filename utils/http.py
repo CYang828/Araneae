@@ -5,7 +5,7 @@ import urlparse
 def revise_url(url):
     if not urlparse.urlparse(url).scheme:
         return 'http://' + url
-    else
+    else:
         return url
 
 def validate_method(method):
