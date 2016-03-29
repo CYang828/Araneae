@@ -1,7 +1,7 @@
 #*-*coding:utf8*-*
 
-import spider
-import chromesome
+import Araneae.dna.spider as SPD
+import Araneae.dna.chromesome as CHM
 
 from Araneae.utils.setting import Setting
 
@@ -17,8 +17,8 @@ class DNA(Setting):
 
     def generator(self):
         if self['SPIDER_TYPE']:
-            chromesome_obj = getattr(chromesome,SPIDER_TYPE[self['SPIDER_TYPE']][0])(self)
-            spider_obj = getattr(spider,SPIDER_TYPE[self['SPIDER_TYPE']][1])(chromesome_obj)
+            chromesome_obj = getattr(CHM,SPIDER_TYPE[self['SPIDER_TYPE']][0])(self)
+            spider_obj = getattr(SPD,SPIDER_TYPE[self['SPIDER_TYPE']][1])(chromesome_obj)
         else:
             raise SpiderChromesomeException('没有指定spider类型')
 
@@ -27,5 +27,7 @@ class DNA(Setting):
         return spider_obj
 
 if __name__ == '__main__':                                                                                                                                      
-    c = DNA('spiders.demo')
+    c = DNA('Araneae.man.default_setting')
     spider = c.generator()
+    spider.start()
+    spider.end()

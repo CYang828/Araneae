@@ -2,53 +2,26 @@
 
 import re
 
+from Araneae.dna.rule import PageRule
 from Araneae.utils.setting import Setting
 
-#0:没有,1:抽取url,2:格式化
-NONE_URL_TYPE = 0
-EXTRACT_URL_TYPE = 1
-FORMAT_URL_TYPE = 2
+RUNNING_TYPE_SINGLETON = 1
+RUNNING_TYPE_DISTRIBUTED = 2
 
-class PageRule(object):
-    """
-    页面规则
-    """
-    __scrawl_url_type = NONE_URL_TYPE
-    __scrawl_url_element = None
-    __scrawl_data_element = None
-    __scrawl_data_field = ''
-    
-    def __init__(self,map):
-        self._essential(map)
-
-    def _essential(self,map):
-        if 'extract_urls' in map.keys():
-            self.__scrawl_url_type = EXTRACT_URL_TYPE
-            self.__scrawl_url_element = map['extract_urls']
-        elif 'format_urls' in map.keys():
-            self.__scrawl_url_type  = FORMAT_URL_TYPE
-            self.__scrawl_url_element = map['format_urls']
-
-        if 'extract_data' in map.keys():
-            self.__scrawl_data_field = map['extract_data']['field']
-            self.__scrawl_data_element ={'type':map['extract_data']['type'],'expression':map['extract_data']['type']}
-
-    def scrawl_url(self):
-        return (self.__scrawl_url_type,self.__scrawl_url_element)
-
-    def scrawl_data(self):
-        return (self.__scrawl_data_element,self.__scrawl_data_field)
-
-    @property
-    def field(self):
-        return self.__scrawl_data_field
+SCHEDULER_SINGLETON = 'SingletonScheduler'
+SCHEDULER_REDIS = 'RedisScheduler'
+SCHEDULER_RABBITMQ = 'RabbitMqScheduler'
 
 class BaseChromesome(Setting):
     """
     每个chromesome必须存在spider_name和first_url
     """
-    def __init__(self,chromesome):
+    OPTIONS = {
+                'RUNNING_TYPE':{'singleton':RUNNING_TYPE_SINGLETON,'distributed':RUNNING_TYPE_DISTRIBUTED},
+                'SCHEDULER'  :{'singleton':SCHEDULER_SINGLETON,'redis':SCHEDULER_REDIS,'rabbitmq':SCHEDULER_RABBITMQ},
+              }
 
+    def __init__(self,chromesome):
         self._attributes = chromesome._attributes
         self._essential_set()
         self._set_essential_options()
@@ -63,43 +36,58 @@ class BaseChromesome(Setting):
 
     @property
     def running_type(self):
-        return self['RUNNING_TYPE']
+        return self.OPTIONS['RUNNING_TYPE'][self['RUNNING_TYPE']]
 
     @property
     def scheduler(self):
-        return self['SCHEDULER']
+        return self.OPTIONS['SCHEDULER'][self['SCHEDULER']]
 
     def _essential_set(self):
         """
         必有参数
         """
-        self.set_essential_keys('SPIDER_NAME','FIRST_URLS','RUNNING_TYPE','SCHEDULER')
+        self.set_essential_keys('SPIDER_NAME','FIRST_URLS','CONCURRENT_REQUESTS','RUNNING_TYPE','SCHEDULER')
 
     def _set_essential_options(self):
         """
         设置配置选项
         """
-        self.set_options('RUNNING_TYPE','singleton','distributed')
-        self.set_options('SCHEDULER','singleton','redis','rabbitmq')
+        for key,opt_info in self.OPTIONS.items():
+            self.set_options(key,*opt_info.keys())
     
 class RuleLinkChromesome(BaseChromesome):
+    """
+    链式爬虫
+    """
     __lasting = None
     __page_rules = []
     __essential_page_keys = set([])
     __page_exp = re.compile(r'PAGE(\d+)')
-    __essential_keys = set(['SPIDER_NAME','FIRST_URLS'])
 
     def __init__(self,chromesome):
         super(RuleLinkChromesome,self).__init__(chromesome)
         self._essential()
 
-    def _essential(self):
-        for key in self.__essential_keys:
-            if key not in self.keys():
-                raise KeyError(key)
+    def iter_page_rule(self):
+        for page_rule in self.__page_rules:
+            yield page_rule
 
+    def get_page_rule(self,number):
+        return self.__page_rules[number]
+
+    def len(self):
+        return len(self.__page_rules)
+
+    @property
+    def lasting(self):
+        return self.__lasting
+ 
+    def _essential(self):
         self._sort_page()
         self.__lasting = self.get('LASTING',None)
+
+        if not self.len():
+            raise TypeError('链路爬虫必须规定页面规则')
 
     def _sort_page(self):
         page_sort_tmp = {}
@@ -115,23 +103,13 @@ class RuleLinkChromesome(BaseChromesome):
 
         self.__page_rules = [PageRule(self._attributes[sort_tmp_item[1]]) for sort_tmp_item in page_sort_tmp]
 
-    def iter_page_rule(self):
-        for page_rule in self.__page_rules:
-            yield page_rule
-
-    def get_page_rule(self,number):
-        return self.__page_rules[number]
-
-    @property
-    def lasting(self):
-        return self._lasting
-        
+       
 class BroadPriorityChromesome(BaseChromesome):
 
     def __init__(self,chromesome):
         pass
 
-class DeepPriorityChromesome(Setting):
+class DeepPriorityChromesome(BaseChromesome):
 
     def __init__(self,chromesome):
         pass

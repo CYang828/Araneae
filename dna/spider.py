@@ -1,20 +1,21 @@
 #*-*coding:utf8*-*
+import sys
 import types
-import Araneae.scheduler
-from data import Data
 from gevent.pool import Pool
-from Araneae.net.request import Request
+
+import Araneae.scheduler
+import Araneae.dna.rule as PR
+import Araneae.dna.chromesome as CHM 
+
+from Araneae.data import Data
 from Araneae.db import generate_pipeline
-from chromesome import BaseChromesome
+from Araneae.extractor import response2dom
+from Araneae.net.request import Request,json2request
 
 """
 `spider.py` -- 爬虫组件
 =======================
 """
-
-DEFAULT_SCHEDULER = 'SingletonScheduler'
-DEFAULT_RUNNING_TYPE = 'Singleton'
-DEFAULT_MAX_POOL_LENGTH = 10
 
 class BaseSpider(object):
     """
@@ -42,50 +43,48 @@ class BaseSpider(object):
         初始化spider必要参数
 
         """
-        if isinstance(chromesome,BaseChromesome):
+        if isinstance(chromesome,CHM.BaseChromesome):
             self.__chromesome = chromesome
         else:
             raise TypeError('参数必须为Chromesome类型')
 
         self.__name = chromesome.get('SPIDER_NAME')
-        self.__running_type = chromesome.get('RUNNING_TYPE',DEFAULT_RUNNING_TYPE)
-        self.__pool = Pool(chromesome.get('MAX_POOL_LENGTH',DEFAULT_MAX_POOL_LENGTH))
-        self.__scheduler = getattr(Araneae.scheduler,chromesome.get('SCHEDULER'),DEFAULT_SCHEDULER)()
-        
+        self.__running_type = chromesome.running_type
+
+        self.__pool = Pool(chromesome.getint('CONCURRENT_REQUESTS'))
+        self.__scheduler = getattr(Araneae.scheduler,chromesome.scheduler)()
+
+        if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
+            self.__rpc = self.__scheduler
+        elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
+            #实例化rpc
+            pass
+                
         if chromesome.lasting:
-            self.__data_pipeline = generate_pipeline(chromesome.lasting)
+            self.__data_pipeline = generate_pipeline(**chromesome.lasting)
 
-    def fetch_sync(self,request,callback = None):
-        """
-        阻塞访问request,用于必须确保完成的任务
-        """
-        self.fetch(request,callback = callback)
-        self._join()
-
-    def fetch(self,request,callback = None):
-        """
-        异步访问request
-        """
-        self.__pool.spawn(self._fetch,request,callback)
-    
-    def first_url(self,first_urls):
+    def first_urls(self,first_urls):
         """
         用来实现如何爬去first_url
         """
         raise NotImplementedError('爬虫必须实现first_url方法')
 
-    def walk(self):
+    def parse(self,response):
         """
-        用来实现爬虫的动作
+        这里可以返回request或者数据对象
         """
-        raise NotImplementedError('爬虫必须实现walk方法')
+        raise NotImplementedError('爬虫必须实现parse方法')
 
     def start(self):
         """
         启动爬虫
         """
-        first_urls = self.__chromesome['FIRST_URL']
-        requests = self.first_url(first_urls)
+        first_urls = self.__chromesome['FIRST_URLS']
+        
+        if isinstance(first_urls,str):
+            first_urls = [].append(first_urls)
+
+        requests = self.first_urls(first_urls)
 
         if isinstance(requests,types.GeneratorType):
             for request in requests:
@@ -106,62 +105,61 @@ class BaseSpider(object):
         #唤醒挂起进程
         pass
 
+    def walk(self):
+        """
+        用来实现爬虫的动作
+        """
+        raise NotImplementedError('爬虫必须实现walk方法')
+
+
     def end(self):
         self.__pool.join()
 
-    def response(self,response):
+    def fetch_sync(self,request,callback = None):
         """
-        这里可以返回request或者数据对象
+        阻塞访问request,用于必须确保完成的任务
         """
-        raise NotImplementedError('爬虫必须实现response方法')
+        self.fetch(request,callback = callback)
+        self._join()
 
-    def url_extractor(self,rule):
-        #返回URLExtractor
-        pass
-
-    def get_page_rule(self,number):
+    def fetch(self,request,callback = None):
         """
-        获取当前的PageRule对象
+        异步访问request
         """
-        self.chromesome.get_page_rule(number)
+        self.__pool.spawn(self._fetch,request,callback)
 
-    def push_master(self,request):
+    #从scheduler获取(pull)request，如果scheduler为空，进行延时重试，如果最后为空，结束爬虫
+    def master_push(self,request):
         """
         向master推送request
         """
         print 'push master'
 
-    def push_data_pipeline(self,data):
+    def data_pipeline_push(self,data):
         """
         向数据管道推送数据
         """
         print 'push data pipeline'
 
-    def pull_scheduler(self):
+    def scheduler_pull(self):
         """
         从调度器拉request_json
         """
         print 'pull scheduler'
 
-    @property
-    def pool(self):
-        return self.__pool
-
-    @property
-    def chromesome(self):
-        return self.__chromesomes
-
-    @property
-    def pool(self):
-        return self.__pool
-
-    @property
-    def scheduler(self):
-        return self.__scheduler
+    def get_page_rule(self,number):
+        """
+        获取当前的PageRule对象
+        """
+        return self.__chromesome.get_page_rule(number)
 
     @property
     def name(self):
         return self.__name
+
+    @property
+    def scheduler(self):
+        return self.__scheduler
 
     def _fetch(self,request,callback = None):
         """
@@ -171,7 +169,7 @@ class BaseSpider(object):
         return方式会等待全部完成后一起放回调度器中
         """
         response = request.fetch()
-        request_or_datas = callback(response) if callback else self.response(response)
+        request_or_datas = getattr(self,callback)(response) if callback else self.parse(response)
 
         if isinstance(request_or_datas,types.GeneratorType):
             #迭代生成器
@@ -187,7 +185,7 @@ class BaseSpider(object):
         else:
             self._fetch_request_or_data(request_or_data)
         
-    def _fetch_reqeust_or_data(self,request_or_data):
+    def _fetch_request_or_data(self,request_or_data):
         if isinstance(request_or_data,Request):
             self.push_master(r_or_d)
         elif isinstance(request_or_data,Data):
@@ -200,18 +198,25 @@ class BaseSpider(object):
 class RuleLinkSpider(BaseSpider):
     
     #起始url
-    def first_url(self,first_urls):
+    def first_urls(self,first_urls):
         for first_url in first_urls:
-            yield Request(first_url,callback = self.first_response)
+            if isinstance(first_url,str):
+                yield Request(first_url,callback = 'first_parse')
+            elif isinstance(fisrt_url,dict):
+                yield json2request(first_url)
 
-    def first_response(self,response):
-        self.get_page_rule(0)
+    def first_parse(self,response):
+        first_page_rule = self.get_page_rule(0)
+        print first_page_rule.field
 
-    def walk(self,url):
-        self.scheduler.pull()
+    def parse(self,response):
+        pass
+        
+    #开始进行调度、爬取和解析
+    def walk(self):
+        self.scheduler_pull()
 
     #返回一个Reqeust对象，或者Request的对象列表,返回的Request自动发送到scheduler
-    def response(self,response):
-        print response
 
-
+    def __page_rule_parse(self,page_rule,response):
+        pass
