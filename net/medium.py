@@ -38,4 +38,5 @@ class Medium(self):
 
         self._json = json.dumps(medium_json)
 
-
+def request2medium(request,**args):
+    pass

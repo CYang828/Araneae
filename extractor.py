@@ -4,15 +4,23 @@ import re
 import lxml.html
 import lxml.html.soupparser
 
+import Araneae.net.request as REQ
+import Araneae.utils.setting as SET
+
 class BaseExtractor(object):
     __dom = None
+    __url = ''
 
 class UrlExtractor(BaseExtractor):
+    """
+    一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
+    """
 
-    def __init__(self,dom,**args):
+    def __init__(self,(dom,url),**args):
+        self.__url = url
         self.__dom = dom
-        self._allow_regex = [re.compile(regex) for regex in args.get('allow',[])]
-        self._deny_regex = [re.compile(regex) for regex in args.get('deny',[])]
+        self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
+        self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
         self._headers = args.get('headers',None)
         self._cookies = args.get('cookies',None)
         self._method = args.get('method','GET')
@@ -20,12 +28,12 @@ class UrlExtractor(BaseExtractor):
 
         self._urls = []
         self._allow_urls = []
+        self._allow_requests = []
         self._extract_urls()
         self._extract_allow_urls()
-        self._extract_deny_urls()
 
     def __call__(self):
-        return self._allow_urls
+        return self._allow_requests
     
     def extract(self):
         return self._allow_urls
@@ -34,20 +42,54 @@ class UrlExtractor(BaseExtractor):
         self._urls = self.__dom.xpath('//a//@href')
 
     def _extract_allow_urls(self):
-        allow_urls_tmp = self._urls
+        """
+        每一个url存在3种状态,deny(2) > allow(1) > unmark(0),在不同的情况下选择展现的url不同(这种代码量少,复杂度高)
 
-        for allow in self._allow_regex:
-            allow_urls_tmp = [url for url in allow_urls_tmp if allow.match(url)] 
+        """
+        #如果允许和阻止的规则都没有,则返回当前页面全部url
+        if not self._allow_regexes and not self._deny_regexes:
+            self._allow_urls = self._urls
+            return
+        
+        #如果有阻止规则没有允许规则,则返回阻止规则剩下的全部url
+        if not self._allow_regexes and self._deny_regexes:
+            deny_list = []
 
-        self._allow_urls = allow_urls_tmp
+            for idx,url in enumerate(self._urls):
+                for deny_regex in self._deny_regexes:
+                    if deny_regex.match(url):
+                        deny_list.append(idx)
+                        break
 
-    def _extract_deny_urls(self):
-        allow_urls_tmp = self._allow_urls
+            for deny_idx in deny_list:
+                del self._urls[deny_idx]
 
-        for deny in self._deny_regex:
-            allow_urls_tmp = [url for url in allow_urls_tmp if not deny.match(url)] 
+            print 'DENY_LIST:' + str(deny_list)
 
-        self._allow_urls = allow_urls_tmp
+            self._allow_urls = self._urls
+            return 
+            
+        #如果允许和阻止的规则都有,则返回允许并不被阻止的url
+        #如果有允许规则没有阻止规则,则返回允许规则的url
+        if self._allow_regexes and self._deny_regexes:
+            for idx,url in enumerate(self._urls):
+                is_deny = False
+
+                #先确定是否禁止
+                for deny_regex in self._deny_regexes:
+                    if deny_regex.match(url):
+                        is_deny = True
+                        #print 'DENY:' + url
+                        break
+
+                if not is_deny:                   
+                    for allow_regex in self._allow_regexes:
+                        if allow_regex.match(url):
+                            #print 'ALLOW:' + url
+                            self._allow_urls.append(url)
+                            break
+            
+            return 
 
     @property
     def urls(self):
@@ -123,4 +165,4 @@ def response2dom(response):
     except UnicodeDecodeError:
         dom = lxml.html.soupparser.fromstring(response.text)
 
-    return dom
+    return (dom,response.url)

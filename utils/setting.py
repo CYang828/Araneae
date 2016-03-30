@@ -80,6 +80,18 @@ class Setting(object):
             if key not in self.keys():
                 raise TypeError('必要的键%s' % key)
 
+def revise_value(value):
+    revise_value = []
+
+    if isinstance(value,str):
+        revise_value.append(value)
+    elif isinstance(value,set):
+        revise_value = dict(value)
+    elif isinstance(value,list):
+        revise_value = value
+
+    return revise_value
+        
 
 if __name__ == '__main__':
     s = Setting('config')

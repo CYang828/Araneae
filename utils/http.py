@@ -8,6 +8,18 @@ def revise_url(url):
     else:
         return url
 
+def replenish_url(response,url):
+    """
+    补全url的域名
+    """
+    url_info = urlparse.urlparse(url)
+    response_url_info = urlparse.urlparse(response.url) 
+
+    if not url_info.scheme and not url_info.hostname:
+        return response_url_info.scheme + '://' + response_url_info.hostname + 'url'
+    else:
+        return url
+
 def validate_method(method):
     method = method.lower()
 
@@ -17,6 +29,7 @@ def validate_method(method):
         return method
     else:
         raise TypeError('http请求方法错误')
+
 
     
 

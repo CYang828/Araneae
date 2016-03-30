@@ -7,6 +7,7 @@ import Araneae.data as DT
 import Araneae.dna.rule as PR
 import Araneae.scheduler as SCH
 import Araneae.extractor as EXT 
+import Araneae.utils.http as UTL
 import Araneae.net.request as REQ 
 import Araneae.dna.chromesome as CHM 
 
@@ -223,8 +224,11 @@ class RuleLinkSpider(BaseSpider):
         response_dom = EXT.response2dom(response)
 
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
-            url_extractor = EXT.UrlExtractor(response_dom,**page_rule.extract_url_element)
-            print url_extractor.urls
+            urls = EXT.UrlExtractor(response_dom,**page_rule.extract_url_element)()
+            
+            for url in urls:
+                url = UTL.replenish_url(response,url)
+                
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
             pass
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
