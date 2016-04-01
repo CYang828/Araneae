@@ -4,21 +4,24 @@ import re
 import lxml.html
 import lxml.html.soupparser
 
+import Araneae.utils.http as UTL
 import Araneae.net.request as REQ
 import Araneae.utils.setting as SET
 
 class BaseExtractor(object):
     __dom = None
-    __url = ''
+    __response_url = ''
 
 class UrlExtractor(BaseExtractor):
     """
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
 
-    def __init__(self,(dom,url),**args):
-        self.__url = url
+    def __init__(self,(dom,response_url),page_rule):
+        self.__rule = page_rule
+        self.__response_url = response_url
         self.__dom = dom
+        args = page_rule.extract_url_element
         self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
         self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
         self._headers = args.get('headers',None)
@@ -31,6 +34,7 @@ class UrlExtractor(BaseExtractor):
         self._allow_requests = []
         self._extract_urls()
         self._extract_allow_urls()
+        self._url2request()
 
     def __call__(self):
         return self._allow_requests
@@ -90,6 +94,13 @@ class UrlExtractor(BaseExtractor):
                             break
             
             return 
+
+    def _url2request(self):
+        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'body':self._body}
+
+        for url in self._allow_urls:
+            request = REQ.Request(UTL.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            self._allow_requests.append(request)
 
     @property
     def urls(self):

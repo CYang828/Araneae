@@ -9,6 +9,7 @@ class PageRule(object):
     """
     页面规则,用来确定输出的url和data
     """
+    __number = None
     __extract_url_type = NONE_URL_TYPE
     __extract_url_element = None
     __extract_data_element = None
@@ -49,3 +50,12 @@ class PageRule(object):
     @property
     def field(self):
         return self.__extract_data_field
+
+    @property
+    def number(self):
+        return self.__number
+    @number.setter
+    def number(self,rule):
+        self.__number = rule
+
+    

@@ -31,7 +31,12 @@ class BaseChromesome(SET.Setting):
         return self['SPIDER_NAME']
 
     @property
-    def first_url(self):
+    def first_urls(self):
+        first_urls = self['FIRST_URLS']
+
+        if isinstance(first_urls,str):
+            self.set_from_value('FISRT_URLS',[first_urls])
+
         return self['FIRST_URLS']
 
     @property
@@ -42,11 +47,15 @@ class BaseChromesome(SET.Setting):
     def scheduler(self):
         return self.OPTIONS['SCHEDULER'][self['SCHEDULER']]
 
+    @property
+    def scheduler_retry_time(self):
+        return self['SCHEDULER_RETRY_TIME']
+
     def _essential_set(self):
         """
         必有参数
         """
-        self.set_essential_keys('SPIDER_NAME','FIRST_URLS','CONCURRENT_REQUESTS','RUNNING_TYPE','SCHEDULER')
+        self.set_essential_keys('SPIDER_NAME','FIRST_URLS','CONCURRENT_REQUESTS','RUNNING_TYPE','SCHEDULER','SCHEDULER_RETRY_TIME')
 
     def _set_essential_options(self):
         """
@@ -73,7 +82,7 @@ class RuleLinkChromesome(BaseChromesome):
             yield page_rule
 
     def get_page_rule(self,number):
-        return self.__page_rules[number]
+        return self.__page_rules[number] if number < len(self.__page_rules) else None
 
     def len(self):
         return len(self.__page_rules)
@@ -102,6 +111,9 @@ class RuleLinkChromesome(BaseChromesome):
         page_sort_tmp = sorted(page_sort_tmp.iteritems(),key = lambda i:i[0])
 
         self.__page_rules = [PR.PageRule(self._attributes[sort_tmp_item[1]]) for sort_tmp_item in page_sort_tmp]
+        
+        for rule_number,rule in enumerate(self.__page_rules):
+            rule.number = rule_number
 
        
 class BroadPriorityChromesome(BaseChromesome):

@@ -4,6 +4,7 @@ from collections import deque
 
 from Araneae.dupefilter import SingletonDupeFilter
 
+
 class BaseScheduler(object):
 
     def pull(self):
@@ -22,7 +23,7 @@ class SingletonScheduler(BaseScheduler):
         self._dupefilter = SingletonDupeFilter()
        
     def push(self,data):
-        if not self._dupefilter.exist():
+        if not self._dupefilter.exist(data):
             self._queue.append(data)
             return True
         else:
@@ -33,6 +34,9 @@ class SingletonScheduler(BaseScheduler):
 
     def full(self):
         pass
+
+    def __len__(self):
+        return len(self._queue)
 
 class RedisScheduler(BaseScheduler):
     pass

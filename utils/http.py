@@ -8,12 +8,12 @@ def revise_url(url):
     else:
         return url
 
-def replenish_url(response,url):
+def replenish_url(response_url,url):
     """
     补全url的域名
     """
     url_info = urlparse.urlparse(url)
-    response_url_info = urlparse.urlparse(response.url) 
+    response_url_info = urlparse.urlparse(response_url) 
 
     if not url_info.scheme and not url_info.hostname:
         return response_url_info.scheme + '://' + response_url_info.hostname + 'url'

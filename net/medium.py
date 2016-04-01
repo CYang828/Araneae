@@ -2,7 +2,9 @@
 
 import json 
 
-class Medium(self):
+import Araneae.net.request as REQ
+
+class Medium(object):
     """
     传输协议
     request:访问对象
@@ -11,12 +13,14 @@ class Medium(self):
     field:索引filed名称
     fid:索引序号
     """
-    def __init__(self,request,spider_name,rule,field = '',fid = 0):
+    def __init__(self,request,**args):
+        if not isinstance(request,REQ.Request):
+            raise TypeError('参数类型必须为Request')
+
         self._request = request
-        self._spider_name = spider_name
-        self._rule = rule
-        self._field = field
-        self._fid = fid
+        self._rule = args.get('rule')
+        self._field = args.get('field')
+        self._fid = args.get('fid')
 
         self._json = ''
         self._json()
@@ -30,13 +34,26 @@ class Medium(self):
 
         medium_json = {}
         medium_json['request'] = request_json
-        medium_json['spider_name'] = self._spider_name
         medium_json['rule'] = self._rule
 
         if self._field and fid:
-            medium_json['index'] = {'fid':self._fid,'field':self._field}
+            medium_json['condition'] = {'fid':self._fid,'field':self._field}
 
         self._json = json.dumps(medium_json)
 
-def request2medium(request,**args):
-    pass
+def request2medium(request,rule,field = '',fid = None):
+    medium_args = {'rule':rule,'field':field,'fid':fid}
+
+    medium = Medium(request,**medium_args)
+    
+    return medium
+
+def requests2mediums(requests,rule,field = '',fid = None):
+    mediums = []
+
+    for request in requests:
+        medium = request2medium(request,spider_name,rule,field,fid)
+        mediums.append(medium)
+
+    return mediums
+    
