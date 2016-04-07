@@ -1,18 +1,20 @@
 #*-*coding:utf8*-*
 
 class Data(object):
-    __data = None
-    __field = ''
+    __kv = {}
+    __fid = None
 
-    def __init__(self,data,field):
-        self._data = data
-        self._field = field
+    def __init__(self,**kvargs):
+        self.__kv = kvargs
 
-    @property
-    def data(self):
-        return self._data
+    def __call__(self):
+        return self.__kv
 
     @property
-    def field(self):
-        return self._field
+    def fid(self):
+        return self.__fid
 
+    @fid.setter
+    def fid(self,fid):
+        self.__fid = fid
+                

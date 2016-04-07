@@ -12,8 +12,7 @@ class PageRule(object):
     __number = None
     __extract_url_type = NONE_URL_TYPE
     __extract_url_element = None
-    __extract_data_element = None
-    __extract_data_field = ''
+    __scrawl_data_element = None
 
     def __init__(self,map):
         self._essential(map)
@@ -28,12 +27,14 @@ class PageRule(object):
         elif 'format_urls' in map.keys():
             self.__extract_url_type  = FORMAT_URL_TYPE
             self.__extract_url_element = map['format_urls']
-        else:
-            raise TypeError('PageRule中必须存在extract_urls或者format_urls中的一个')
+        #else:
+        #    raise TypeError('PageRule中必须存在extract_urls或者format_urls中的一个')
 
         if 'extract_data' in map.keys():
-            self.__extract_data_field = map['extract_data']['field']
-            self.__extract_data_element = {'type':map['extract_data']['type'],'expression':map['extract_data']['expression']}
+            if isinstance(map['extract_data'],dict):
+                self.__scrawl_data_element = [map['extract_data']]
+            elif isinstance(map['extract_data'],list):
+                self.__scrawl_data_element = map['extract_data']
 
     @property
     def extract_url_type(self):
@@ -44,16 +45,13 @@ class PageRule(object):
         return self.__extract_url_element
 
     @property
-    def scrawl_data(self):
-        return self.__extract_data_element
-
-    @property
-    def field(self):
-        return self.__extract_data_field
+    def scrawl_data_element(self):
+        return self.__scrawl_data_element
 
     @property
     def number(self):
         return self.__number
+
     @number.setter
     def number(self,rule):
         self.__number = rule

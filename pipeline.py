@@ -1,7 +1,8 @@
 # *-* coding:utf-8 *-*
 
-#替换log，替换exception
-#from exception import MysqlException,RedisException,MongoException
+from importlib import import_module
+
+from Araneae.utils.log import Plog
 
 try:
     import MySQLdb 
@@ -18,8 +19,82 @@ try:
     from pymongo import MongoClient
     from pymongo.errors import ConnectionFailure,ServerSelectionTimeoutError,PyMongoError
     from pymongo.cursor import CursorType
+    from bson.objectid import ObjectId
 except ImportError:
     ERROR('pymongo moudle not in os')
+
+class BaseDataPipeline(object):
+
+    def select(self,db,table,**kvargs):
+        """
+        选择数据库和表,如果为关系型数据库需要建立相应的表
+        """
+        raise NotImplementedError('DataPipeline必须实现select')
+
+    def insert(self,data):
+        """
+        插入数据
+        """
+        raise NotImplementedError('DataPipeline必须实现insert')
+
+    def update(self,filter,data):
+        """
+        更新数据,如果存在已有字段则覆盖
+        """
+        raise NotImplementedError('DataPipeline必须实现update')
+
+class MongoDataPipeline(BaseDataPipeline):
+    
+    def __init__(self,**args):
+        self.reset(**args)
+
+    def reset(self,**args):
+        self._mongo = None
+        self._db = None
+        self._collection = None
+        
+        mongo_config = {'host':args['host'],'port':int(args['port']),'connectTimeoutMS':int(args['timeout'])}
+
+        try:
+            self._mongo = MongoClient(**mongo_config)
+        
+        except ConnectionFailure,e:
+            EROR('Mongo Error -- connect failed[%s]' % e)
+            raise MongoException
+
+    def select(self,db,collection):
+        self._db = self._mongo[db]
+        self._collection = self._db[collection]
+
+    def insert(self,data):
+        try:
+            obj_id = str(self._collection.insert_one(data).inserted_id)
+            Plog('Mongo insert -- data[%s] -- _id[%s]' % (data,obj_id))
+            return obj_id
+        except PyMongoError:    
+            raise MongoException
+
+    def update(self,filter,data):
+        try:
+            filter = {'_id':ObjectId(filter)}
+            update_id = str(self._collection.update_one(filter = filter,update = {'$set':data}).upserted_id)
+            Plog('Mongo update -- filter[%s] -- data[%s] -- upserted id[%s]' % (filter,data,update_id))
+            return update_id
+        except PyMongoError:
+            raise MongoException
+
+    def find(self,filter=None,projection=None,skip=0,limit=0,no_cursor_timeout=False,cursor_type=CursorType.NON_TAILABLE,sort=None,allow_partial_results=False,\
+             oplog_replay=False, modifiers=None, manipulate=True):
+        return self._collection.find(filter=filter,projection=projection,skip=skip,limit=limit,no_cursor_timeout=no_cursor_timeout,\
+               cursor_type=CursorType.NON_TAILABLE,sort=sort,allow_partial_results=allow_partial_results,oplog_replay=oplog_replay,\
+               modifiers=modifiers, manipulate=manipulate)
+    
+    def count(self):
+        return self._collection.count()
+
+
+    def collection_names(self,system = True):
+        return self._db.collection_names(include_system_collections = system)
 
 MYSQL_RETRY_TIMES = 10
 
@@ -318,54 +393,6 @@ class Redis(object):
 
         return ret
 
-class Mongo(object):
-    
-    def __init__(self,**args):
-        self.reset(**args)
-
-    def reset(self,**args):
-        self._mongo = None
-        self._db = None
-        self._collection = None
-        
-        mongo_config = {'host':args['host'],'port':int(args['port']),'connectTimeoutMS':int(args['timeout'])}
-
-        try:
-            self._mongo = MongoClient(**mongo_config)
-        
-        except ConnectionFailure,e:
-            EROR('Mongo Error -- connect failed[%s]' % e)
-            raise MongoException
-
-    def find(self,filter=None,projection=None,skip=0,limit=0,no_cursor_timeout=False,cursor_type=CursorType.NON_TAILABLE,sort=None,allow_partial_results=False,\
-             oplog_replay=False, modifiers=None, manipulate=True):
-        return self._collection.find(filter=filter,projection=projection,skip=skip,limit=limit,no_cursor_timeout=no_cursor_timeout,\
-               cursor_type=CursorType.NON_TAILABLE,sort=sort,allow_partial_results=allow_partial_results,oplog_replay=oplog_replay,\
-               modifiers=modifiers, manipulate=manipulate)
-    
-    def count(self):
-        return self._collection.count()
-
-    def select(self,db,collection):
-        self._db = self._mongo[db]
-        self._collection = self._db[collection]
-
-    def select_db(self,db):
-        self._db = self._mongo[db]
-
-    def select_collection(self,collection):
-        self._collection = self._db[collection]
-
-    def insert_one(self,data):
-        try:
-            obj_id = str(self._collection.insert_one(data).inserted_id)
-            INFO('Mongo insert -- data[%s] -- ret[%s]' % (data,obj_id))
-            return obj_id
-        except PyMongoError:    
-            raise MongoException
-
-    def collection_names(self,system = True):
-        return self._db.collection_names(include_system_collections = system)
 
 DEFAULT_PIPELINE_TYPE = 'mongo'
         
@@ -376,13 +403,15 @@ def generate_pipeline(**args):
     pipeline_type = args.get('type',DEFAULT_PIPELINE_TYPE).lower()
 
     #后续可以支持更多种类
-    option_type = {'mongo':'Mongo'}
+    option_type = {'mongo':'MongoDataPipeline'}
+
+    pipeline_obj = None
 
     if not pipeline_type in option_type:
         raise TypeError('不支持该类型pipeline，目前只支持mongo')
     else:
-        eval_str = option_type[pipeline_type] + '(**args)'
-        pipeline_obj = eval(eval_str)
+        pipeline_module = import_module('Araneae.pipeline')
+        pipeline_obj = getattr(pipeline_module,option_type[pipeline_type])(**args)
 
     return pipeline_obj
 

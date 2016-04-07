@@ -34,7 +34,6 @@ class Request(object):
         self._auth = args.get('auth',None)
 
         self._rule_number = rule_number
-        self._field = args.get('field')
         self._fid = args.get('fid')
 
         self._json = ''
@@ -50,6 +49,10 @@ class Request(object):
 
     def set_rule_number(self,rule_number):
         self._rule_number = rule_number
+
+    @property
+    def fid(self):
+        return self._fid
 
     @property
     def url(self):
@@ -109,8 +112,6 @@ class Request(object):
 
         request_json['rule_number'] = self._rule_number
         
-        if self._field:
-            request_json['field'] = self._field
         if self._fid:
             request_json['fid'] = self._fid
 

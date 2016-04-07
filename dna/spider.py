@@ -3,9 +3,9 @@ import types
 import gevent as GEV
 import gevent.pool as GEVP
 
-import Araneae.db as DB
 import Araneae.data as DT
 import Araneae.dna.rule as PR
+import Araneae.pipeline as PPL
 import Araneae.scheduler as SCH
 import Araneae.extractor as EXT 
 import Araneae.net.request as REQ 
@@ -68,7 +68,8 @@ class BaseSpider(object):
             pass
                 
         if chromesome.lasting:
-            self.__data_pipeline = DB.generate_pipeline(**chromesome.lasting)
+            self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)
+            self.__data_pipeline.select(chromesome.lasting['db'],self.__name)
 
         self._scheduler_retry_time = self.__chromesome['SCHEDULER_RETRY_TIME']
         self._scheduler_retry_interval = self.__chromesome['SCHEDULER_RETRY_INTERVAL']
@@ -188,7 +189,11 @@ class BaseSpider(object):
         """
         向数据管道推送数据
         """
-        print 'push data pipeline'
+        if data.fid:
+            self.__data_pipeline.update(filter = data.fid,data = data())
+        else:
+            insert_id = self.__data_pipeline.insert(data = data())
+            data.fid = insert_id
 
     def scheduler_pull(self):
         """
@@ -220,8 +225,9 @@ class BaseSpider(object):
         response = request.fetch()
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)
+        fid = request.fid
 
-        request_or_datas = getattr(self,callback)(response,rule,**args) if callback else self.parse(response,rule,**args)
+        request_or_datas = getattr(self,callback)(response,rule,fid) if callback else self.parse(response,rule,fid)
 
         if isinstance(request_or_datas,types.GeneratorType):
             #迭代生成器
@@ -241,7 +247,7 @@ class BaseSpider(object):
         if isinstance(request_or_data,REQ.Request):
             self.master_push(request_or_data)
         elif isinstance(request_or_data,DT.Data):
-            self.data_pipeline_push(r_or_d)
+            self.data_pipeline_push(request_or_data)
 
     def _local_request(self,request):
         if isinstance(request,REQ.Request):
@@ -261,35 +267,44 @@ class RuleLinkSpider(BaseSpider):
             request.callback = 'first_parse'
             yield request
         
-    def first_parse(self,response,rule,**args):
+    def first_parse(self,response,rule,fid):
         first_page_rule = rule
-        requests = self.page_rule_parse(first_page_rule,response)
+        requests = self.page_rule_parse(response,first_page_rule,fid)
         return requests
 
-    def parse(self,response,rule,**args):
-        print response,rule
+    def parse(self,response,rule,fid):
+        requests = self.page_rule_parse(response,rule,fid)
+        return requests
 
     #返回一个Request对象，或者Request的对象列表,返回的Request自动发送到scheduler
 
-    def page_rule_parse(self,page_rule,response):
+    def page_rule_parse(self,response,page_rule,fid):
         """
         PageRule规则解析
         结果只有两个
-        一个是生成Request,自动包装成Medium进行传输,放入scheduler
+        一个是生成Request,放入scheduler
         一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
         response_dom = EXT.response2dom(response)
 
-        #url抽取规则
+        print page_rule.scrawl_data_element
+        #数据抽取规则
+        if page_rule.scrawl_data_element:
+            data = EXT.DataExtractor(response_dom,page_rule,fid)()
+            print data.fid
+            yield data
+
+        fid = data.fid
+
+        #url抽取规则(url_extractor > format_url > none_url)
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
-            requests = EXT.UrlExtractor(response_dom,page_rule)()
+            requests = EXT.UrlExtractor(response_dom,response.url,page_rule,fid)()
             yield requests
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
-            pass
+            requests = EXT.UrlFormatExtractor(response_dom,response.url,page_rule,fid)()
+            yield requests
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
-            #没有继续抽出的规则
             pass
         
-        #数据抽取规则
-
+        
 

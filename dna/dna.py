@@ -26,6 +26,10 @@ class DNA(SET.Setting):
         return spider_obj
 
 if __name__ == '__main__':                                                                                                                                      
+    import sys
+    sys.path.append('/home/zhangchunyang/')
+    del sys
+
     c = DNA('Araneae.man.default_setting')
     spider = c.generator()
     spider.start()
