@@ -285,12 +285,12 @@ class RuleLinkSpider(BaseSpider):
         一个是生成Request,放入scheduler
         一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
-        response_dom = EXT.response2dom(response)
+        #response_dom = EXT.response2dom(response)
 
         print page_rule.scrawl_data_element
         #数据抽取规则
         if page_rule.scrawl_data_element:
-            data = EXT.DataExtractor(response_dom,page_rule,fid)()
+            data = EXT.DataExtractor(response,page_rule,fid)()
             print data.fid
             yield data
 
@@ -298,10 +298,10 @@ class RuleLinkSpider(BaseSpider):
 
         #url抽取规则(url_extractor > format_url > none_url)
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
-            requests = EXT.UrlExtractor(response_dom,response.url,page_rule,fid)()
+            requests = EXT.UrlExtractor(response,page_rule,fid)()
             yield requests
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
-            requests = EXT.UrlFormatExtractor(response_dom,response.url,page_rule,fid)()
+            requests = EXT.UrlFormatExtractor(response,page_rule,fid)()
             yield requests
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
             pass

@@ -3,16 +3,17 @@
 import re
 import itertools
 import lxml.html
+import lxml.etree
 import lxml.html.soupparser
 
 import Araneae.data as DT
-import Araneae.utils.http as UTL
+import Araneae.utils.http as UTLH
 import Araneae.net.request as REQ
 import Araneae.utils.setting as SET
-
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+import Araneae.utils.contrib as UTLC
+"""
+dom的生成过程可以通过cache进行优化，后续进行
+"""
 
 class BaseExtractor(object):
     __dom = None
@@ -23,10 +24,11 @@ class UrlExtractor(BaseExtractor):
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
 
-    def __init__(self,dom,response_url,page_rule,fid):
+    def __init__(self,response,page_rule,fid):
+        self.__response = response
         self.__rule = page_rule
-        self.__dom = dom
-        self.__response_url = response_url
+        self.__dom = response2dom(response)
+        self.__response_url = response.url
         args = page_rule.extract_url_element
         self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
         self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
@@ -104,10 +106,13 @@ class UrlExtractor(BaseExtractor):
             return 
 
     def _url2request(self):
-        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid}
+        #附加上次爬去后的cookies
+        cookies = dict(self._cookies,**self.__response.cookies)
+
+        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTL.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
             self._allow_requests.append(request)
 
     @property
@@ -120,10 +125,11 @@ class UrlExtractor(BaseExtractor):
 
 class UrlFormatExtractor(BaseExtractor):
 
-    def __init__(self,dom,response_url,page_rule,fid):
+    def __init__(self,response,page_rule,fid):
+        self.__response = response
         self.__rule = page_rule
-        self.__dom = dom
-        self.__response_url = response_url
+        self.__dom = response2dom(response)
+        self.__response_url = response.url
 
         args = page_rule.extract_url_element
         self._format_url = args.get('format_url')
@@ -204,20 +210,28 @@ class UrlFormatExtractor(BaseExtractor):
         return result
 
     def _url2request(self):
-        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid}
+        cookies = combine(self._cookies,**self.__response.cookies)
+
+        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTL.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
             self._requests.append(request)
 
+DEFAULT_TYPE = 'xpath'
+DEFAULT_MULTIPLE = False
+DEFAULT_PARENT = 'ancestor'
 
 class DataExtractor(BaseExtractor):
-    
-    def __init__(self,dom,page_rule,fid):
-        self.__dom = dom
+    """
+    数据抽取类
+    抽取数据可以分为两种，一种mutiple record 用于生成多个data对象,一种single record只生成单个data对象
+    """
+    def __init__(self,response,page_rule,fid):
+        self.__dom = response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
 
-        self._data = None
+        self._data = {}
         self._fid = fid
 
         self._extract_data()
@@ -226,11 +240,11 @@ class DataExtractor(BaseExtractor):
         return self._data
 
     def _extract_data(self):
-        results = {}
-
         for element in self._extract_data_elements:
-            type = element.get('type','xpath')
+            tp = element.get('type',DEFAULT_TYPE)
             expression = element.get('expression')
+            multiple = element.get('multiple',DEFAULT_MULTIPLE)
+            parent_field = element.get('parent_field',DEFAULT_PARENT)
 
             if not expression:
                 raise TypeError('忘了写配置中的expression了')
@@ -242,28 +256,50 @@ class DataExtractor(BaseExtractor):
 
             result = []
 
-            if type == 'xpath':
+            if tp == 'xpath':
                 result = self.__dom.xpath(expression)
-            elif type == 'css':
+            elif tp == 'css':
                 result = self.__dom.cssselect(expression)
 
-            results[field] = result
+            for idx,res in enumerate(result):
+                if isinstance(res,lxml.etree.ElementBase):
+                    result[idx] = res.text
 
-        self._results2data(results)
+            self._results2data(result,field,parent_field,multiple)
+
+        #合并多级数据为一个
            
-    def _results2data(self,results):
-        self._data = DT.Data(**results)
-        self._data.fid = self._fid
+    def _results2data(self,results,field,parent_field,multiple = False):
+        data = None
+
+        if multiple:
+            tmp_data = []
+            for result in results:
+                tmp_data.append(DT.Data(**{field:result}))
+
+            data = tmp_data
+        else:
+            data = DT.Data(**{field:results})
+ 
+        if parent_field in self._data.keys():
+            self._data[parent_field].append(data)
+        else:
+            self._data[parent_field] = [data]
+
+        print self._data      
+
+    def _combine_data(self):
+        pass
 
     @property
     def fid(self):
         return self._fid
 
 def response2dom(response):
-    try:
-        dom = lxml.html.fromstring(response.content)
-    except UnicodeDecodeError:
-        dom = lxml.html.soupparser.fromstring(response.content)
+    #try:
+    #    dom = lxml.html.fromstring(response.content)
+    #except UnicodeDecodeError:
+    dom = lxml.html.soupparser.fromstring(response.content,features = 'html5lib')
 
     return dom
 
