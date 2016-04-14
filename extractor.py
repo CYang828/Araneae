@@ -32,10 +32,10 @@ class UrlExtractor(BaseExtractor):
         args = page_rule.extract_url_element
         self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
         self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
-        self._headers = args.get('headers',None)
-        self._cookies = args.get('cookies',None)
+        self._headers = args.get('headers',{})
+        self._cookies = args.get('cookies',{})
         self._method = args.get('method','GET')
-        self._data = args.get('data',None)
+        self._data = args.get('data',{})
 
         self._fid = fid
 
@@ -85,7 +85,7 @@ class UrlExtractor(BaseExtractor):
             
         #如果允许和阻止的规则都有,则返回允许并不被阻止的url
         #如果有允许规则没有阻止规则,则返回允许规则的url
-        if self._allow_regexes and self._deny_regexes:
+        if self._allow_regexes and not self._deny_regexes:
             for idx,url in enumerate(self._urls):
                 is_deny = False
 
@@ -93,13 +93,13 @@ class UrlExtractor(BaseExtractor):
                 for deny_regex in self._deny_regexes:
                     if deny_regex.match(url):
                         is_deny = True
-                        #print 'DENY:' + url
+                        print 'DENY:' + url
                         break
 
                 if not is_deny:                   
                     for allow_regex in self._allow_regexes:
                         if allow_regex.match(url):
-                            #print 'ALLOW:' + url
+                            print 'ALLOW:' + url
                             self._allow_urls.append(url)
                             break
             
@@ -286,9 +286,9 @@ class DataExtractor(BaseExtractor):
         else:
             self._data[parent_field] = [data]
 
-        print self._data      
 
     def _combine_data(self):
+        #print self._data
         pass
 
     @property

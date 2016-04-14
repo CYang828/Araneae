@@ -16,7 +16,7 @@ def replenish_url(response_url,url):
     response_url_info = urlparse.urlparse(response_url) 
 
     if not url_info.scheme and not url_info.hostname:
-        return response_url_info.scheme + '://' + response_url_info.hostname + 'url'
+        return response_url_info.scheme + '://' + response_url_info.hostname +url
     else:
         return url
 
