@@ -1,4 +1,5 @@
 #*-*coding:utf8*-*
+import time
 import types
 import gevent as GEV
 import gevent.pool as GEVP
@@ -13,7 +14,6 @@ import Araneae.dna.chromesome as CHM
 
 from Araneae.utils.log import Plog
 
-SCHEDULER_RETRY_INTERVAL = 10
 
 """
 `spider.py` -- 爬虫基类和个性化爬虫实现
@@ -71,8 +71,13 @@ class BaseSpider(object):
             self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)
             self.__data_pipeline.select(chromesome.lasting['db'],self.__name)
 
-        self._scheduler_retry_time = self.__chromesome['SCHEDULER_RETRY_TIME']
-        self._scheduler_retry_interval = self.__chromesome['SCHEDULER_RETRY_INTERVAL']
+        self._scheduler_retry_time = self.__chromesome.getint('SCHEDULER_RETRY_TIME')
+        self._scheduler_retry_interval = self.__chromesome.getint('SCHEDULER_RETRY_INTERVAL')
+
+	self._request_timeout = self.__chromesome.getint('REQUEST_TIMEOUT')
+	self._request_sleep_time = self.__chromesome.getint('REQUEST_SLEEP_TIME')
+
+	self._login_header = self.__chromesome.getdict('LOGIN_HEADER')
 
     def first_urls(self,first_urls):
         """
@@ -110,10 +115,9 @@ class BaseSpider(object):
 
         for first_url in first_urls:
             if isinstance(first_url,str):
-                requests.append(REQ.Request(first_url,rule_number = 0))
+                requests.append(REQ.Request(first_url,rule_number = 0,headers = self._login_header))
             elif isinstance(fisrt_url,dict):
-                first_rule['rule_number'] = 0
-                requests.append(REQ.json2request(first_url))
+                requests.append(REQ.json2request(first_url,rule_number = 0,headers = self._login_header))
 
         return_or_yield = self.first_urls(requests)
 
@@ -222,7 +226,9 @@ class BaseSpider(object):
         yield方式会立刻将request放回调度器中
         return方式会等待全部完成后一起放回调度器中
         """
-        response = request.fetch()
+	time.sleep(self._request_sleep_time)
+
+        response = request.fetch(self._request_timeout)
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)
         fid = request.fid
@@ -277,7 +283,6 @@ class RuleLinkSpider(BaseSpider):
         return requests
 
     #返回一个Request对象，或者Request的对象列表,返回的Request自动发送到scheduler
-
     def page_rule_parse(self,response,page_rule,fid):
         """
         PageRule规则解析
@@ -292,7 +297,8 @@ class RuleLinkSpider(BaseSpider):
             data = EXT.DataExtractor(response,page_rule,fid)()
             print data.fid
             yield data
-
+        
+        fid = 0
         if data:
             fid = data.fid
 

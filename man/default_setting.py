@@ -16,7 +16,9 @@ RUNNING_TYPE = 'singleton'
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
 #请求超时时间
-REQUEST_TIMEOUT = 2#还未添加
+REQUEST_TIMEOUT = 2
+#请求休眠时间
+REQUEST_SLEEP_TIME = 2
 #爬虫类型
 SPIDER_TYPE     =   'RuleLink'
 #爬虫名
@@ -37,31 +39,29 @@ LOGIN_HEADER = {'DWRSESSIONID':'IvCebsu7Ifbcx*H5o*jyP','JSESSIONID':'abcbwytCNeN
 FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
 #页面爬取规则
 PAGE1           =   {
-                        #'extract_data':
-                        #[
-                        #    {
-                        #        'type':'css', #reg #xpath
-                        #        'expression':'div.tbkt_title > a.active > span',
-                        #        #'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/tr[*]/td/table/tbody/tr/td[1]/a/text()',#这里不能是列表
+                        'extract_data':
+                        [
+                            {
+                                'type':'css', #reg #xpath
+                                'expression':'div.tbkt_title > a.active > span',
+                                #'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/tr[*]/td/table/tbody/tr/td[1]/a/text()',#这里不能是列表
 
-                        #        'field':'subject',#想要抽取的数据必须有字段名,否则没法存储
-                        #        'multiple':False,
-                        #    },
-                        #    {
-                        #        'type':'xpath', #reg #xpath
-                        #        #'expression':'div.tbkt_title > a.active > span',
-                        #        'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/tr[*]/td/table/tbody/tr/td[1]/a/text()',#这里不能是列表
-
-                        #        'field':'grade',#想要抽取的数据必须有字段名,否则没法存储
-                        #        'multiple':True,
-                        #        'parent_field':'subject'
-
-                        #    }
+                                'field':'subject',#想要抽取的数据必须有字段名,否则没法存储
+                            },
+                            {
+                                'type':'group_xpath', #reg #xpath
+                                'group_expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/',
+                                'expression':['tr[*]/td/table/tbody/tr/td[1]/a','tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'],#?后面的数字必须比当前位置小,代表数字位置的生成数量
+                                #'extract_urls':'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/href()',
+                                'field':['grade','edition'],#想要抽取的数据必须有字段名,否则没法存储
+                                'parent_field':'subject'
+                            }
                             #这里的列表可以产生多级数据
 
-                        #],
+                        ],
                         'extract_urls':
                         {
+                            'field':'edition',
                             'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d*.shtm',
                             #'deny':r'http://news.sina.com.cn/china/',
                             #'headers':{'name':'zhangchunyang'},

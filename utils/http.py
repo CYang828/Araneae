@@ -30,6 +30,6 @@ def validate_method(method):
     else:
         raise TypeError('http请求方法错误')
 
-
-    
+ 
+ 
 

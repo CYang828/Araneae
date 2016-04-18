@@ -2,15 +2,15 @@
 
 import re
 import itertools
-import lxml.html
 import lxml.etree
-import lxml.html.soupparser
 
 import Araneae.data as DT
 import Araneae.utils.http as UTLH
 import Araneae.net.request as REQ
+import Araneae.utils.common as COM
 import Araneae.utils.setting as SET
 import Araneae.utils.contrib as UTLC
+
 """
 dom的生成过程可以通过cache进行优化，后续进行
 """
@@ -21,13 +21,14 @@ class BaseExtractor(object):
 
 class UrlExtractor(BaseExtractor):
     """
+    抽取url,?????????????????????????在有关联的关系时,抽取的url需要记录关联的data数据,
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
-
+    
     def __init__(self,response,page_rule,fid):
         self.__response = response
         self.__rule = page_rule
-        self.__dom = response2dom(response)
+        self.__dom = UTLC.response2dom(response)
         self.__response_url = response.url
         args = page_rule.extract_url_element
         self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
@@ -124,11 +125,14 @@ class UrlExtractor(BaseExtractor):
         return self._allow_urls
 
 class UrlFormatExtractor(BaseExtractor):
+    """
+    抽取格式化的url
+    """
 
     def __init__(self,response,page_rule,fid):
         self.__response = response
         self.__rule = page_rule
-        self.__dom = response2dom(response)
+        self.__dom = UTLC.response2dom(response)
         self.__response_url = response.url
 
         args = page_rule.extract_url_element
@@ -219,20 +223,22 @@ class UrlFormatExtractor(BaseExtractor):
             self._requests.append(request)
 
 DEFAULT_TYPE = 'xpath'
-DEFAULT_MULTIPLE = False
 DEFAULT_PARENT = 'ancestor'
 
 class DataExtractor(BaseExtractor):
     """
     数据抽取类
-    抽取数据可以分为两种，一种mutiple record 用于生成多个data对象,一种single record只生成单个data对象
+    抽取数据可以分为两种，一种mutiple 用于生成多个data对象,一种single 只生成单个data对象
+    ?????????如何构建一个通用的数据抽取模型
     """
     def __init__(self,response,page_rule,fid):
-        self.__dom = response2dom(response)
+        self.__dom = UTLC.response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
 
         self._data = {}
         self._fid = fid
+
+        self._group_regex = re.compile(r'\[\?(\d*)\]')
 
         self._extract_data()
 
@@ -243,7 +249,6 @@ class DataExtractor(BaseExtractor):
         for element in self._extract_data_elements:
             tp = element.get('type',DEFAULT_TYPE)
             expression = element.get('expression')
-            multiple = element.get('multiple',DEFAULT_MULTIPLE)
             parent_field = element.get('parent_field',DEFAULT_PARENT)
 
             if not expression:
@@ -257,26 +262,69 @@ class DataExtractor(BaseExtractor):
             result = []
 
             if tp == 'xpath':
-                result = self.__dom.xpath(expression)
+                result.append(self.__dom.xpath(expression))
             elif tp == 'css':
-                result = self.__dom.cssselect(expression)
+                result.append(self.__dom.cssselect(expression))
+            elif tp == 'group_xpath':
+                group_expression = element.get('group_expression')
+                
+                if not group_expression:
+                    raise TypeError('忘了写group_expression')
 
-            for idx,res in enumerate(result):
-                if isinstance(res,lxml.etree.ElementBase):
-                    result[idx] = res.text
+                #结果寄存器
+                res_register = []
 
-            self._results2data(result,field,parent_field,multiple)
+                for exp_idx,exp in enumerate(expression):
+                    exps = []
+                    group_idx = None
+                    
+                    group_match = self._group_regex.search(exp)
 
-        #合并多级数据为一个
+                    if group_match:
+                        group_idx = group_match.group(1)
+
+                        if group_idx.isdigit():
+                            group_idx = int(group_idx)
+                        else:
+                            raise TypeError('不能识别的表达式')
+                            
+                        if group_idx >= exp_idx:
+                            raise TypeError('组索引超出范围')
+                        else:
+                            for sub_idx in range(COM.element_len(res_register[group_idx])):
+                                t_exp = re.sub(self._group_regex,'[%d]'%(sub_idx+1),exp)
+                                exps.append(t_exp)
+                    else:
+                        exps.append(exp)
+                       
+                    for o_exp in exps:
+                        c_exp = group_expression + o_exp
+                        t_res = self.__dom.xpath(c_exp)
+                       
+                        if len(res_register) > exp_idx:
+                            res_register[exp_idx].append(t_res)
+                        else:
+                            res_register.append()
+                            res_register[exp_idx].append(t_res)
+                
+                    result = res_register
+
+            #把所有的element对象转换成text
+            result = COM.element2text(result)
+
+            import json
+            print json.dumps(result,ensure_ascii = False)
+            self._results2data(result,field,parent_field)
            
-    def _results2data(self,results,field,parent_field,multiple = False):
+    def _results2data(self,results,field,parent_field):
+        pass
+        """
         data = None
 
-        if multiple:
             tmp_data = []
             for result in results:
                 tmp_data.append(DT.Data(**{field:result}))
-
+        
             data = tmp_data
         else:
             data = DT.Data(**{field:results})
@@ -285,8 +333,7 @@ class DataExtractor(BaseExtractor):
             self._data[parent_field].append(data)
         else:
             self._data[parent_field] = [data]
-
-
+        """
     def _combine_data(self):
         #print self._data
         pass
@@ -294,14 +341,6 @@ class DataExtractor(BaseExtractor):
     @property
     def fid(self):
         return self._fid
-
-def response2dom(response):
-    #try:
-    #    dom = lxml.html.fromstring(response.content)
-    #except UnicodeDecodeError:
-    dom = lxml.html.soupparser.fromstring(response.content,features = 'html5lib')
-
-    return dom
 
 
 
