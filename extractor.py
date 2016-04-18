@@ -7,7 +7,6 @@ import lxml.etree
 import Araneae.data as DT
 import Araneae.utils.http as UTLH
 import Araneae.net.request as REQ
-import Araneae.utils.common as COM
 import Araneae.utils.setting as SET
 import Araneae.utils.contrib as UTLC
 
@@ -237,7 +236,7 @@ class DataExtractor(BaseExtractor):
 
         self._data = {}
         self._fid = fid
-
+       
         self._group_regex = re.compile(r'\[\?(\d*)\]')
 
         self._extract_data()
@@ -271,17 +270,30 @@ class DataExtractor(BaseExtractor):
                 if not group_expression:
                     raise TypeError('忘了写group_expression')
 
+                if len(field) != len(expression):
+                    raise TypeError('字段名称和expression必须一一对应')
+
                 #结果寄存器
+                #[ 
+                #	{'xpath':[],'result':[[结果],...]},
+                #	{'xpath':[],'result':[[结果],...]},
+                #	...
+                #]
                 res_register = []
 
                 for exp_idx,exp in enumerate(expression):
                     exps = []
+                    group_flag = False
                     group_idx = None
-                    
-                    group_match = self._group_regex.search(exp)
+                    res_register.append({'xpath':[],'result':[]})
 
-                    if group_match:
-                        group_idx = group_match.group(1)
+                    group_match = self._group_regex.finditer(exp)
+
+                    for match in group_match:
+                        group_flag = True
+
+                        group_idx = match.group(1)
+                        print '匹配索引:' + group_idx
 
                         if group_idx.isdigit():
                             group_idx = int(group_idx)
@@ -291,30 +303,78 @@ class DataExtractor(BaseExtractor):
                         if group_idx >= exp_idx:
                             raise TypeError('组索引超出范围')
                         else:
-                            for sub_idx in range(COM.element_len(res_register[group_idx])):
-                                t_exp = re.sub(self._group_regex,'[%d]'%(sub_idx+1),exp)
-                                exps.append(t_exp)
-                    else:
-                        exps.append(exp)
-                       
-                    for o_exp in exps:
-                        c_exp = group_expression + o_exp
-                        t_res = self.__dom.xpath(c_exp)
-                       
-                        if len(res_register) > exp_idx:
-                            res_register[exp_idx].append(t_res)
-                        else:
-                            res_register.append()
-                            res_register[exp_idx].append(t_res)
-                
-                    result = res_register
+                            sub_xpathes = []
 
-            #把所有的element对象转换成text
-            result = COM.element2text(result)
+                            #寄存器中已经存在该次产生的结果
+                            if len(res_register[exp_idx]['xpath']):
+                                for sub_xpath in res_register[exp_idx]['xpath']:
+                                    for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                        for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                            sub_xpath = re.sub(self._group_regex,'[%d]' % (i_result + 1),sub_xpath)
+                                            sub_xpathes.append(sub_xpath)    
+                            else:
+                                for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                    for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                        sub_xpath = re.sub(self._group_regex,'[%d]' % (i_result + 1),exp)
+                                        print sub_xpath
+                                        sub_xpathes.append(sub_xpath)    
+                                
+                            res_register[exp_idx]['xpath'] = sub_xpathes
+                     
+                    if not group_flag:
+                        res_register[exp_idx]['xpath'] = [exp]
+  
+                    results = []
 
-            import json
-            print json.dumps(result,ensure_ascii = False)
-            self._results2data(result,field,parent_field)
+                    for xpath in res_register[exp_idx]['xpath']:
+                        xpath = group_expression + xpath
+                        result = self.__dom.xpath(xpath)
+
+                        for i_res,res in enumerate(result):
+                            if isinstance(res,lxml.etree.ElementBase):
+                                result[i_res] = res.text
+
+                        results.append(result) 
+                                        
+                    res_register[exp_idx]['result']  = results    
+
+                import json
+                print json.dumps(res_register,ensure_ascii = False)
+
+                #构造完整的数据,res_regiser中的result的顺序为文档查找顺序
+                #url抽取也应该是文档查找顺序，这样才能对应上
+                """
+                最终构造的数据结构为
+                {   
+                    'field1':'data1',
+                    'field2':'data2',
+                    'field3':'data3',
+                    ....
+                }
+                """
+                register_len = len(res_register)
+
+                for i_field in range(register_len):
+                    for i_results,results in enumerate(res_register[i_field]['result']):
+                        for i_result,result in enumerate(results):
+                            if i_field < register_len - 1:
+                                res_register[i_field+1]['result'] = []
+                                for item in itertools.product([result],res_register[i_field+1]['result'][i_result]):
+                                    print json.dumps(item,ensure_ascii = False)
+                                    res_register[i_field+1]['result'].append(item)
+
+                                print 'res_register'
+                                print json.dumps(res_register,ensure_ascii = False)
+
+
+                                #print json.dumps([{field[i_field]:result}],ensure_ascii = False)
+                                #print json.dumps(res_register[i_field+1],ensure_ascii = False)
+                                #print json.dumps({field[i_field+1]:res_register[i_field+1]['result'][i_result]},ensure_ascii = False)
+                                #print '+++++++++'
+                        
+
+                #self._results2data(result,field,parent_field)
+                #构造数据的结构关系
            
     def _results2data(self,results,field,parent_field):
         pass

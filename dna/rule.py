@@ -13,6 +13,7 @@ class PageRule(object):
     __extract_url_type = NONE_URL_TYPE
     __extract_url_element = None
     __scrawl_data_element = None
+    __fields = set([])
 
     def __init__(self,map):
         self._essential(map)
@@ -36,6 +37,23 @@ class PageRule(object):
             elif isinstance(map['extract_data'],list):
                 self.__scrawl_data_element = map['extract_data']
 
+            for data_item in self.__scrawl_data_element:
+                if 'field' in data_item.keys():
+                    if isinstance(data_item['field'],list):
+                        for f in data_item['field']:
+                            if f in self.__fields:
+                                raise TypeError('同一spider中不能出现重复field')
+                            else:
+                                self.__fields.add(f)
+                    else:
+                        if data_item['field'] in self.__fields:
+                                raise TypeError('同一spider中不能出现重复field')
+                        else:
+                            self.__fields.add(data_item['field'])
+    @property
+    def fields(self):
+        return self.__fields    
+        
     @property
     def extract_url_type(self):
         return self.__extract_url_type

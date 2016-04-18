@@ -31,5 +31,6 @@ def element2text(e):
                     e[xn][xm][xp] = p.text
                     continue
     return e
+
             
         

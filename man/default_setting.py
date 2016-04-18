@@ -51,7 +51,7 @@ PAGE1           =   {
                             {
                                 'type':'group_xpath', #reg #xpath
                                 'group_expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/',
-                                'expression':['tr[*]/td/table/tbody/tr/td[1]/a','tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'],#?后面的数字必须比当前位置小,代表数字位置的生成数量
+                                'expression':['tr[*]/td/table/tbody/tr/td[1]/a','tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'],#?只能匹配其父级的个数
                                 #'extract_urls':'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/href()',
                                 'field':['grade','edition'],#想要抽取的数据必须有字段名,否则没法存储
                                 'parent_field':'subject'
