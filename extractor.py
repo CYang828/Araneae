@@ -222,7 +222,7 @@ class UrlFormatExtractor(BaseExtractor):
             self._requests.append(request)
 
 DEFAULT_TYPE = 'xpath'
-DEFAULT_PARENT = 'ancestor'
+DEFAULT_MULTIPLE = False
 
 class DataExtractor(BaseExtractor):
     """
@@ -234,7 +234,8 @@ class DataExtractor(BaseExtractor):
         self.__dom = UTLC.response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
 
-        self._data = {}
+        self._parent_datas = {}
+        self._datas = []
         self._fid = fid
        
         self._group_regex = re.compile(r'\[\?(\d*)\]')
@@ -242,28 +243,52 @@ class DataExtractor(BaseExtractor):
         self._extract_data()
 
     def __call__(self,type = None):
-        return self._data
+        return self._datas
 
     def _extract_data(self):
-        for element in self._extract_data_elements:
+        parent_datas = {}
+
+        for idx_element,element in enumerate(self._extract_data_elements):
             tp = element.get('type',DEFAULT_TYPE)
             expression = element.get('expression')
-            parent_field = element.get('parent_field',DEFAULT_PARENT)
+
+            parent = element.get('parent')
+            multiple = element.get('multiple',DEFAULT_MULTIPLE)
 
             if not expression:
                 raise TypeError('忘了写配置中的expression了')
+            else:
+                if not isinstance(expression,list):
+                    expression = [expression]
 
             field = element.get('field')
 
             if not field:
                 raise TypeError('忘了写配置中的field了')
+            else:
+                if not isinstance(field,list):
+                    field = [field]
 
-            result = []
+            middle = []
 
             if tp == 'xpath':
-                result.append(self.__dom.xpath(expression))
+                for exp in expression:
+                    results = self.__dom.xpath(exp)
+
+                    for i_result,result in enumerate(results):
+                        if isinstance(result,lxml.etree.ElementBase):
+                            results[i_result] = result.text
+
+                middle.append(results)
             elif tp == 'css':
-                result.append(self.__dom.cssselect(expression))
+                for exp in expression:
+                    results = self.__dom.cssselect(exp)
+
+                    for i_result,result in enumerate(results):
+                        if isinstance(result,lxml.etree.ElementBase):
+                            results[i_result] = result.text
+
+                    middle.append(results)
             elif tp == 'group_xpath':
                 group_expression = element.get('group_expression')
                 
@@ -353,50 +378,70 @@ class DataExtractor(BaseExtractor):
                 }
                 """
                 register_len = len(res_register)
+                middle = res_register[0]['result'][0]
 
                 for i_field in range(register_len):
-                    for i_results,results in enumerate(res_register[i_field]['result']):
-                        for i_result,result in enumerate(results):
-                            if i_field < register_len - 1:
-                                res_register[i_field+1]['result'] = []
-                                for item in itertools.product([result],res_register[i_field+1]['result'][i_result]):
-                                    print json.dumps(item,ensure_ascii = False)
-                                    res_register[i_field+1]['result'].append(item)
+                    if i_field < register_len - 1:
+                        middle_res = []
 
-                                print 'res_register'
-                                print json.dumps(res_register,ensure_ascii = False)
+                        for i_mid,mid in enumerate(middle):
+                            items = [item for item in itertools.product([mid],res_register[i_field+1]['result'][i_mid])]
+                            middle_res += items
+                            #print json.dumps(items,ensure_ascii = False)
+                            #print '+++++++++++++++++++++++'
+                        middle = middle_res
 
+            #构造DATA
+            datas = []
+            raw_data = {}
+            import json
+            for mid in middle:
+                for i_f,f in enumerate(field):
+                    if multiple:
+                        raw_data[f] = mid[i_f]
+                    else:
+                        if f not in raw_data.keys():
+                            raw_data[f] = []
+                            raw_data[f].append(mid[i_f])
+                        else:
+                            raw_data[f].append(mid[i_f])
+                  
+                if multiple:
+                    data = DT.Data(**raw_data)
+                    #print 'DATA'
+                    #print json.dumps(raw_data,ensure_ascii = False)
+                    datas.append(data)
+                    raw_data = {}
+            
+            if not multiple:
+                #print 'DATA'
+                #print json.dumps(raw_data,ensure_ascii = False)
+                data =  DT.Data(**raw_data)
+                datas.append(data)
 
-                                #print json.dumps([{field[i_field]:result}],ensure_ascii = False)
-                                #print json.dumps(res_register[i_field+1],ensure_ascii = False)
-                                #print json.dumps({field[i_field+1]:res_register[i_field+1]['result'][i_result]},ensure_ascii = False)
-                                #print '+++++++++'
-                        
+            #关联parent
+            if parent is not None:
+                if parent == idx_element-1:
+                    new_datas = []
+                    for p_data in parent_datas[parent]:
+                        for data in datas:
+                            print 'PARENT'
+                            print json.dumps(p_data(),ensure_ascii = False)
+                            print 'DATA'
+                            print json.dumps(data(),ensure_ascii = False)
+                            new_data = p_data + data
+                            new_datas.append(new_data)
+                            print 'NEW'
+                            print new_data
+                    parent_datas[parent] = new_datas
+                    datas = new_datas
 
-                #self._results2data(result,field,parent_field)
-                #构造数据的结构关系
-           
-    def _results2data(self,results,field,parent_field):
-        pass
-        """
-        data = None
+                else:
+                    raise TypeError('parent必须是上一个field')
 
-            tmp_data = []
-            for result in results:
-                tmp_data.append(DT.Data(**{field:result}))
-        
-            data = tmp_data
-        else:
-            data = DT.Data(**{field:results})
- 
-        if parent_field in self._data.keys():
-            self._data[parent_field].append(data)
-        else:
-            self._data[parent_field] = [data]
-        """
-    def _combine_data(self):
-        #print self._data
-        pass
+                    
+            parent_datas[idx_element] = datas
+
 
     @property
     def fid(self):

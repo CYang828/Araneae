@@ -39,14 +39,15 @@ LOGIN_HEADER = {'DWRSESSIONID':'IvCebsu7Ifbcx*H5o*jyP','JSESSIONID':'abcbwytCNeN
 FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
 #页面爬取规则
 PAGE1           =   {
+                        #只能生成一种类型的数据,不能生成多种
+                        #生成多种最好使用多个爬虫
                         'extract_data':
                         [
                             {
                                 'type':'css', #reg #xpath
                                 'expression':'div.tbkt_title > a.active > span',
-                                #'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/tr[*]/td/table/tbody/tr/td[1]/a/text()',#这里不能是列表
-
                                 'field':'subject',#想要抽取的数据必须有字段名,否则没法存储
+                                'multiple':False
                             },
                             {
                                 'type':'group_xpath', #reg #xpath
@@ -54,7 +55,8 @@ PAGE1           =   {
                                 'expression':['tr[*]/td/table/tbody/tr/td[1]/a','tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'],#?只能匹配其父级的个数
                                 #'extract_urls':'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/href()',
                                 'field':['grade','edition'],#想要抽取的数据必须有字段名,否则没法存储
-                                'parent_field':'subject'
+                                'parent':0,   
+                                'multiple':True
                             }
                             #这里的列表可以产生多级数据
 
