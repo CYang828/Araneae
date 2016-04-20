@@ -246,7 +246,7 @@ class DataExtractor(BaseExtractor):
         return self._datas
 
     def _extract_data(self):
-        parent_datas = {}
+        parent_datas = None
 
         for idx_element,element in enumerate(self._extract_data_elements):
             tp = element.get('type',DEFAULT_TYPE)
@@ -408,14 +408,14 @@ class DataExtractor(BaseExtractor):
                   
                 if multiple:
                     data = DT.Data(**raw_data)
-                    #print 'DATA'
-                    #print json.dumps(raw_data,ensure_ascii = False)
+                    print 'DATA'
+                    print json.dumps(raw_data,ensure_ascii = False)
                     datas.append(data)
                     raw_data = {}
             
             if not multiple:
-                #print 'DATA'
-                #print json.dumps(raw_data,ensure_ascii = False)
+                print 'DATA'
+                print json.dumps(raw_data,ensure_ascii = False)
                 data =  DT.Data(**raw_data)
                 datas.append(data)
 
@@ -423,7 +423,7 @@ class DataExtractor(BaseExtractor):
             if parent is not None:
                 if parent == idx_element-1:
                     new_datas = []
-                    for p_data in parent_datas[parent]:
+                    for p_data in parent_datas:
                         for data in datas:
                             print 'PARENT'
                             print json.dumps(p_data(),ensure_ascii = False)
@@ -433,15 +433,15 @@ class DataExtractor(BaseExtractor):
                             new_datas.append(new_data)
                             print 'NEW'
                             print new_data
-                    parent_datas[parent] = new_datas
+
                     datas = new_datas
 
                 else:
                     raise TypeError('parent必须是上一个field')
 
-                    
-            parent_datas[idx_element] = datas
+            parent_datas = datas
 
+        self._datas = parent_datas
 
     @property
     def fid(self):

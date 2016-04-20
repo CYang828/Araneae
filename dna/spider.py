@@ -294,14 +294,10 @@ class RuleLinkSpider(BaseSpider):
         data = None
 
         if page_rule.scrawl_data_element:
-            data = EXT.DataExtractor(response,page_rule,fid)()
-            print data.fid
-            yield data
+            datas = EXT.DataExtractor(response,page_rule,fid)()
+            print datas
+            yield datas
         
-        fid = 0
-        if data:
-            fid = data.fid
-
         #url抽取规则(url_extractor > format_url > none_url)
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
             requests = EXT.UrlExtractor(response,page_rule,fid)()

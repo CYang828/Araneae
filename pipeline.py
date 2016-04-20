@@ -71,8 +71,8 @@ class MongoDataPipeline(BaseDataPipeline):
             obj_id = str(self._collection.insert_one(data).inserted_id)
             Plog('Mongo insert -- data[%s] -- _id[%s]' % (data,obj_id))
             return obj_id
-        except PyMongoError:    
-            raise MongoException
+        except PyMongoError as e:    
+            raise TypeError(e)
 
     def update(self,filter,data):
         try:
@@ -80,8 +80,8 @@ class MongoDataPipeline(BaseDataPipeline):
             update_id = str(self._collection.update_one(filter = filter,update = {'$set':data}).upserted_id)
             Plog('Mongo update -- filter[%s] -- data[%s] -- upserted id[%s]' % (filter,data,update_id))
             return update_id
-        except PyMongoError:
-            raise MongoException
+        except PyMongoError as e:
+            raise TypeError(e)
 
     def find(self,filter=None,projection=None,skip=0,limit=0,no_cursor_timeout=False,cursor_type=CursorType.NON_TAILABLE,sort=None,allow_partial_results=False,\
              oplog_replay=False, modifiers=None, manipulate=True):

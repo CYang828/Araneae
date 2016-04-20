@@ -26,7 +26,7 @@ SPIDER_NAME     =   'demo'
 #持久化存储配置
 LASTING         =   {
                         'type':'mongo',
-                        'host':'10.60.0.165',
+                        'host':'172.18.4.52',
                         'port':'27017',
                         'password':'',
                         'db':'crawl_test',
