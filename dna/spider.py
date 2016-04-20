@@ -290,23 +290,38 @@ class RuleLinkSpider(BaseSpider):
         一个是生成Request,放入scheduler
         一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
+        print '规则号码'
+        print page_rule.number
+
         #数据抽取规则
-        data = None
+        datas = None
+        requests = None
 
         if page_rule.scrawl_data_element:
             datas = EXT.DataExtractor(response,page_rule,fid)()
-            print datas
             yield datas
         
-        #url抽取规则(url_extractor > format_url > none_url)
+        print page_rule.extract_url_type
+        #url抽取
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
+            print '通用url抽取'
             requests = EXT.UrlExtractor(response,page_rule,fid)()
-            yield requests
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
             requests = EXT.UrlFormatExtractor(response,page_rule,fid)()
-            yield requests
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
             pass
-        
+
+        print '链接生成数:%d' % len(requests)
+
+        #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
+        if datas and requests:
+            if len(datas) != len(requests):
+                raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
+            else:
+                for i_data,data in enumerate(datas):
+                    fid = data.fid
+                    requests[i_data].fid = fid
+                
+        yield requests
         
 

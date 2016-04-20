@@ -63,8 +63,7 @@ PAGE1           =   {
                         ],
                         'extract_urls':
                         {
-                            'field':'edition',
-                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d*.shtm',
+                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{12}.shtm',
                             #'deny':r'http://news.sina.com.cn/china/',
                             #'headers':{'name':'zhangchunyang'},
                             #'cookies':{'user':'zhangchunyang'},#如果不指定，沿用上一页后的http头
@@ -83,33 +82,22 @@ PAGE1           =   {
                         #    'cookies':{'user':'zhangchunyang'},#如果不指定，沿用上一页后的http头
                         #},
                    }
-
 PAGE2           =   {
-                        '''
-                        'extract_data':
-                        [
-                            {
-                                'type':'xpath', #reg #xpath
-                                'expression':'//*[@id="artibodyTitle"]/text()',
-                                'field':'title'#想要抽取的数据必须有字段名,否则没法存储
-                            }
-                        ]
-                        '''
                         'extract_urls':
-                        {
-                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d*.shtm',
+                        {           
+                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',
                         }
                     }
 PAGE3           =   {
                         'extract_urls':
                         {
-                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d*.shtm',
+                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm',
                         }
                     }
 PAGE4           =   {
                         'extract_urls':
                         {
-                            'allow':r'/Jty/tbkt/getTbkt2.action?getTbkt2_currentBitCode_\d*.shtm',
+                            'allow':r'/Jty/tbkt/getTbkt2.action?getTbkt2_currentBitCode_\d{21}.shtm',
                         }
                     }
 PAGE5           =   {

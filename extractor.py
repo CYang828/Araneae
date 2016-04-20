@@ -24,7 +24,7 @@ class UrlExtractor(BaseExtractor):
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
     
-    def __init__(self,response,page_rule,fid):
+    def __init__(self,response,page_rule,fid = None):
         self.__response = response
         self.__rule = page_rule
         self.__dom = UTLC.response2dom(response)
@@ -78,13 +78,15 @@ class UrlExtractor(BaseExtractor):
             for deny_idx in deny_list:
                 del self._urls[deny_idx]
 
-            print 'DENY_LIST:' + str(deny_list)
+            #print 'DENY_LIST:' + str(deny_list)
 
             self._allow_urls = self._urls
             return 
             
         #如果允许和阻止的规则都有,则返回允许并不被阻止的url
         #如果有允许规则没有阻止规则,则返回允许规则的url
+        #print '所有的url' 
+        #print self._urls
         if self._allow_regexes and not self._deny_regexes:
             for idx,url in enumerate(self._urls):
                 is_deny = False
@@ -93,13 +95,13 @@ class UrlExtractor(BaseExtractor):
                 for deny_regex in self._deny_regexes:
                     if deny_regex.match(url):
                         is_deny = True
-                        print 'DENY:' + url
+                        #print 'DENY:' + url
                         break
 
                 if not is_deny:                   
                     for allow_regex in self._allow_regexes:
                         if allow_regex.match(url):
-                            print 'ALLOW:' + url
+                            #print 'ALLOW:' + url
                             self._allow_urls.append(url)
                             break
             
@@ -122,6 +124,8 @@ class UrlExtractor(BaseExtractor):
     @property
     def allow_urls(self):
         return self._allow_urls
+
+
 
 class UrlFormatExtractor(BaseExtractor):
     """
@@ -364,7 +368,7 @@ class DataExtractor(BaseExtractor):
                     res_register[exp_idx]['result']  = results    
 
                 import json
-                print json.dumps(res_register,ensure_ascii = False)
+                #print json.dumps(res_register,ensure_ascii = False)
 
                 #构造完整的数据,res_regiser中的result的顺序为文档查找顺序
                 #url抽取也应该是文档查找顺序，这样才能对应上
@@ -391,6 +395,7 @@ class DataExtractor(BaseExtractor):
                             #print '+++++++++++++++++++++++'
                         middle = middle_res
 
+
             #构造DATA
             datas = []
             raw_data = {}
@@ -408,14 +413,19 @@ class DataExtractor(BaseExtractor):
                   
                 if multiple:
                     data = DT.Data(**raw_data)
-                    print 'DATA'
-                    print json.dumps(raw_data,ensure_ascii = False)
+                    #print 'DATA'
+                    #print json.dumps(raw_data,ensure_ascii = False)
                     datas.append(data)
                     raw_data = {}
             
             if not multiple:
-                print 'DATA'
-                print json.dumps(raw_data,ensure_ascii = False)
+                #print 'DATA'
+                #print json.dumps(raw_data,ensure_ascii = False)
+                #消除非multiple时field中只有一个
+                for field,value in raw_data.items():
+                    if len(value) == 1:
+                        raw_data[field] = value[0]
+                        
                 data =  DT.Data(**raw_data)
                 datas.append(data)
 
@@ -425,14 +435,14 @@ class DataExtractor(BaseExtractor):
                     new_datas = []
                     for p_data in parent_datas:
                         for data in datas:
-                            print 'PARENT'
-                            print json.dumps(p_data(),ensure_ascii = False)
-                            print 'DATA'
-                            print json.dumps(data(),ensure_ascii = False)
+                            #print 'PARENT'
+                            #print json.dumps(p_data(),ensure_ascii = False)
+                            #print 'DATA'
+                            #print json.dumps(data(),ensure_ascii = False)
                             new_data = p_data + data
                             new_datas.append(new_data)
-                            print 'NEW'
-                            print new_data
+                            #print 'NEW'
+                            #print new_data
 
                     datas = new_datas
 
