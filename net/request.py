@@ -49,17 +49,21 @@ class Request(object):
         self._rule_number = rule_number
 
     def set_headers(self,header_dict):
-	self._headers = dict(self._headers,**header_dict)
+	    self._headers = dict(self._headers,**header_dict)
 
     def set_cookies(self,cookie_dict):
-	self._cookies = dict(self._cookies,**cookie_dict)
+	    self._cookies = dict(self._cookies,**cookie_dict)
 
     def set_auth(self,auth_dict):
-	self._auth = dict(self._auth,**auth_dict)
+	    self._auth = dict(self._auth,**auth_dict)
 
     @property
     def fid(self):
         return self._fid
+
+    @fid.setter
+    def fid(self,fid):
+        self._fid = fid
 
     @property
     def url(self):

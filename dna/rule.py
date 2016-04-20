@@ -23,6 +23,7 @@ class PageRule(object):
         在一个PageRule中,extract_urls和format_urls只能存在一个,如果两个同时存在,则抛弃format_urls(该方案以后可以进行调整)
         """
         if 'extract_urls' in map.keys():
+            print '类型 url'
             self.__extract_url_type = EXTRACT_URL_TYPE
             self.__extract_url_element = map['extract_urls']
         elif 'format_urls' in map.keys():
