@@ -2,17 +2,17 @@
 
 import re
 import itertools
-import lxml.html
-import lxml.html.soupparser
+import lxml.etree
 
 import Araneae.data as DT
-import Araneae.utils.http as UTL
+import Araneae.utils.http as UTLH
 import Araneae.net.request as REQ
 import Araneae.utils.setting as SET
+import Araneae.utils.contrib as UTLC
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+"""
+dom的生成过程可以通过cache进行优化，后续进行
+"""
 
 class BaseExtractor(object):
     __dom = None
@@ -20,20 +20,22 @@ class BaseExtractor(object):
 
 class UrlExtractor(BaseExtractor):
     """
+    抽取url,?????????????????????????在有关联的关系时,抽取的url需要记录关联的data数据,
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
-
-    def __init__(self,dom,response_url,page_rule,fid):
+    
+    def __init__(self,response,page_rule,fid):
+        self.__response = response
         self.__rule = page_rule
-        self.__dom = dom
-        self.__response_url = response_url
+        self.__dom = UTLC.response2dom(response)
+        self.__response_url = response.url
         args = page_rule.extract_url_element
         self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
         self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
-        self._headers = args.get('headers',None)
-        self._cookies = args.get('cookies',None)
+        self._headers = args.get('headers',{})
+        self._cookies = args.get('cookies',{})
         self._method = args.get('method','GET')
-        self._data = args.get('data',None)
+        self._data = args.get('data',{})
 
         self._fid = fid
 
@@ -83,7 +85,7 @@ class UrlExtractor(BaseExtractor):
             
         #如果允许和阻止的规则都有,则返回允许并不被阻止的url
         #如果有允许规则没有阻止规则,则返回允许规则的url
-        if self._allow_regexes and self._deny_regexes:
+        if self._allow_regexes and not self._deny_regexes:
             for idx,url in enumerate(self._urls):
                 is_deny = False
 
@@ -91,23 +93,26 @@ class UrlExtractor(BaseExtractor):
                 for deny_regex in self._deny_regexes:
                     if deny_regex.match(url):
                         is_deny = True
-                        #print 'DENY:' + url
+                        print 'DENY:' + url
                         break
 
                 if not is_deny:                   
                     for allow_regex in self._allow_regexes:
                         if allow_regex.match(url):
-                            #print 'ALLOW:' + url
+                            print 'ALLOW:' + url
                             self._allow_urls.append(url)
                             break
             
             return 
 
     def _url2request(self):
-        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid}
+        #附加上次爬去后的cookies
+        cookies = dict(self._cookies,**self.__response.cookies)
+
+        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTL.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
             self._allow_requests.append(request)
 
     @property
@@ -119,11 +124,15 @@ class UrlExtractor(BaseExtractor):
         return self._allow_urls
 
 class UrlFormatExtractor(BaseExtractor):
+    """
+    抽取格式化的url
+    """
 
-    def __init__(self,dom,response_url,page_rule,fid):
+    def __init__(self,response,page_rule,fid):
+        self.__response = response
         self.__rule = page_rule
-        self.__dom = dom
-        self.__response_url = response_url
+        self.__dom = UTLC.response2dom(response)
+        self.__response_url = response.url
 
         args = page_rule.extract_url_element
         self._format_url = args.get('format_url')
@@ -204,68 +213,239 @@ class UrlFormatExtractor(BaseExtractor):
         return result
 
     def _url2request(self):
-        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid}
+        cookies = combine(self._cookies,**self.__response.cookies)
+
+        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTL.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
             self._requests.append(request)
 
+DEFAULT_TYPE = 'xpath'
+DEFAULT_MULTIPLE = False
 
 class DataExtractor(BaseExtractor):
-    
-    def __init__(self,dom,page_rule,fid):
-        self.__dom = dom
+    """
+    数据抽取类
+    抽取数据可以分为两种，一种mutiple 用于生成多个data对象,一种single 只生成单个data对象
+    ?????????如何构建一个通用的数据抽取模型
+    """
+    def __init__(self,response,page_rule,fid):
+        self.__dom = UTLC.response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
 
-        self._data = None
+        self._parent_datas = {}
+        self._datas = []
         self._fid = fid
+       
+        self._group_regex = re.compile(r'\[\?(\d*)\]')
 
         self._extract_data()
 
     def __call__(self,type = None):
-        return self._data
+        return self._datas
 
     def _extract_data(self):
-        results = {}
+        parent_datas = {}
 
-        for element in self._extract_data_elements:
-            type = element.get('type','xpath')
+        for idx_element,element in enumerate(self._extract_data_elements):
+            tp = element.get('type',DEFAULT_TYPE)
             expression = element.get('expression')
+
+            parent = element.get('parent')
+            multiple = element.get('multiple',DEFAULT_MULTIPLE)
 
             if not expression:
                 raise TypeError('忘了写配置中的expression了')
+            else:
+                if not isinstance(expression,list):
+                    expression = [expression]
 
             field = element.get('field')
 
             if not field:
                 raise TypeError('忘了写配置中的field了')
+            else:
+                if not isinstance(field,list):
+                    field = [field]
 
-            result = []
+            middle = []
 
-            if type == 'xpath':
-                result = self.__dom.xpath(expression)
-            elif type == 'css':
-                result = self.__dom.cssselect(expression)
+            if tp == 'xpath':
+                for exp in expression:
+                    results = self.__dom.xpath(exp)
 
-            results[field] = result
+                    for i_result,result in enumerate(results):
+                        if isinstance(result,lxml.etree.ElementBase):
+                            results[i_result] = result.text
 
-        self._results2data(results)
-           
-    def _results2data(self,results):
-        self._data = DT.Data(**results)
-        self._data.fid = self._fid
+                middle.append(results)
+            elif tp == 'css':
+                for exp in expression:
+                    results = self.__dom.cssselect(exp)
+
+                    for i_result,result in enumerate(results):
+                        if isinstance(result,lxml.etree.ElementBase):
+                            results[i_result] = result.text
+
+                    middle.append(results)
+            elif tp == 'group_xpath':
+                group_expression = element.get('group_expression')
+                
+                if not group_expression:
+                    raise TypeError('忘了写group_expression')
+
+                if len(field) != len(expression):
+                    raise TypeError('字段名称和expression必须一一对应')
+
+                #结果寄存器
+                #[ 
+                #	{'xpath':[],'result':[[结果],...]},
+                #	{'xpath':[],'result':[[结果],...]},
+                #	...
+                #]
+                res_register = []
+
+                for exp_idx,exp in enumerate(expression):
+                    exps = []
+                    group_flag = False
+                    group_idx = None
+                    res_register.append({'xpath':[],'result':[]})
+
+                    group_match = self._group_regex.finditer(exp)
+
+                    for match in group_match:
+                        group_flag = True
+
+                        group_idx = match.group(1)
+                        print '匹配索引:' + group_idx
+
+                        if group_idx.isdigit():
+                            group_idx = int(group_idx)
+                        else:
+                            raise TypeError('不能识别的表达式')
+                            
+                        if group_idx >= exp_idx:
+                            raise TypeError('组索引超出范围')
+                        else:
+                            sub_xpathes = []
+
+                            #寄存器中已经存在该次产生的结果
+                            if len(res_register[exp_idx]['xpath']):
+                                for sub_xpath in res_register[exp_idx]['xpath']:
+                                    for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                        for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                            sub_xpath = re.sub(self._group_regex,'[%d]' % (i_result + 1),sub_xpath)
+                                            sub_xpathes.append(sub_xpath)    
+                            else:
+                                for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                    for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                        sub_xpath = re.sub(self._group_regex,'[%d]' % (i_result + 1),exp)
+                                        print sub_xpath
+                                        sub_xpathes.append(sub_xpath)    
+                                
+                            res_register[exp_idx]['xpath'] = sub_xpathes
+                     
+                    if not group_flag:
+                        res_register[exp_idx]['xpath'] = [exp]
+  
+                    results = []
+
+                    for xpath in res_register[exp_idx]['xpath']:
+                        xpath = group_expression + xpath
+                        result = self.__dom.xpath(xpath)
+
+                        for i_res,res in enumerate(result):
+                            if isinstance(res,lxml.etree.ElementBase):
+                                result[i_res] = res.text
+
+                        results.append(result) 
+                                        
+                    res_register[exp_idx]['result']  = results    
+
+                import json
+                print json.dumps(res_register,ensure_ascii = False)
+
+                #构造完整的数据,res_regiser中的result的顺序为文档查找顺序
+                #url抽取也应该是文档查找顺序，这样才能对应上
+                """
+                最终构造的数据结构为
+                {   
+                    'field1':'data1',
+                    'field2':'data2',
+                    'field3':'data3',
+                    ....
+                }
+                """
+                register_len = len(res_register)
+                middle = res_register[0]['result'][0]
+
+                for i_field in range(register_len):
+                    if i_field < register_len - 1:
+                        middle_res = []
+
+                        for i_mid,mid in enumerate(middle):
+                            items = [item for item in itertools.product([mid],res_register[i_field+1]['result'][i_mid])]
+                            middle_res += items
+                            #print json.dumps(items,ensure_ascii = False)
+                            #print '+++++++++++++++++++++++'
+                        middle = middle_res
+
+            #构造DATA
+            datas = []
+            raw_data = {}
+            import json
+            for mid in middle:
+                for i_f,f in enumerate(field):
+                    if multiple:
+                        raw_data[f] = mid[i_f]
+                    else:
+                        if f not in raw_data.keys():
+                            raw_data[f] = []
+                            raw_data[f].append(mid[i_f])
+                        else:
+                            raw_data[f].append(mid[i_f])
+                  
+                if multiple:
+                    data = DT.Data(**raw_data)
+                    #print 'DATA'
+                    #print json.dumps(raw_data,ensure_ascii = False)
+                    datas.append(data)
+                    raw_data = {}
+            
+            if not multiple:
+                #print 'DATA'
+                #print json.dumps(raw_data,ensure_ascii = False)
+                data =  DT.Data(**raw_data)
+                datas.append(data)
+
+            #关联parent
+            if parent is not None:
+                if parent == idx_element-1:
+                    new_datas = []
+                    for p_data in parent_datas[parent]:
+                        for data in datas:
+                            print 'PARENT'
+                            print json.dumps(p_data(),ensure_ascii = False)
+                            print 'DATA'
+                            print json.dumps(data(),ensure_ascii = False)
+                            new_data = p_data + data
+                            new_datas.append(new_data)
+                            print 'NEW'
+                            print new_data
+                    parent_datas[parent] = new_datas
+                    datas = new_datas
+
+                else:
+                    raise TypeError('parent必须是上一个field')
+
+                    
+            parent_datas[idx_element] = datas
+
 
     @property
     def fid(self):
         return self._fid
-
-def response2dom(response):
-    try:
-        dom = lxml.html.fromstring(response.content)
-    except UnicodeDecodeError:
-        dom = lxml.html.soupparser.fromstring(response.content)
-
-    return dom
 
 
 

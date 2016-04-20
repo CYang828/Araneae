@@ -19,19 +19,17 @@ class Request(object):
         data:提交数据
         cookies:cookie信息
         callback:回调函数对象
-        timeout:超时时间
         """
         if not url:
             raise TypeError
 
         self._url = UTLH.revise_url(url)
         self._method = UTLH.validate_method(args.get('method','GET')) 
-        self._headers = args.get('headers',None)
-        self._data = args.get('data',None)
-        self._cookies = args.get('cookies',None)
+        self._headers = args.get('headers',{})
+        self._data = args.get('data',{})
+        self._cookies = args.get('cookies',{})
         self._callback = args.get('callback','parse')
-        self._timeout = args.get('timeout',DEFAULT_TIMEOUT)
-        self._auth = args.get('auth',None)
+        self._auth = args.get('auth',{})
 
         self._rule_number = rule_number
         self._fid = args.get('fid')
@@ -39,16 +37,25 @@ class Request(object):
         self._json = ''
         self._sequence_json()
 
-    def fetch(self):
+    def fetch(self,timeout = DEFAULT_TIMEOUT):
         """
         抓取页面信息
         """
         method = self._method.lower()
-        response = getattr(requests,method)(self._url,data = self._data,headers = self._headers,cookies = self._cookies,timeout = self._timeout)
+        response = getattr(requests,method)(self._url,data = self._data,headers = self._headers,cookies = self._cookies,timeout = timeout)
         return response
 
     def set_rule_number(self,rule_number):
         self._rule_number = rule_number
+
+    def set_headers(self,header_dict):
+	self._headers = dict(self._headers,**header_dict)
+
+    def set_cookies(self,cookie_dict):
+	self._cookies = dict(self._cookies,**cookie_dict)
+
+    def set_auth(self,auth_dict):
+	self._auth = dict(self._auth,**auth_dict)
 
     @property
     def fid(self):
