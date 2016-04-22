@@ -35,13 +35,13 @@ class Request(object):
         self._fid = args.get('fid')
 
         self._json = ''
-        self._sequence_json()
 
     def fetch(self,timeout = DEFAULT_TIMEOUT):
         """
         抓取页面信息
         """
         method = self._method.lower()
+        #?????????????????????添加错误处理,外部将错误链接重新添加回调度器
         response = getattr(requests,method)(self._url,data = self._data,headers = self._headers,cookies = self._cookies,timeout = timeout)
         return response
 
@@ -103,6 +103,7 @@ class Request(object):
 
     @property
     def json(self):
+        self._sequence_json()
         return self._json
 
     #这个是用来放到mq中的

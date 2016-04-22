@@ -4,14 +4,29 @@ import json
 
 class Data(object):
     __kv = {}
-    __fid = []
-
+    __fid = None
+    __rule_number = None
    
     def __init__(self,**kvargs):
         """
         kvargs为数据内容
         """
         self.__kv = kvargs
+
+    def add(self,**kvargs):
+        for field in kvargs.keys():
+            if field in self.fields:
+                tmp_value = self.__kv[field]
+
+                if isinstance(tmp_value,list):
+                    tmp_value.append(kvargs[field])
+                else:
+                    tmp_value = [tmp_value]
+                    tmp_value.append(kvargs[field])
+            
+                self.__kv[field] = tmp_value
+            else:
+                self.__kv = dict(self.__kv,**kvargs)
 
     def __get__(self,data):
         pass
@@ -34,7 +49,10 @@ class Data(object):
             else:
                 tmp_kv = dict(self.__kv,**data())
 
-        return Data(**tmp_kv)
+        new_data = Data(**tmp_kv)
+        new_data.__rule_number = self.__rule_number
+        new_data.__fid = self.__fid
+        return new_data
 
     def __call__(self):
         return self.__kv
@@ -61,6 +79,14 @@ class Data(object):
     @value.setter
     def value(self,value):
         self.__kv = value
+
+    @property
+    def rule_number(self):
+        return self.__rule_number
+
+    @rule_number.setter
+    def rule_number(self,rule_number):
+        self.__rule_number = rule_number
 
 if __name__ == '__main__':        
     pass

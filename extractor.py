@@ -114,7 +114,7 @@ class UrlExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
             self._allow_requests.append(request)
 
     @property
@@ -222,7 +222,7 @@ class UrlFormatExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.number+1,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
             self._requests.append(request)
 
 DEFAULT_TYPE = 'xpath'
@@ -237,6 +237,7 @@ class DataExtractor(BaseExtractor):
     def __init__(self,response,page_rule,fid):
         self.__dom = UTLC.response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
+        self._page_rule = page_rule
 
         self._parent_datas = {}
         self._datas = []
@@ -413,6 +414,8 @@ class DataExtractor(BaseExtractor):
                   
                 if multiple:
                     data = DT.Data(**raw_data)
+                    data.fid = self._fid
+                    data.rule_number = self._page_rule.number
                     #print 'DATA'
                     #print json.dumps(raw_data,ensure_ascii = False)
                     datas.append(data)
@@ -427,6 +430,8 @@ class DataExtractor(BaseExtractor):
                         raw_data[field] = value[0]
                         
                 data =  DT.Data(**raw_data)
+                data.fid = self._fid
+                data.rule_number = self._page_rule.number
                 datas.append(data)
 
             #关联parent

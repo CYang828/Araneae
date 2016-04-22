@@ -1,6 +1,7 @@
 #*-*coding:utf8*-*
 
 import re
+import collections
 
 import Araneae.dna.rule as PR
 import Araneae.utils.setting as SET
@@ -51,6 +52,14 @@ class BaseChromesome(SET.Setting):
     def scheduler_retry_time(self):
         return self['SCHEDULER_RETRY_TIME']
 
+    @property
+    def merge_data_collection(self):
+        return self['MERGE_DATA_COLLECTION']
+
+    @property
+    def middle_data_collection(self):
+        return self['MIDDLE_DATA_COLLECTION']
+
     def _essential_set(self):
         """
         必有参数
@@ -69,7 +78,7 @@ class RuleLinkChromesome(BaseChromesome):
     链式爬虫
     """
     __lasting = None
-    __page_rules = []
+    __page_rules = collections.OrderedDict()
     __essential_page_keys = set([])
     __page_exp = re.compile(r'PAGE(\d+)')
 
@@ -78,14 +87,18 @@ class RuleLinkChromesome(BaseChromesome):
         self._essential()
 
     def iter_page_rule(self):
-        for page_rule in self.__page_rules:
+        for rule_number,page_rule in self.__page_rules.items():
             yield page_rule
 
     def get_page_rule(self,number):
-        return self.__page_rules[number] if number < len(self.__page_rules) else None
+        return self.__page_rules[number] if number in self.__page_rules.keys() else None
 
-    def len(self):
+    def __len__(self):
         return len(self.__page_rules)
+
+    @property
+    def first_rule_number(self):
+        return  min(self.__page_rules.keys())
 
     @property
     def lasting(self):
@@ -95,7 +108,7 @@ class RuleLinkChromesome(BaseChromesome):
         self._sort_page()
         self.__lasting = self.get('LASTING',None)
 
-        if not self.len():
+        if not len(self):
             raise TypeError('链路爬虫必须规定页面规则')
 
     def _sort_page(self):
@@ -105,16 +118,30 @@ class RuleLinkChromesome(BaseChromesome):
             page_match = self.__page_exp.match(key)
  
             if page_match:
-                page_num = page_match.group(1)
+                page_num = int(page_match.group(1))
                 page_sort_tmp[page_num] = key
 
-        page_sort_tmp = sorted(page_sort_tmp.iteritems(),key = lambda i:i[0])
 
-        self.__page_rules = [PR.PageRule(self._attributes[sort_tmp_item[1]]) for sort_tmp_item in page_sort_tmp]
+        page_sort_tmp = {rule_number:PR.PageRule(self._attributes[sort_tmp_item]).set_number(rule_number) for rule_number,sort_tmp_item in page_sort_tmp.items()}
+        self.__page_rules = collections.OrderedDict(sorted(page_sort_tmp.items(),key = lambda i:i[0]))
+
+        first_flag = True
+        upper_page_rule = None
+
+        for rule_number,page_rule in self.__page_rules.items():
+            if first_flag:
+                first_flag = False
+                upper_page_rule = page_rule
+                continue
+            
+            upper_page_rule.next_number = page_rule.number
+            upper_page_rule = page_rule
+            
         
+        """
         for rule_number,rule in enumerate(self.__page_rules):
             rule.number = rule_number
-
+        """
        
 class BroadPriorityChromesome(BaseChromesome):
 

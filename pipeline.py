@@ -65,8 +65,19 @@ class MongoDataPipeline(BaseDataPipeline):
     def select(self,db,collection):
         self._db = self._mongo[db]
         self._collection = self._db[collection]
+        return self._collection
 
-    def insert(self,data):
+    def select_db(self,db):
+        self._db = self._mongo[db]
+        return self._db
+
+    def select_collection(self,collection):
+        self._collection = self._db[collection]
+        return self._collection
+
+    def insert(self,collection,data):
+        self.select_collection(collection)
+        
         try:
             obj_id = str(self._collection.insert_one(data).inserted_id)
             Plog('Mongo insert -- data[%s] -- _id[%s]' % (data,obj_id))
@@ -93,7 +104,7 @@ class MongoDataPipeline(BaseDataPipeline):
         return self._collection.count()
 
 
-    def collection_names(self,system = True):
+    def collection_names(self,system = False):
         return self._db.collection_names(include_system_collections = system)
 
 MYSQL_RETRY_TIMES = 10

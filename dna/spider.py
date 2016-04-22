@@ -1,8 +1,11 @@
 #*-*coding:utf8*-*
+import re
 import time
+import copy
 import types
 import gevent as GEV
 import gevent.pool as GEVP
+import bson as BS
 
 import Araneae.data as DT
 import Araneae.dna.rule as PR
@@ -69,7 +72,7 @@ class BaseSpider(object):
                 
         if chromesome.lasting:
             self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)
-            self.__data_pipeline.select(chromesome.lasting['db'],self.__name)
+            self.__data_pipeline.select_db(self.__name)
 
         self._scheduler_retry_time = self.__chromesome.getint('SCHEDULER_RETRY_TIME')
         self._scheduler_retry_interval = self.__chromesome.getint('SCHEDULER_RETRY_INTERVAL')
@@ -115,9 +118,9 @@ class BaseSpider(object):
 
         for first_url in first_urls:
             if isinstance(first_url,str):
-                requests.append(REQ.Request(first_url,rule_number = 0,headers = self._login_header))
+                requests.append(REQ.Request(first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header))
             elif isinstance(fisrt_url,dict):
-                requests.append(REQ.json2request(first_url,rule_number = 0,headers = self._login_header))
+                requests.append(REQ.json2request(first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header))
 
         return_or_yield = self.first_urls(requests)
 
@@ -152,9 +155,82 @@ class BaseSpider(object):
 
         Plog('爬取任务结束')
         self.end()
-                  
+
+    def merge_data(self):
+        """
+        合并数据
+        """
+        merge_number = []
+        upper_associate_stat = False
+        merge_number_register = []
+
+        for page_rule in self.__chromesome.iter_page_rule():
+            print page_rule.number
+            if page_rule.scrawl_data_element and page_rule.associate:
+                upper_associate_stat = True
+                merge_number.append(page_rule.number)
+                print merge_number
+            elif not page_rule.associate and page_rule.scrawl_data_element and upper_associate_stat:
+                merge_number.append(page_rule.number)
+                print merge_number
+                merge_number_register.append(merge_number)
+                print merge_number_register
+                upper_associate_stat = False
+                merge_number = []
+
+        page_rule_len = len(self.__chromesome)
+        merge_result_len = len(merge_number_register)
+        data_pipelines = []
+
+        for i in range(page_rule_len+merge_result_len):
+            data_pipeline = PPL.generate_pipeline(**self.__chromesome.lasting)
+            data_pipeline.select_db(self.__name)
+            data_pipelines.append(data_pipeline)
+        
+        for idx_result,merge_number in enumerate(merge_number_register):
+            lower_cursor = None
+            collections = []
+            merge_collection = None
+
+            merge_collection_name = self.__chromesome.merge_data_collection + ('_%d' % idx_result)
+            merge_collection = data_pipelines.pop().select_collection(merge_collection_name)
+
+            for idx,number in enumerate(sorted(merge_number,reverse = False)):
+                collection_name = self.__chromesome.middle_data_collection + ('_%d' % number)
+                collection = data_pipelines.pop().select_collection(collection_name)
+
+                if idx == 0:
+                    lower_cursor = collection.find()
+                else:
+                    collections.append(collection)
+
+            for doc in lower_cursor:
+                full_data = {}
+                fid = doc.get('fid')
+                del doc['_id']
+                full_data = doc
+                
+                if fid:
+                    for collection in collections:
+                        if fid:
+                            #不会查询到多条数据
+                            doc = collection.find(filter = {'_id':BS.ObjectId(fid)})
+                            if doc.count():
+                                doc = doc[0]
+                                fid = doc.get('fid')
+                                del doc['_id']
+                                del doc['fid']
+                                full_data = dict(full_data,**doc)
+                import json
+                print '完整数据'          
+                print json.dumps(full_data,ensure_ascii = False)
+
+                
+
+            
+                        
     def stop(self):
-        pass
+         pass
 
     def pause(self):
         #使用信号量使进程挂起，非阻塞
@@ -182,11 +258,11 @@ class BaseSpider(object):
         Plog('非阻塞爬取地址【%s】' % request.url.encode('utf8'))
         self.__pool.spawn(self._fetch,request,**args)
 
-    #从scheduler获取(pull)request，如果scheduler为空，进行延时重试，如果最后为空，结束爬虫
     def master_push(self,request):
         """
         向master推送medium
         """
+        print request.json
         self.__rpc.push(request.json)
 
     def data_pipeline_push(self,data):
@@ -194,10 +270,12 @@ class BaseSpider(object):
         向数据管道推送数据
         """
         if data.fid:
-            self.__data_pipeline.update(filter = data.fid,data = data())
-        else:
-            insert_id = self.__data_pipeline.insert(data = data())
-            data.fid = insert_id
+            data.add(**{'fid':data.fid})
+
+        rule_number = data.rule_number
+        table_name = 'Rule_%d' % rule_number
+        insert_id = self.__data_pipeline.insert(table_name,data = data())
+        data.fid = insert_id
 
     def scheduler_pull(self):
         """
@@ -226,7 +304,7 @@ class BaseSpider(object):
         yield方式会立刻将request放回调度器中
         return方式会等待全部完成后一起放回调度器中
         """
-	time.sleep(self._request_sleep_time)
+        time.sleep(self._request_sleep_time)
 
         response = request.fetch(self._request_timeout)
         callback = request.callback
@@ -269,6 +347,7 @@ class RuleLinkSpider(BaseSpider):
     
     #起始url
     def first_urls(self,requests):
+        self.merge_data()
         for request in requests:
             request.callback = 'first_parse'
             yield request
@@ -292,7 +371,8 @@ class RuleLinkSpider(BaseSpider):
         """
         print '规则号码'
         print page_rule.number
-
+        print 'FID' 
+        print fid
         #数据抽取规则
         datas = None
         requests = None
@@ -312,16 +392,18 @@ class RuleLinkSpider(BaseSpider):
             pass
 
         print '链接生成数:%d' % len(requests)
+        if page_rule.associate:
+            #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
+            if datas and requests:
+                if len(datas) != len(requests):
+                    raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
+                else:
+                    for i_data,data in enumerate(datas):
+                        #print '数据fid:%s' %  data.fid
+                        requests[i_data].fid = data.fid
 
-        #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
-        if datas and requests:
-            if len(datas) != len(requests):
-                raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
-            else:
-                for i_data,data in enumerate(datas):
-                    fid = data.fid
-                    requests[i_data].fid = fid
-                
         yield requests
         
-
+        #是否有下载的配置项
+        #如果有就进行下载       
+        #yield downloader

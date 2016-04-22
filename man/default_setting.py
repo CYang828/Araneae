@@ -29,9 +29,12 @@ LASTING         =   {
                         'host':'172.18.4.52',
                         'port':'27017',
                         'password':'',
-                        'db':'crawl_test',
                         'timeout':5
                     }
+#中间数据结果集前缀
+MIDDLE_DATA_COLLECTION = 'Rule'
+#合并后结果集前缀
+MERGE_DATA_COLLECTION = 'merge_result'
 #登录的headers
 LOGIN_HEADER = {'DWRSESSIONID':'IvCebsu7Ifbcx*H5o*jyP','JSESSIONID':'abcbwytCNeNmn6E0J40pv','jsessionid':'CECE9ED64DAE21A218B284CE0E33E6AC','Hm_lvt_acbe332524305cf7430995bc4404a862':'1460101950','Hm_lpvt_acbe332524305cf7430995bc4404a862':'1460101950'}
 
@@ -56,7 +59,8 @@ PAGE1           =   {
                                 #'extract_urls':'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/href()',
                                 'field':['grade','edition'],#想要抽取的数据必须有字段名,否则没法存储
                                 'parent':0,   
-                                'multiple':True
+                                'multiple':True,
+                                'associate':True#默认为False
                             }
                             #这里的列表可以产生多级数据
 
@@ -83,6 +87,16 @@ PAGE1           =   {
                         #},
                    }
 PAGE2           =   {
+                        'extract_data':
+                        [
+                            {
+                                'type':'xpath', #reg #xpath
+                                'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[1]/td[1]/text()',
+                                'field':'unit',#想要抽取的数据必须有字段名,否则没法存储
+                                'multiple':False,
+                                'associate':False
+                            },
+                        ],
                         'extract_urls':
                         {           
                             'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',

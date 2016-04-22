@@ -13,7 +13,9 @@ class PageRule(object):
     __extract_url_type = NONE_URL_TYPE
     __extract_url_element = None
     __scrawl_data_element = None
+    __associate = False
     __fields = set([])
+    __next_number = None
 
     def __init__(self,map):
         self._essential(map)
@@ -23,7 +25,6 @@ class PageRule(object):
         在一个PageRule中,extract_urls和format_urls只能存在一个,如果两个同时存在,则抛弃format_urls(该方案以后可以进行调整)
         """
         if 'extract_urls' in map.keys():
-            print '类型 url'
             self.__extract_url_type = EXTRACT_URL_TYPE
             self.__extract_url_element = map['extract_urls']
         elif 'format_urls' in map.keys():
@@ -38,6 +39,9 @@ class PageRule(object):
             elif isinstance(map['extract_data'],list):
                 self.__scrawl_data_element = map['extract_data']
 
+            if self.__scrawl_data_element[len(self.__scrawl_data_element)-1].get('associate'):
+                self.__associate = True
+
             for data_item in self.__scrawl_data_element:
                 if 'field' in data_item.keys():
                     if isinstance(data_item['field'],list):
@@ -51,6 +55,19 @@ class PageRule(object):
                                 raise TypeError('同一spider中不能出现重复field')
                         else:
                             self.__fields.add(data_item['field'])
+
+    def set_number(self,number):
+        self.__number = number 
+        return self
+
+    @property
+    def next_number(self):
+        return self.__next_number
+
+    @next_number.setter
+    def next_number(self,next_number):
+        self.__next_number = next_number
+
     @property
     def fields(self):
         return self.__fields    
@@ -66,6 +83,10 @@ class PageRule(object):
     @property
     def scrawl_data_element(self):
         return self.__scrawl_data_element
+
+    @property
+    def associate(self):
+        return self.__associate
 
     @property
     def number(self):
