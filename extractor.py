@@ -24,7 +24,8 @@ class UrlExtractor(BaseExtractor):
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
     
-    def __init__(self,response,page_rule,fid = None):
+    def __init__(self,spider_name,response,page_rule,fid = None):
+        self.__spider_name = spider_name
         self.__response = response
         self.__rule = page_rule
         self.__dom = UTLC.response2dom(response)
@@ -114,7 +115,7 @@ class UrlExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
+            request = REQ.Request(self.__spider_name,UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
             self._allow_requests.append(request)
 
     @property
@@ -132,7 +133,8 @@ class UrlFormatExtractor(BaseExtractor):
     抽取格式化的url
     """
 
-    def __init__(self,response,page_rule,fid):
+    def __init__(self,spider_name,response,page_rule,fid):
+        self.__spider_name = spider_name
         self.__response = response
         self.__rule = page_rule
         self.__dom = UTLC.response2dom(response)
@@ -222,7 +224,7 @@ class UrlFormatExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
+            request = REQ.Request(self.__spider_name,UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
             self._requests.append(request)
 
 DEFAULT_TYPE = 'xpath'

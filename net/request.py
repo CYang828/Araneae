@@ -11,8 +11,9 @@ DEFAULT_TIMEOUT = 2
 
 class Request(object):
 
-    def __init__(self,url,rule_number,**args):
+    def __init__(self,spider_name,url,rule_number,**args):
         """
+        spider_name:爬虫名
         url:统一资源定位符
         method:方式
         headers:头信息
@@ -22,7 +23,8 @@ class Request(object):
         """
         if not url:
             raise TypeError
-
+        
+        self._spider_name = spider_name
         self._url = UTLH.revise_url(url)
         self._method = UTLH.validate_method(args.get('method','GET')) 
         self._headers = args.get('headers',{})
@@ -30,6 +32,7 @@ class Request(object):
         self._cookies = args.get('cookies',{})
         self._callback = args.get('callback','parse')
         self._auth = args.get('auth',{})
+        self._proxy = args.get('proxy',None)
 
         self._rule_number = rule_number
         self._fid = args.get('fid')
@@ -42,7 +45,7 @@ class Request(object):
         """
         method = self._method.lower()
         #?????????????????????添加错误处理,外部将错误链接重新添加回调度器
-        response = getattr(requests,method)(self._url,data = self._data,headers = self._headers,cookies = self._cookies,timeout = timeout)
+        response = getattr(requests,method)(self._url,proxies = self._proxy,data = self._data,headers = self._headers,cookies = self._cookies,timeout = timeout)
         return response
 
     def set_rule_number(self,rule_number):
@@ -56,6 +59,15 @@ class Request(object):
 
     def set_auth(self,auth_dict):
 	    self._auth = dict(self._auth,**auth_dict)
+
+    def set_user_agent(self,user_agent):
+        self._headers['User-Agent'] = user_agent
+
+    def set_http_proxy(self,proxy):
+        self._proxy = {'http':proxy}
+
+    def set_https_proxy(self,proxy):
+        self._proxy = {'https':proxy}
 
     @property
     def fid(self):
@@ -111,6 +123,9 @@ class Request(object):
         request_json = {}
         request_json['url'] = self._url
 
+        if self._spider_name:
+            request_json['spider_name'] = self._spider_name
+
         if self._method:
             request_json['method'] = self._method
         if self._headers:
@@ -136,10 +151,3 @@ def json2request(request_json):
     request_json = json.loads(request_json)
     request = Request(**request_json)
     return request
-
-if __name__ == '__main__':
-    r = Request('http://www.baidu.com',method = 'POST')
-    res = r.fetch()
-    print time.time()
-    print r.fingerprinter()
-    print time.time()

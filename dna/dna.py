@@ -2,6 +2,7 @@
 
 import Araneae.dna.spider as SPD
 import Araneae.utils.setting as SET
+import Araneae.man.exception as EXP
 import Araneae.dna.chromesome as CHM
 
 SPIDER_TYPE = { 
@@ -10,24 +11,36 @@ SPIDER_TYPE = {
                 'DeepPriority'  :   (   'DeepPriorityChromesome'    ,   'DeepPrioritySpider'    ),
               }
 
+SPIDER_TYPE_RULELINK = 'RuleLink' 
+
+DEFAULT_SETTING = 'Araneae.man.default_setting'
+
 class DNA(SET.Setting):
 
-    __spider_obj = None
+    SPIDER_TYPE_OPTIONS = {'rulelink':SPIDER_TYPE_RULELINK}
+
+    __spider_objs = {}
+
+    def __init__(self,module):
+        super(DNA,self).__init__('Araneae.man.default_setting')
+        super(DNA,self).__init__(module)
+
+        self.set_options('SPIDER_TYPE',*self.SPIDER_TYPE_OPTIONS.keys())
 
     def generator(self):
-        if self['SPIDER_TYPE']:
-            chromesome_obj = getattr(CHM,SPIDER_TYPE[self['SPIDER_TYPE']][0])(self)
-            spider_obj = getattr(SPD,SPIDER_TYPE[self['SPIDER_TYPE']][1])(chromesome_obj)
-        else:
-            raise SpiderChromesomeException('没有指定spider类型')
+        spider_type = self.SPIDER_TYPE_OPTIONS[self.get('SPIDER_TYPE')]
 
-        self.__spider_obj = spider_obj
-        #应该生成一个spider对象
+        if spider_type:
+            chromesome_obj = getattr(CHM,SPIDER_TYPE[spider_type][0])(self)
+            spider_obj = getattr(SPD,SPIDER_TYPE[spider_type][1])(chromesome_obj)
+        else:
+            raise EXP.DNAException('没有指定spider类型')
+
+        self.__spider_objs[spider_obj.name] = spider_obj
         return spider_obj
 
 if __name__ == '__main__':                                                                                                                                      
-    
-    c = DNA('Araneae.man.default_setting')
+    c = DNA('Araneae.man.setting')
     spider = c.generator()
     spider.start()
     spider.end()

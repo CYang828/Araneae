@@ -3,16 +3,18 @@ import re
 import time
 import copy
 import types
+import bson as BS
 import gevent as GEV
 import gevent.pool as GEVP
-import bson as BS
 
 import Araneae.data as DT
 import Araneae.dna.rule as PR
 import Araneae.pipeline as PPL
 import Araneae.scheduler as SCH
 import Araneae.extractor as EXT 
+import Araneae.middleware as MID
 import Araneae.net.request as REQ 
+import Araneae.man.exception as EXP
 import Araneae.dna.chromesome as CHM 
 
 from Araneae.utils.log import Plog
@@ -28,13 +30,13 @@ class BaseSpider(object):
     每个spider必备:
         +爬虫名,用来唯一标识一个爬虫
         +爬虫运行类型:#Singleton单机模式(不指定时默认为该模式),Distributed(分布式,需要启动master,所有功能都能使用)
-        +一个chromesome,配置爬去规则
-        +一个pool,用来爬取任务,pool的大小可以限制爬虫的速度
-        +一个thread_id,每个爬虫都在一个thread中,用来管理该线程
+        +chromesome,配置爬取规则
+        +pool,用来爬取任务,pool的大小可以限制爬虫的速度
+        +thread_id,每个爬虫都在一个thread中,用来管理该线程
 
-        +一个scheduler,用来pull任务
-        +一个data_pipeline,一个传输数据管道,根据配置爬虫情况(可选)
-        +一个rpc对象,如果为单机模式,rpc关联到scheduler进行push,单机模式下功能退化,只能满足简单的爬虫功能(rpc对象必须有一个和scheduler相同的push接口)
+        +scheduler,用来调度任务
+        +data_pipeline,传输数据管道,根据配置生成(可选)
+        +rpc对象,如果为单机模式,rpc关联到scheduler进行push,单机模式下功能退化,只能满足简单的爬虫功能(rpc对象必须有一个和scheduler相同的push接口)
     """
     __rpc = None
     __name = ''
@@ -47,7 +49,8 @@ class BaseSpider(object):
 
     def __init__(self,chromesome):
         """
-        初始化spider必要参数
+        初始化spider必要参数，
+        错误预检查，防止出现运行一段时间出现错误
 
         参数:
             chromesome:爬虫配置(必须为BaseChromesome子类)
@@ -56,12 +59,12 @@ class BaseSpider(object):
         if isinstance(chromesome,CHM.BaseChromesome):
             self.__chromesome = chromesome
         else:
-            raise TypeError('参数必须为Chromesome类型')
+            raise EXP.ChromesomeException('spider的参数必须为Chromesome类型')
 
-        self.__name = chromesome.get('SPIDER_NAME')
+        self.__name = chromesome.spider_name
         self.__running_type = chromesome.running_type
 
-        self.__pool = GEVP.Pool(chromesome.getint('CONCURRENT_REQUESTS'))
+        self.__pool = GEVP.Pool(chromesome.concurrent_requests)
         self.__scheduler = getattr(SCH,chromesome.scheduler)()
 
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
@@ -74,13 +77,24 @@ class BaseSpider(object):
             self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)
             self.__data_pipeline.select_db(self.__name)
 
-        self._scheduler_retry_time = self.__chromesome.getint('SCHEDULER_RETRY_TIME')
-        self._scheduler_retry_interval = self.__chromesome.getint('SCHEDULER_RETRY_INTERVAL')
+        self._scheduler_retry_time = chromesome.scheduler_retry_time
+        self._scheduler_retry_interval = chromesome.scheduler_retry_interval
 
-	self._request_timeout = self.__chromesome.getint('REQUEST_TIMEOUT')
-	self._request_sleep_time = self.__chromesome.getint('REQUEST_SLEEP_TIME')
+        self._request_timeout = chromesome.request_timeout
+        self._request_sleep_time = chromesome.request_sleep_time
+        self._login_header = chromesome.login_header
+        self._middle_data_collection = chromesome.middle_data_collection
+        self._merge_data_collection = chromesome.merge_data_collection
 
-	self._login_header = self.__chromesome.getdict('LOGIN_HEADER')
+        self._user_agent = None
+        self._http_proxy = None
+
+        if chromesome.user_agent:
+            self._user_agent = MID.UserAgent('Araneae.man.user_agent')
+            
+        if chromesome.http_proxy:
+            http_proxy_module = chromesome.http_proxy_module
+            self._http_proxy = MID.ProxyIp(http_proxy_module)
 
     def first_urls(self,first_urls):
         """
@@ -118,9 +132,13 @@ class BaseSpider(object):
 
         for first_url in first_urls:
             if isinstance(first_url,str):
-                requests.append(REQ.Request(first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header))
+                request = REQ.Request(self.__name,first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header)
+                requests.append(request)
+            #？？？有问题
             elif isinstance(fisrt_url,dict):
-                requests.append(REQ.json2request(first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header))
+                request = REQ.json2request(self.__name,first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header)
+
+            requests.append(request)
 
         return_or_yield = self.first_urls(requests)
 
@@ -148,7 +166,7 @@ class BaseSpider(object):
                 self._scheduler_retry_time -= 1
                 Plog('cheduler里没有request了,等待一会吧')
             else:
-                self._scheduler_retry_time = self.__chromesome['SCHEDULER_RETRY_TIME']
+                self._scheduler_retry_time = self._scheduler_retry_time
                 request_json = self.scheduler_pull()
                 request = REQ.json2request(request_json)
                 self.fetch(request)
@@ -165,16 +183,12 @@ class BaseSpider(object):
         merge_number_register = []
 
         for page_rule in self.__chromesome.iter_page_rule():
-            print page_rule.number
             if page_rule.scrawl_data_element and page_rule.associate:
                 upper_associate_stat = True
                 merge_number.append(page_rule.number)
-                print merge_number
             elif not page_rule.associate and page_rule.scrawl_data_element and upper_associate_stat:
                 merge_number.append(page_rule.number)
-                print merge_number
                 merge_number_register.append(merge_number)
-                print merge_number_register
                 upper_associate_stat = False
                 merge_number = []
 
@@ -192,11 +206,11 @@ class BaseSpider(object):
             collections = []
             merge_collection = None
 
-            merge_collection_name = self.__chromesome.merge_data_collection + ('_%d' % idx_result)
+            merge_collection_name = self._merge_data_collection + ('_%d' % idx_result)
             merge_collection = data_pipelines.pop().select_collection(merge_collection_name)
 
             for idx,number in enumerate(sorted(merge_number,reverse = False)):
-                collection_name = self.__chromesome.middle_data_collection + ('_%d' % number)
+                collection_name = self._middle_data_collection + ('_%d' % number)
                 collection = data_pipelines.pop().select_collection(collection_name)
 
                 if idx == 0:
@@ -221,13 +235,8 @@ class BaseSpider(object):
                                 del doc['_id']
                                 del doc['fid']
                                 full_data = dict(full_data,**doc)
-                import json
-                print '完整数据'          
-                print json.dumps(full_data,ensure_ascii = False)
-
-                
-
-            
+                #import json
+                #print json.dumps(full_data,ensure_ascii = False)
                         
     def stop(self):
          pass
@@ -306,6 +315,14 @@ class BaseSpider(object):
         """
         time.sleep(self._request_sleep_time)
 
+        if self._user_agent:                                                                                                                                  
+            user_agent = self._user_agent.random()
+            request.set_user_agent(user_agent)
+
+        if self._http_proxy:
+            proxy = self._http_proxy.random()
+            request.set_proxy(proxy)
+
         response = request.fetch(self._request_timeout)
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)
@@ -369,10 +386,7 @@ class RuleLinkSpider(BaseSpider):
         一个是生成Request,放入scheduler
         一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
-        print '规则号码'
-        print page_rule.number
-        print 'FID' 
-        print fid
+        Plog('规则号码【%d】' % (page_rule.number))
         #数据抽取规则
         datas = None
         requests = None
@@ -381,17 +395,14 @@ class RuleLinkSpider(BaseSpider):
             datas = EXT.DataExtractor(response,page_rule,fid)()
             yield datas
         
-        print page_rule.extract_url_type
         #url抽取
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
-            print '通用url抽取'
-            requests = EXT.UrlExtractor(response,page_rule,fid)()
+            requests = EXT.UrlExtractor(self.name,response,page_rule,fid)()
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
-            requests = EXT.UrlFormatExtractor(response,page_rule,fid)()
+            requests = EXT.UrlFormatExtractor(self.name,response,page_rule,fid)()
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
             pass
 
-        print '链接生成数:%d' % len(requests)
         if page_rule.associate:
             #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
             if datas and requests:
@@ -399,7 +410,6 @@ class RuleLinkSpider(BaseSpider):
                     raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
                 else:
                     for i_data,data in enumerate(datas):
-                        #print '数据fid:%s' %  data.fid
                         requests[i_data].fid = data.fid
 
         yield requests
