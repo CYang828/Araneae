@@ -49,10 +49,10 @@ class Setting(object):
     def getfloat(self,name,default = 0.0):
         return float(self.get(name,default))
 
-    def getlist(self,name,default = None):
+    def getlist(self,name,default = []):
         return list(self.get(name,default))
 
-    def getdict(self,name,default = None):
+    def getdict(self,name,default = {}):
         return dict(self.get(name,default))
 
     def set_from_module(self,module):

@@ -46,12 +46,13 @@ class BaseChromesome(SET.Setting):
 
     def _essential_set(self):
         #self.set_essential_keys('LOG_PATH','LOG_FORMAT','LOG_LEVEL','LOG_DATE_FORMAT')
-        self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
         self.set_essential_keys('RUNNING_TYPE')
+        self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
         self.set_essential_keys('SCHEDULER','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
         self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT')
         self.set_essential_keys('MIDDLE_DATA_COLLECTION','MERGE_DATA_COLLECTION','LASTING')
         self.set_essential_keys('SPIDER_NAME','SPIDER_TYPE','FIRST_URLS','LOGIN_HEADER')
+        self.set_essential_keys('REQUEST_MIDDLEWARE','DATA_MIDDLEWARE','FILE_MIDDLEWARE')
 
     def _set_essential_options(self):
         for key,opt_info in self.OPTIONS.items():
@@ -142,6 +143,19 @@ class BaseChromesome(SET.Setting):
             self.set_from_value('FISRT_URLS',[first_urls])
 
         return self.getlist('FIRST_URLS')
+
+    @property
+    def request_middleware(self):
+        return self.getlist('REQUEST_MIDDLEWARE')
+
+    @property
+    def data_middleware(self):
+        return self.getlist('DATA_MIDDLEWARE')
+
+    @property
+    def file_middleware(self):
+        return self.getlist('FILE_MIDDLEWARE')
+   
    
  
 class RuleLinkChromesome(BaseChromesome):

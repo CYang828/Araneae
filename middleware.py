@@ -6,6 +6,24 @@ import random
 import Araneae.man.exception as EXP
 import Araneae.utils.setting as SET
 
+class BaseMiddleware(object):
+    pass
+
+class RequestMiddleware(BaseMiddleware):
+
+    def transport(self,request):
+        raise NotImplementedError('reqeust middleware必须实现transport')
+
+class DataMiddleware(BaseMiddleware):
+
+    def transport(self,data):
+        raise NotImplementedError('data middleware必须实现transport')
+
+class FileMiddleware(BaseMiddleware):
+
+    def transport(self,file_obj):
+        raise NotImplementedError('file middleware必须实现transport')
+
 class RandomMiddleWare(SET.Setting):
     __list = []
     __list_len = None
@@ -29,17 +47,27 @@ class RandomMiddleWare(SET.Setting):
         self.__black_list.append(item)
         self.__list_len -= 1
         
-class UserAgent(RandomMiddleWare):
+class UserAgentMiddleware(RequestMiddleware,RandomMiddleWare):
 
-    def __init__(self,module):
-        super(UserAgent,self).__init__(module)
+    def __init__(self):
+        super(UserAgentMiddleware,self).__init__('Araneae.man.user_agent')
         self.set_key('USER_AGENT')
 
-class ProxyIp(RandomMiddleWare):
+    def transport(self,request):
+        user_agent = self.random()
+        request.set_user_agent(user_agent)
+        return request
+
+class ProxyMiddleware(RequestMiddleware,RandomMiddleWare):
 
     def __init__(self,module):
-        super(UserAgent,self).__init__(module)
+        super(ProxyMiddleware,self).__init__('')
         self.set_key('PROXY_IP')
+
+    def transport(self,request):
+        proxy = self.random()
+        request.set_proxy(proxy)
+        return request
 
 if __name__ == '__main__':
     user_agent = UserAgent('Araneae.man.user_agent')

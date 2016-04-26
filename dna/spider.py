@@ -15,6 +15,7 @@ import Araneae.extractor as EXT
 import Araneae.middleware as MID
 import Araneae.net.request as REQ 
 import Araneae.man.exception as EXP
+import Araneae.utils.contrib as UTLC
 import Araneae.dna.chromesome as CHM 
 
 from Araneae.utils.log import Plog
@@ -67,12 +68,16 @@ class BaseSpider(object):
         self.__pool = GEVP.Pool(chromesome.concurrent_requests)
         self.__scheduler = getattr(SCH,chromesome.scheduler)()
 
+        #调度器和rpc使用的都是request对象的json序列化
+        #运行方式为单机时,rpc对象为调度器对象
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
             self.__rpc = self.__scheduler
+        #运行方式为分布式时,rpc对象与master通信
+        #master需要根据spider name不同分别放入不同的shceduler和dupefileter中
         elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
-            #实例化rpc
             pass
-                
+               
+        #一个spider产生的数据放入一个与spider同名的库中 
         if chromesome.lasting:
             self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)
             self.__data_pipeline.select_db(self.__name)
@@ -86,16 +91,35 @@ class BaseSpider(object):
         self._middle_data_collection = chromesome.middle_data_collection
         self._merge_data_collection = chromesome.merge_data_collection
 
-        self._user_agent = None
-        self._http_proxy = None
+        #生成中间件对象,预检查
+        self._request_middleware = []
+        self._data_middleware = []
+        self._file_middleware = []
 
-        if chromesome.user_agent:
-            self._user_agent = MID.UserAgent('Araneae.man.user_agent')
-            
-        if chromesome.http_proxy:
-            http_proxy_module = chromesome.http_proxy_module
-            self._http_proxy = MID.ProxyIp(http_proxy_module)
+        for request_middleware in chromesome.request_middleware:
+            request_middleware = UTLC.load_class(request_middleware)               
 
+            if not isinstance(request_middleware,MID.RequestMiddleware):
+                raise EXP.MiddlewareException('request中间件必须继承RequestMiddleware')
+        
+            self._request_middleware.append(request_middleware)
+
+        for data_middleware in chromesome.data_middleware:
+            data_middleware = UTLC.load_class(data_middleware)               
+
+            if not isinstance(data_middleware,MID.DataMiddleware):
+                raise EXP.MiddlewareException('data中间件必须继承DataMiddleware')
+
+            self._data_middleware.append(data_middleware)
+
+        for file_middleware in chromesome.file_middleware:
+            file_middleware = UTLC.load_class(file_middleware)               
+
+            if not isinstance(file_middleware,MID.FileMiddleware):
+                raise EXP.MiddlewareException('file中间件必须继承FileMiddleware')
+
+            self._file_middleware.append(file_middleware)
+        
     def first_urls(self,first_urls):
         """
         定义爬取fisrt_urls的方式
@@ -286,6 +310,9 @@ class BaseSpider(object):
         insert_id = self.__data_pipeline.insert(table_name,data = data())
         data.fid = insert_id
 
+    def downloader_push(self,file_obj):
+        pass
+
     def scheduler_pull(self):
         """
         从调度器拉request_json
@@ -315,14 +342,10 @@ class BaseSpider(object):
         """
         time.sleep(self._request_sleep_time)
 
-        if self._user_agent:                                                                                                                                  
-            user_agent = self._user_agent.random()
-            request.set_user_agent(user_agent)
+        for request_middleware in self._request_middleware:
+            request = request_middleware.transport(request)
 
-        if self._http_proxy:
-            proxy = self._http_proxy.random()
-            request.set_proxy(proxy)
-
+        print request.json
         response = request.fetch(self._request_timeout)
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)

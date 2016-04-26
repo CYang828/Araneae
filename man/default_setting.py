@@ -51,6 +51,13 @@ SPIDER_TYPE     =   None
 LOGIN_HEADER = {}
 #爬虫初始地址
 FIRST_URLS       =   []
+#request中间件
+REQUEST_MIDDLEWARE = ['Araneae.middleware.UserAgentMiddleware']
+#data中间件
+DATA_MIDDLEWARE = []
+#file中间件
+FILE_MIDDLEWARE = []
+
 
 """
 页面爬去规则
