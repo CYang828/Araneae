@@ -113,6 +113,7 @@ PAGE2           =   {
                             'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',
                         }
                     }
+"""
 PAGE3           =   {
                         'extract_urls':
                         {
@@ -138,4 +139,4 @@ PAGE6           =   {
                             'expression':'//*[@id="mainContent"]/table[1]/tbody/tr/td'
                         }
                     }
-
+"""

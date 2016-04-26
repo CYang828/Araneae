@@ -10,6 +10,8 @@ import Araneae.net.request as REQ
 import Araneae.utils.setting as SET
 import Araneae.utils.contrib as UTLC
 
+
+
 """
 dom的生成过程可以通过cache进行优化，后续进行
 """
@@ -20,10 +22,9 @@ class BaseExtractor(object):
 
 class UrlExtractor(BaseExtractor):
     """
-    抽取url,?????????????????????????在有关联的关系时,抽取的url需要记录关联的data数据,
+    url抽取
     一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
     """
-    
     def __init__(self,spider_name,response,page_rule,fid = None):
         self.__spider_name = spider_name
         self.__response = response
@@ -115,7 +116,7 @@ class UrlExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(self.__spider_name,UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number)
             self._allow_requests.append(request)
 
     @property
@@ -224,7 +225,7 @@ class UrlFormatExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(self.__spider_name,UTLH.replenish_url(self.__response_url,url),rule_number = self.__rule.next_number,**request_args)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number)
             self._requests.append(request)
 
 DEFAULT_TYPE = 'xpath'

@@ -17,6 +17,9 @@ class ChromesomeException(AraneaeException):
 class DNAException(AraneaeException):
     pass
 
+class RequestException(AraneaeException):
+    pass
+
 
 
 

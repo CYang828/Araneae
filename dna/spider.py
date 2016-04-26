@@ -1,4 +1,5 @@
 #*-*coding:utf8*-*
+
 import re
 import time
 import copy
@@ -8,6 +9,7 @@ import gevent as GEV
 import gevent.pool as GEVP
 
 import Araneae.data as DT
+import Araneae.file as FILE
 import Araneae.dna.rule as PR
 import Araneae.pipeline as PPL
 import Araneae.scheduler as SCH
@@ -38,12 +40,17 @@ class BaseSpider(object):
         +scheduler,用来调度任务
         +data_pipeline,传输数据管道,根据配置生成(可选)
         +rpc对象,如果为单机模式,rpc关联到scheduler进行push,单机模式下功能退化,只能满足简单的爬虫功能(rpc对象必须有一个和scheduler相同的push接口)
+        ?????rpc对象是共用一个还是每个spider用一个?????????????????
+        +downloader下载器,用来下载文件,可以是单机也可以是远程,远程会是一个rpc对象
+        ?????downloader对象是共用一个还是每个spider用一个?????????????????
+
     """
     __rpc = None
     __name = ''
     __pool = None
     __thread_id = 0
     __scheduler = None
+    __downloader = None
     __chromesome = None
     __running_type = ''     
     __data_pipeline = None
@@ -119,7 +126,63 @@ class BaseSpider(object):
                 raise EXP.MiddlewareException('file中间件必须继承FileMiddleware')
 
             self._file_middleware.append(file_middleware)
+ 
+    def _fetch(self,request,**args):
+        """
+        完成访问的请求,并把response转发到回调函数
+        回调函数中进行页面和数据解析,可以将解析的内容通过yield或者return的方式返回
+        yield方式会立刻将request放回调度器中
+        return方式会等待全部完成后一起放回调度器中
+        """
+        time.sleep(self._request_sleep_time)
+
+        for request_middleware in self._request_middleware:
+            request = request_middleware.transport(request)
+
+        response = request.fetch(self._request_timeout)
+        callback = request.callback
+        rule = self.get_page_rule(request.rule_number)
+        fid = request.fid
+
+        objs = getattr(self,callback)(response,rule,fid) if callback else self.parse(response,rule,fid)
+
+        #迭代器判断
+        if isinstance(objs,types.GeneratorType):
+            for obj in objs:
+                self._fetch_route(obj)
+        else:             
+            self._fetch_route(objs)
+
+    def _fetch_route(self,objs):
+        if isinstance(objs,list):
+            for obj in objs:
+                self._fetch_obj(obj)
+        else:
+            self._fetch_obj(objs)
         
+    def _fetch_obj(self,obj):
+        if isinstance(obj,REQ.Request):
+            self.master_push(obj)
+        elif isinstance(obj,DT.Data):
+            self.data_pipeline_push(obj)
+        elif isinstance(obj,FILE.File):
+            self.downloader_push(obj)
+
+    def _local_request(self,request):
+        """
+        本机请求
+        """
+        if isinstance(request,REQ.Request):
+            self.fetch_sync(request)
+        else:
+            raise TypeError('返回的不是Request对象')
+ 
+    def _join(self):
+        """
+        等待pool中任务结束
+        """
+        self.__pool.join()
+       
     def first_urls(self,first_urls):
         """
         定义爬取fisrt_urls的方式
@@ -149,18 +212,14 @@ class BaseSpider(object):
         """
         Plog('【%s】爬虫启动' % self.__name)
 
-        #构建first_urls的request对象
-        first_urls = self.__chromesome.first_urls
-
         requests = []
+        first_urls = self.__chromesome.first_urls
 
         for first_url in first_urls:
             if isinstance(first_url,str):
-                request = REQ.Request(self.__name,first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header)
-                requests.append(request)
-            #？？？有问题
+                request = REQ.Request(first_url,headers = self._login_header).set_spider_name(self.__name).set_rule_number(self.__chromesome.first_rule_number)
             elif isinstance(fisrt_url,dict):
-                request = REQ.json2request(self.__name,first_url,rule_number = self.__chromesome.first_rule_number,headers = self._login_header)
+                request = REQ.json2request(**first_url).add_header(self._login_header)
 
             requests.append(request)
 
@@ -305,6 +364,9 @@ class BaseSpider(object):
         if data.fid:
             data.add(**{'fid':data.fid})
 
+        for data_middleware in self._data_middleware:
+            data = data_middleware.transport(data)
+
         rule_number = data.rule_number
         table_name = 'Rule_%d' % rule_number
         insert_id = self.__data_pipeline.insert(table_name,data = data())
@@ -325,67 +387,15 @@ class BaseSpider(object):
         """
         return self.__chromesome.get_page_rule(number)
 
+    def page_rule_parse(self,response,page_rule,fid):
+        raise NotImplementedError('spider必须实现page_rule_parse方法')
+
     @property
     def name(self):
         return self.__name
 
-    @property
-    def scheduler(self):
-        return self.__scheduler
-
-    def _fetch(self,request,**args):
-        """
-        完成访问的请求,并把response转发到回调函数
-        回调函数中进行页面和数据解析,可以将解析的内容通过yield或者return的方式返回
-        yield方式会立刻将request放回调度器中
-        return方式会等待全部完成后一起放回调度器中
-        """
-        time.sleep(self._request_sleep_time)
-
-        for request_middleware in self._request_middleware:
-            request = request_middleware.transport(request)
-
-        print request.json
-        response = request.fetch(self._request_timeout)
-        callback = request.callback
-        rule = self.get_page_rule(request.rule_number)
-        fid = request.fid
-
-        request_or_datas = getattr(self,callback)(response,rule,fid) if callback else self.parse(response,rule,fid)
-
-        if isinstance(request_or_datas,types.GeneratorType):
-            #迭代生成器
-            for r_or_d in request_or_datas:
-                self._fetch_route(r_or_d)
-        else:             
-            self._fetch_route(request_or_datas)
-
-    def _fetch_route(self,request_or_data):
-        if isinstance(request_or_data,list):
-            for r_or_d in request_or_data:
-                self._fetch_request_or_data(r_or_d)
-        else:
-            self._fetch_request_or_data(request_or_data)
-        
-    def _fetch_request_or_data(self,request_or_data):
-        if isinstance(request_or_data,REQ.Request):
-            self.master_push(request_or_data)
-        elif isinstance(request_or_data,DT.Data):
-            self.data_pipeline_push(request_or_data)
-
-    def _local_request(self,request):
-        if isinstance(request,REQ.Request):
-            self.fetch_sync(request)
-        else:
-            raise TypeError('返回的不是Request对象')
- 
-    def _join(self):
-        self.__pool.join()
-
-
 class RuleLinkSpider(BaseSpider):
     
-    #起始url
     def first_urls(self,requests):
         self.merge_data()
         for request in requests:
@@ -410,20 +420,24 @@ class RuleLinkSpider(BaseSpider):
         一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
         Plog('规则号码【%d】' % (page_rule.number))
-        #数据抽取规则
         datas = None
         requests = None
+        files = None
+
+        #是否有下载的配置项
+        #如果有就进行下载       
+        #yield downloader
+        #下载后的存储信息和data结合
 
         if page_rule.scrawl_data_element:
             datas = EXT.DataExtractor(response,page_rule,fid)()
             yield datas
         
-        #url抽取
-        if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
+        if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:
             requests = EXT.UrlExtractor(self.name,response,page_rule,fid)()
-        elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
+        elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE and page_rule.next_number:
             requests = EXT.UrlFormatExtractor(self.name,response,page_rule,fid)()
-        elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
+        elif page_rule.extract_url_type == PR.NONE_URL_TYPE and page_rule.next_number:
             pass
 
         if page_rule.associate:
@@ -437,6 +451,4 @@ class RuleLinkSpider(BaseSpider):
 
         yield requests
         
-        #是否有下载的配置项
-        #如果有就进行下载       
-        #yield downloader
+

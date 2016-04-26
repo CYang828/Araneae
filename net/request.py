@@ -6,147 +6,179 @@ import hashlib
 import requests
 
 import Araneae.utils.http as UTLH
+import Araneae.man.exception as EXP
 
-DEFAULT_TIMEOUT = 2
+DEFAULT_REQUEST_TIMEOUT = 2
+DEFAULT_CALLBACK = 'parse'
 
 class Request(object):
+    """
+    spider_name:爬虫名
+    url:统一资源定位符
+    method:方式
+    headers:头信息
+    data:提交数据
+    cookies:cookie信息
+    callback:回调函数对象
+    auth:认证
+    proxies:代理
+    """
 
-    def __init__(self,spider_name,url,rule_number,**args):
-        """
-        spider_name:爬虫名
-        url:统一资源定位符
-        method:方式
-        headers:头信息
-        data:提交数据
-        cookies:cookie信息
-        callback:回调函数对象
-        """
+    __spider_name = ''
+    __url = ''
+    __method = 'get'
+    __data = {}
+    __cookies = {}
+    __auth = {}
+    __proxies = {}
+    __callback = None
+    __fid = None
+    __rule_number = None
+
+    def __init__(self,url,**args):
         if not url:
-            raise TypeError
+            raise EXP.RequestException('request对象必须有url')
         
-        self._spider_name = spider_name
-        self._url = UTLH.revise_url(url)
-        self._method = UTLH.validate_method(args.get('method','GET')) 
-        self._headers = args.get('headers',{})
-        self._data = args.get('data',{})
-        self._cookies = args.get('cookies',{})
-        self._callback = args.get('callback','parse')
-        self._auth = args.get('auth',{})
-        self._proxy = args.get('proxy',None)
+        self.__url = UTLH.revise_url(url)
 
-        self._rule_number = rule_number
-        self._fid = args.get('fid')
+        self.__method = UTLH.validate_method(args.get('method','GET')) 
+        self.__headers = args.get('headers',{})
+        self.__data = args.get('data',{})
+        self.__cookies = args.get('cookies',{})
+        self.__auth = args.get('auth',{})
+        self.__proxies = args.get('proxies',None)
 
-        self._json = ''
+        self.__spider_name = args.get('spider_name','')
+        self.__fid = args.get('fid',None)
+        self.__rule_number = args.get('rule_number',None)
+        self.__callback = args.get('callback',DEFAULT_CALLBACK)
 
-    def fetch(self,timeout = DEFAULT_TIMEOUT):
+    def _sequence_json(self):
+        request_json = {}
+        request_json['url'] = self.__url
+
+        if self.__spider_name:
+            request_json['spider_name'] = self.__spider_name
+
+        if self.__method:
+            request_json['method'] = self.__method
+        if self.__headers:
+            request_json['headers'] = self.__headers
+        if self.__data:
+            request_json['data'] = self.__data
+        if self.__cookies:
+            request_json['cookies'] = self.__cookies
+        if self.__auth:
+            request_json['auth'] = self.__auth
+        if self.__proxies:
+            request_json['proxies'] = self.__proxies
+
+        if self.__callback:
+            request_json['callback'] = self.__callback
+        if self.__fid:
+            request_json['fid'] = self.__fid
+
+        if not self.__rule_number:
+            raise EXP.RequestException('request对象必须设置rule number')
+
+        request_json['rule_number'] = self.__rule_number
+
+        return json.dumps(request_json,ensure_ascii = False)
+
+    def set_spider_name(self,spider_name):
+        self.__spider_name = spider_name
+        return self
+
+    def set_rule_number(self,rule_number):
+        self.__rule_number = rule_number
+        return self
+
+    def set_fid(self,fid):
+        self.__fid = fid
+        return self
+
+    def set_auth(self,auth):
+        self.__auth = auth
+        return self
+
+    def set_user_agent(self,user_agent):
+        self.__headers['User-Agent'] = user_agent
+        return self
+
+    def set_http_proxy(self,proxy):
+        self.__proxy = {'http':proxy}
+        return self
+
+    def set_https_proxy(self,proxy):
+        self.__proxy = {'https':proxy}
+        return self
+
+    def add_headers(self,header_dict):
+        self.__headers = dict(self._headers,**header_dict)
+        return self
+
+    def add_cookies(self,cookie_dict):
+        self.__cookies = dict(self._cookies,**cookie_dict)
+        return self
+
+    def fetch(self,timeout = DEFAULT_REQUEST_TIMEOUT):
         """
         抓取页面信息
         """
-        method = self._method.lower()
-        #?????????????????????添加错误处理,外部将错误链接重新添加回调度器
-        response = getattr(requests,method)(self._url,proxies = self._proxy,data = self._data,headers = self._headers,cookies = self._cookies,timeout = timeout)
+        response = getattr(requests,self.__method)(self.__url,proxies = self.__proxies,data = self.__data,headers = self.__headers,cookies = self.__cookies,timeout = timeout)
         return response
-
-    def set_rule_number(self,rule_number):
-        self._rule_number = rule_number
-
-    def set_headers(self,header_dict):
-	    self._headers = dict(self._headers,**header_dict)
-
-    def set_cookies(self,cookie_dict):
-	    self._cookies = dict(self._cookies,**cookie_dict)
-
-    def set_auth(self,auth_dict):
-	    self._auth = dict(self._auth,**auth_dict)
-
-    def set_user_agent(self,user_agent):
-        self._headers['User-Agent'] = user_agent
-
-    def set_http_proxy(self,proxy):
-        self._proxy = {'http':proxy}
-
-    def set_https_proxy(self,proxy):
-        self._proxy = {'https':proxy}
-
-    @property
-    def fid(self):
-        return self._fid
-
-    @fid.setter
-    def fid(self,fid):
-        self._fid = fid
 
     @property
     def url(self):
-        return self._url
+        return self.__url
 
     @property
     def method(self):
-        return self._method
+        return self.__method
 
     @property
     def rule_number(self):
-        return self._rule_number
+        return self.__rule_number
 
     @rule_number.setter
     def rule_number(self,rule_number):
-        self._rule_number = rule_number
+        self.__rule_number = rule_number
 
     @property
     def headers(self):
-        return self._headers
+        return self.__headers
 
     @property
     def cookies(self):
-        return self._cookies
+        return self.__cookies
 
     @property
     def data(self):
-        return self._data
+        return self.__data
 
     @property
     def callback(self):
-        return self._callback
+        return self.__callback
 
     @callback.setter
     def callback(self,callback):
-        self._callback = callback
+        self.__callback = callback
 
     @property
     def json(self):
-        self._sequence_json()
-        return self._json
+        return self._sequence_json()
 
-    #这个是用来放到mq中的
-    def _sequence_json(self):
-        request_json = {}
-        request_json['url'] = self._url
+    @property
+    def fid(self):
+        return self.__fid
 
-        if self._spider_name:
-            request_json['spider_name'] = self._spider_name
-
-        if self._method:
-            request_json['method'] = self._method
-        if self._headers:
-            request_json['headers'] = self._headers
-        if self._data:
-            request_json['data'] = self._data
-        if self._cookies:
-            request_json['cookies'] = self._cookies
-        if self._callback:
-            request_json['callback'] = self._callback
-
-        request_json['rule_number'] = self._rule_number
-        
-        if self._fid:
-            request_json['fid'] = self._fid
-
-        self._json = json.dumps(request_json)
+    @fid.setter
+    def fid(self,fid):
+        self.__fid = fid
 
 def json2request(request_json):
     """
-    将Medium的json穿转换成request
+    json串转换成request对象
     """
     request_json = json.loads(request_json)
     request = Request(**request_json)
