@@ -21,7 +21,7 @@ SCHEDULER_RETRY_INTERVAL = 1
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
 #请求休眠时间,单位秒
-REQUEST_SLEEP_TIME = 2
+REQUEST_SLEEP_TIME = 1
 #请求超时时间,单位秒
 REQUEST_TIMEOUT = 2
 
@@ -33,7 +33,7 @@ SPIDER_TYPE     =   'rulelink'
 
 
 #中间数据结果集前缀
-MIDDLE_DATA_COLLECTION = 'Rule'
+MIDDLE_DATA_COLLECTION = 'rule'
 #合并后结果集前缀
 MERGE_DATA_COLLECTION = 'merge_result'
 #持久化存储配置

@@ -60,6 +60,9 @@ class Data(object):
     def __str__(self):
         return json.dumps(self.__kv,ensure_ascii = False).encode('utf8')
 
+    def set_url(self,url):
+        self.add(**{'_url':url})   
+
     @property
     def fields(self):
         return self.__kv.keys()
@@ -71,6 +74,7 @@ class Data(object):
     @fid.setter
     def fid(self,fid):
         self.__fid = fid
+        self.add(**{'fid':fid})
 
     @property
     def value(self):

@@ -143,8 +143,9 @@ class BaseSpider(object):
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)
         fid = request.fid
+        associate = request.associate
 
-        objs = getattr(self,callback)(response,rule,fid) if callback else self.parse(response,rule,fid)
+        objs = getattr(self,callback)(response,rule,fid,associate) if callback else self.parse(response,rule,fid,associate)
 
         #迭代器判断
         if isinstance(objs,types.GeneratorType):
@@ -212,6 +213,8 @@ class BaseSpider(object):
         """
         Plog('【%s】爬虫启动' % self.__name)
 
+        self.merge_data()
+
         requests = []
         first_urls = self.__chromesome.first_urls
 
@@ -254,6 +257,7 @@ class BaseSpider(object):
                 request = REQ.json2request(request_json)
                 self.fetch(request)
 
+        self.merge_data()
         Plog('爬取任务结束')
         self.end()
 
@@ -265,6 +269,7 @@ class BaseSpider(object):
         upper_associate_stat = False
         merge_number_register = []
 
+        #判断有关联关系的表
         for page_rule in self.__chromesome.iter_page_rule():
             if page_rule.scrawl_data_element and page_rule.associate:
                 upper_associate_stat = True
@@ -274,16 +279,18 @@ class BaseSpider(object):
                 merge_number_register.append(merge_number)
                 upper_associate_stat = False
                 merge_number = []
-
+       
         page_rule_len = len(self.__chromesome)
         merge_result_len = len(merge_number_register)
         data_pipelines = []
 
+        #初始化collection对象
         for i in range(page_rule_len+merge_result_len):
             data_pipeline = PPL.generate_pipeline(**self.__chromesome.lasting)
             data_pipeline.select_db(self.__name)
             data_pipelines.append(data_pipeline)
-        
+
+        #从关联项的最后开始生成数据
         for idx_result,merge_number in enumerate(merge_number_register):
             lower_cursor = None
             collections = []
@@ -292,7 +299,7 @@ class BaseSpider(object):
             merge_collection_name = self._merge_data_collection + ('_%d' % idx_result)
             merge_collection = data_pipelines.pop().select_collection(merge_collection_name)
 
-            for idx,number in enumerate(sorted(merge_number,reverse = False)):
+            for idx,number in enumerate(sorted(merge_number,reverse = True)):
                 collection_name = self._middle_data_collection + ('_%d' % number)
                 collection = data_pipelines.pop().select_collection(collection_name)
 
@@ -304,20 +311,33 @@ class BaseSpider(object):
             for doc in lower_cursor:
                 full_data = {}
                 fid = doc.get('fid')
+
+                if fid:
+                    del doc['fid']
+
                 del doc['_id']
+                del doc['_url']
                 full_data = doc
-                
+
                 if fid:
                     for collection in collections:
                         if fid:
-                            #不会查询到多条数据
+                            #只能查询到一条数据
                             doc = collection.find(filter = {'_id':BS.ObjectId(fid)})
+
                             if doc.count():
                                 doc = doc[0]
                                 fid = doc.get('fid')
+
+                                if fid:
+                                    del doc['fid'] 
+                                
                                 del doc['_id']
-                                del doc['fid']
+                                del doc['_url']
                                 full_data = dict(full_data,**doc)
+
+                merge_collection.insert(full_data)
+
                 #import json
                 #print json.dumps(full_data,ensure_ascii = False)
                         
@@ -361,14 +381,11 @@ class BaseSpider(object):
         """
         向数据管道推送数据
         """
-        if data.fid:
-            data.add(**{'fid':data.fid})
-
         for data_middleware in self._data_middleware:
             data = data_middleware.transport(data)
 
         rule_number = data.rule_number
-        table_name = 'Rule_%d' % rule_number
+        table_name = self._middle_data_collection + ('_%d' % rule_number)
         insert_id = self.__data_pipeline.insert(table_name,data = data())
         data.fid = insert_id
 
@@ -397,22 +414,21 @@ class BaseSpider(object):
 class RuleLinkSpider(BaseSpider):
     
     def first_urls(self,requests):
-        self.merge_data()
         for request in requests:
             request.callback = 'first_parse'
             yield request
         
-    def first_parse(self,response,rule,fid):
+    def first_parse(self,response,rule,fid,associate):
         first_page_rule = rule
-        requests = self.page_rule_parse(response,first_page_rule,fid)
+        requests = self.page_rule_parse(response,first_page_rule,fid,associate)
         return requests
 
-    def parse(self,response,rule,fid):
-        requests = self.page_rule_parse(response,rule,fid)
+    def parse(self,response,rule,fid,associate):
+        requests = self.page_rule_parse(response,rule,fid,associate)
         return requests
 
     #返回一个Request对象，或者Request的对象列表,返回的Request自动发送到scheduler
-    def page_rule_parse(self,response,page_rule,fid):
+    def page_rule_parse(self,response,page_rule,fid,associate):
         """
         PageRule规则解析
         结果只有两个
@@ -430,13 +446,17 @@ class RuleLinkSpider(BaseSpider):
         #下载后的存储信息和data结合
 
         if page_rule.scrawl_data_element:
-            datas = EXT.DataExtractor(response,page_rule,fid)()
+            if associate:
+                datas = EXT.DataExtractor(response,page_rule,fid)()
+            else:
+                datas = EXT.DataExtractor(response,page_rule)()
+                
             yield datas
         
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlExtractor(self.name,response,page_rule,fid)()
+            requests = EXT.UrlExtractor(self.name,response,page_rule,fid).set_associate(page_rule.associate)()
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlFormatExtractor(self.name,response,page_rule,fid)()
+            requests = EXT.UrlFormatExtractor(self.name,response,page_rule,fid).set_associate(page_rule.associate)()
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE and page_rule.next_number:
             pass
 

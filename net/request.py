@@ -10,6 +10,7 @@ import Araneae.man.exception as EXP
 
 DEFAULT_REQUEST_TIMEOUT = 2
 DEFAULT_CALLBACK = 'parse'
+DEFAULT_ASSOCIATE = False
 
 class Request(object):
     """
@@ -22,6 +23,7 @@ class Request(object):
     callback:回调函数对象
     auth:认证
     proxies:代理
+    associate:是否关联
     """
 
     __spider_name = ''
@@ -34,6 +36,7 @@ class Request(object):
     __callback = None
     __fid = None
     __rule_number = None
+    __associate = False
 
     def __init__(self,url,**args):
         if not url:
@@ -52,6 +55,7 @@ class Request(object):
         self.__fid = args.get('fid',None)
         self.__rule_number = args.get('rule_number',None)
         self.__callback = args.get('callback',DEFAULT_CALLBACK)
+        self.__associate = args.get('associate',DEFAULT_ASSOCIATE)
 
     def _sequence_json(self):
         request_json = {}
@@ -83,6 +87,8 @@ class Request(object):
 
         request_json['rule_number'] = self.__rule_number
 
+        request_json['associate'] = self.__associate
+
         return json.dumps(request_json,ensure_ascii = False)
 
     def set_spider_name(self,spider_name):
@@ -111,6 +117,10 @@ class Request(object):
 
     def set_https_proxy(self,proxy):
         self.__proxy = {'https':proxy}
+        return self
+
+    def set_associate(self,associate):
+        self.__associate = associate
         return self
 
     def add_headers(self,header_dict):
@@ -175,6 +185,14 @@ class Request(object):
     @fid.setter
     def fid(self,fid):
         self.__fid = fid
+
+    @property
+    def associate(self):
+        return self.__associate
+
+    @associate.setter
+    def associate(self,associate):
+        self.__associate = associate
 
 def json2request(request_json):
     """

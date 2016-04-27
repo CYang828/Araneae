@@ -38,6 +38,7 @@ class UrlExtractor(BaseExtractor):
         self._cookies = args.get('cookies',{})
         self._method = args.get('method','GET')
         self._data = args.get('data',{})
+        self._associate = False
 
         self._fid = fid
 
@@ -46,9 +47,9 @@ class UrlExtractor(BaseExtractor):
         self._allow_requests = []
         self._extract_urls()
         self._extract_allow_urls()
-        self._url2request()
 
     def __call__(self):
+        self._url2request()
         return self._allow_requests
     
     def extract(self):
@@ -116,8 +117,13 @@ class UrlExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number).set_associate(self._associate)
+            
             self._allow_requests.append(request)
+
+    def set_associate(self,associate):
+        self._associate = associate
+        return self
 
     @property
     def urls(self):
@@ -237,7 +243,8 @@ class DataExtractor(BaseExtractor):
     抽取数据可以分为两种，一种mutiple 用于生成多个data对象,一种single 只生成单个data对象
     ?????????如何构建一个通用的数据抽取模型
     """
-    def __init__(self,response,page_rule,fid):
+    def __init__(self,response,page_rule,fid = ''):
+        self.__response = response
         self.__dom = UTLC.response2dom(response)
         self._extract_data_elements = page_rule.scrawl_data_element
         self._page_rule = page_rule
@@ -403,7 +410,7 @@ class DataExtractor(BaseExtractor):
             #构造DATA
             datas = []
             raw_data = {}
-            import json
+
             for mid in middle:
                 for i_f,f in enumerate(field):
                     if multiple:
@@ -433,6 +440,7 @@ class DataExtractor(BaseExtractor):
                         raw_data[field] = value[0]
                         
                 data =  DT.Data(**raw_data)
+                data.set_url(self.__response.url)
                 data.fid = self._fid
                 data.rule_number = self._page_rule.number
                 datas.append(data)
@@ -448,6 +456,7 @@ class DataExtractor(BaseExtractor):
                             #print 'DATA'
                             #print json.dumps(data(),ensure_ascii = False)
                             new_data = p_data + data
+                            new_data.set_url(self.__response.url)
                             new_datas.append(new_data)
                             #print 'NEW'
                             #print new_data
@@ -461,9 +470,15 @@ class DataExtractor(BaseExtractor):
 
         self._datas = parent_datas
 
+    def set_fid(self,fid):
+        self._fid = fid
+        return self
+
     @property
     def fid(self):
         return self._fid
 
-
-
+   
+    @fid.setter
+    def fid(self,fid):
+        self._fid = fid

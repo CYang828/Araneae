@@ -216,6 +216,10 @@ class RuleLinkChromesome(BaseChromesome):
     def first_rule_number(self):
         return  min(self.__page_rules.keys())
 
+    @property
+    def first_rule(self):
+        return self.__page_rules[self.first_rule_number]
+
        
 class BroadPriorityChromesome(BaseChromesome):
     """
