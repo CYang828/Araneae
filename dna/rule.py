@@ -9,15 +9,18 @@ class PageRule(object):
     """
     页面规则,用来确定输出的url和data
     """
-    __number = None
-    __extract_url_type = NONE_URL_TYPE
-    __extract_url_element = None
-    __scrawl_data_element = None
-    __associate = False
-    __fields = set([])
-    __next_number = None
-
     def __init__(self,map):
+        self.__number = None
+        self.__extract_url_type = NONE_URL_TYPE
+        self.__extract_url_element = None
+        self.__extract_file_element = None
+        self.__next_page_url_type = NONE_URL_TYPE
+        self.__next_page_url_element = None
+        self.__scrawl_data_element = None
+        self.__associate = False
+        self.__fields = set([])
+        self.__next_number = None
+
         self._essential(map)
 
     def _essential(self,map):
@@ -30,8 +33,17 @@ class PageRule(object):
         elif 'format_urls' in map.keys():
             self.__extract_url_type  = FORMAT_URL_TYPE
             self.__extract_url_element = map['format_urls']
-        #else:
-        #    raise TypeError('PageRule中必须存在extract_urls或者format_urls中的一个')
+
+        if 'extract_files' in map.keys():
+            self.__extract_file_element = map['extract_files']
+
+        if 'extract_next_page' in map.keys():
+            self.__next_page_url_type = EXTRACT_URL_TYPE
+            self.__next_page_url_element = map['extract_next_page']
+
+        elif 'format_next_page' in map.keys():
+            self.__next_page_url_type  = FORMAT_URL_TYPE
+            self.__next_page_url_element = map['extract_next_page']
 
         if 'extract_data' in map.keys():
             if isinstance(map['extract_data'],dict):
@@ -77,8 +89,20 @@ class PageRule(object):
         return self.__extract_url_type
 
     @property
+    def next_page_url_type(self):
+        return self.__next_page_url_type
+
+    @property
+    def next_page_url_element(self):
+        return self.__next_page_url_element
+
+    @property
     def extract_url_element(self):
         return self.__extract_url_element
+
+    @property
+    def extract_file_element(self):
+        return self.__extract_file_element
 
     @property
     def scrawl_data_element(self):

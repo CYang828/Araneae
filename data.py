@@ -62,6 +62,12 @@ class Data(object):
 
     def set_url(self,url):
         self.add(**{'_url':url})   
+        return self
+
+    def set_fid(self,fid):
+        self.add(**{'fid':fid})
+        self.__fid = fid
+        return self
 
     @property
     def fields(self):
@@ -73,8 +79,8 @@ class Data(object):
 
     @fid.setter
     def fid(self,fid):
-        self.__fid = fid
         self.add(**{'fid':fid})
+        self.__fid = fid
 
     @property
     def value(self):

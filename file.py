@@ -5,8 +5,8 @@ class File(object):
     __method = None
     __file_name = None
    
-    def __init__(self,**kvargs):
-        self.__url = kvargs.get('url')
+    def __init__(self,url,**kvargs):
+        self.__url = url
         self.__method = kvargs.get('method','get')
         self.__file_path = kvargs.get('file_path')
 
@@ -14,6 +14,7 @@ class File(object):
         self._headers = kvargs.get('headers')
         self._proxies = kvargs.get('proxies')
         self._auth = kvargs.get('auth')
+        self._data = kvargs.get('data')
 
     def set_user_agent(self,user_agent):
         self.__headers['User-Agent'] = user_agent
@@ -80,10 +81,13 @@ class File(object):
             file_json['file_path'] = self.__file_path
 
         if self.__headers:
-            file_json['header'] = self.__headers
+            file_json['header'] = self._headers
 
         if self.__proxies:
-            file_json['proxy'] = self.__proxies
+            file_json['proxy'] = self._proxies
+
+        if self.__data:
+            file_json['data'] = self._data
 
         file_json = json.dumps(file_json,ensure_ascii = True)
 

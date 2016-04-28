@@ -213,7 +213,7 @@ class BaseSpider(object):
         """
         Plog('【%s】爬虫启动' % self.__name)
 
-        self.merge_data()
+        #self.merge_data()
 
         requests = []
         first_urls = self.__chromesome.first_urls
@@ -387,7 +387,7 @@ class BaseSpider(object):
         rule_number = data.rule_number
         table_name = self._middle_data_collection + ('_%d' % rule_number)
         insert_id = self.__data_pipeline.insert(table_name,data = data())
-        data.fid = insert_id
+        data.set_fid(insert_id)
 
     def downloader_push(self,file_obj):
         pass
@@ -431,35 +431,67 @@ class RuleLinkSpider(BaseSpider):
     def page_rule_parse(self,response,page_rule,fid,associate):
         """
         PageRule规则解析
-        结果只有两个
-        一个是生成Request,放入scheduler
-        一个是生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
+        生成File放入downloader中下载
+        生成Request,放入scheduler
+        生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
         Plog('规则号码【%d】' % (page_rule.number))
-        datas = None
-        requests = None
-        files = None
+
+        dom = UTLC.response2dom(response)
+        url = response.url
+        cookies = response.cookies
+        spider_name = self.name
+        next_associate = page_rule.associate
+        rule_number = page_rule.number
+        next_rule_number = page_rule.next_number
+
+        print associate
+
+        data_files = []
+        datas = []
+        requests = []
+        next_page_requests = []
 
         #是否有下载的配置项
         #如果有就进行下载       
         #yield downloader
         #下载后的存储信息和data结合
+        if page_rule.extract_file_element:
+           data_files = EXT.FileExtractor(dom,url,page_rule.extract_file_element,spider_name = spider_name,cookies = cookies).extract()
 
+        #数据抽取
+        #如果上一规则为关联,数据中才记录fid
         if page_rule.scrawl_data_element:
             if associate:
-                datas = EXT.DataExtractor(response,page_rule,fid)()
+                datas = EXT.DataExtractor(dom,url,page_rule.scrawl_data_element,fid = fid,rule_number = rule_number).extract()
             else:
-                datas = EXT.DataExtractor(response,page_rule)()
-                
-            yield datas
+                datas = EXT.DataExtractor(dom,url,page_rule.scrawl_data_element,rule_number = rule_number).extract()
+    
+        #只有数据和文件的数量相同时才能进行下载,否则没办法存储
+        if datas and data_files:
+            if len(data_files) != len(datas):
+                raise TypeError('生成的数据和文件的数量不同没法下载')
+            else:
+                for idx_data,(data,file_obj) in enumerate(data_files):
+                    datas[idx_data] = datas[idx_data] + data
+                    yield file_obj
+        elif not datas:
+                for idx_data,(data,file_obj) in enumerate(data_files):
+                    datas.append(data)
+                    yield file_obj
+
+        yield datas
+
+        print page_rule.extract_url_type
         
+        #应该在这里设置page_rule的number
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlExtractor(self.name,response,page_rule,fid).set_associate(page_rule.associate)()
+            requests = EXT.UrlExtractor(dom,url,page_rule.extract_url_element,spider_name,next_rule_number,fid,next_associate,cookies).extract()
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlFormatExtractor(self.name,response,page_rule,fid).set_associate(page_rule.associate)()
+            requests = EXT.UrlFormatExtractor(dom,url,page_rule.extract_url_element,spider_name,next_rule_number,fid,next_associate).extract()
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE and page_rule.next_number:
             pass
-
+        
         if page_rule.associate:
             #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
             if datas and requests:
@@ -467,8 +499,17 @@ class RuleLinkSpider(BaseSpider):
                     raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
                 else:
                     for i_data,data in enumerate(datas):
-                        requests[i_data].fid = data.fid
+                        requests[i_data].set_fid(data.fid)
 
         yield requests
-        
 
+        #下一页链接抽取和普通抽取的唯一区别是page_rule的number
+        if page_rule.next_page_url_type == PR.EXTRACT_URL_TYPE:
+            next_page_requests = EXT.UrlExtractor(dom,url,page_rule.extract_url_element,spider_name,rule_number,fid,associate).extract()
+        elif page_rule.next_page_url_type == PR.FORMAT_URL_TYPE:
+            next_page_requests = EXT.UrlFormatExtractor(dom,url,page_rule.extract_url_element,spider_name,rule_number,fid,next_associate).extract()
+        elif page_rule.next_page_url_type == PR.NONE_URL_TYPE:
+            pass
+
+        yield next_page_requests        
+        

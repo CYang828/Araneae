@@ -84,7 +84,6 @@ PAGE1           =   {
                             #'cookies':{'user':'zhangchunyang'},#如果不指定，沿用上一页后的http头
                             #'method':'GET',
                             #'data':None,
-                            #'nextPage'#翻页功能,获取到的url与当前平级
                         },
                         #'format_urls':
                         #{
@@ -96,21 +95,33 @@ PAGE1           =   {
                         #    'headers':{'name':'zhangchunyang'},
                         #    'cookies':{'user':'zhangchunyang'},#如果不指定，沿用上一页后的http头
                         #},
+                        #'extract_next_page':
+                        #{
+                        #},
+                        #'format_next_page':
+                        #{
+                        #},
+                        #'extract_files':
+                        #{
+                        #    'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_001001001001.shtm',
+                        #    'field':'class'
+                        #}
                    }
 PAGE2           =   {
-                        'extract_data':
-                        [
-                            {
-                                'type':'xpath', #reg #xpath
-                                'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[1]/td[1]/text()',
-                                'field':'unit',#想要抽取的数据必须有字段名,否则没法存储
-                                'multiple':False,
-                                'associate':False
-                            },
-                        ],
+                        #'extract_data':
+                        #[
+                        #    {
+                        #        'type':'xpath', #reg #xpath
+                        #        'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[1]/td[1]/text()',
+                        #        'field':'unit',#想要抽取的数据必须有字段名,否则没法存储
+                        #        'multiple':False,
+                        #        'associate':False
+                        #    },
+                        #],
                         'extract_urls':
                         {           
-                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',
+                            #'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',
+                            'allow':r'/jty/tbkt/showDetail\.action\?articleId=\d*',
                         }
                     }
 """

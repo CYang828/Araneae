@@ -80,7 +80,7 @@ class MongoDataPipeline(BaseDataPipeline):
         
         try:
             obj_id = str(self._collection.insert_one(data).inserted_id)
-            #Plog('Mongo insert -- data[%s] -- _id[%s]' % (data,obj_id))
+            Plog('Mongo insert -- data[%s] -- _id[%s]' % (data,obj_id))
             return obj_id
         except PyMongoError as e:    
             raise TypeError(e)

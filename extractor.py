@@ -1,9 +1,13 @@
 #*-*coding:utf8*-*
 
 import re
+import hashlib
+import lxml.html
 import itertools
 import lxml.etree
+import lxml.html.soupparser
 
+import Araneae.file as FILE
 import Araneae.data as DT
 import Araneae.utils.http as UTLH
 import Araneae.net.request as REQ
@@ -11,52 +15,47 @@ import Araneae.utils.setting as SET
 import Araneae.utils.contrib as UTLC
 
 
-
-"""
-dom的生成过程可以通过cache进行优化，后续进行
-"""
-
-class BaseExtractor(object):
-    __dom = None
-    __response_url = ''
-
-class UrlExtractor(BaseExtractor):
+class UrlExtractor(object):
     """
     url抽取
-    一个UrlExtractor只是针对一个response存在的,一个response对象可以对应有多个extractor
-    """
-    def __init__(self,spider_name,response,page_rule,fid = None):
-        self.__spider_name = spider_name
-        self.__response = response
-        self.__rule = page_rule
-        self.__dom = UTLC.response2dom(response)
-        self.__response_url = response.url
-        args = page_rule.extract_url_element
-        self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('allow',[]))]
-        self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(args.get('deny',[]))]
-        self._headers = args.get('headers',{})
-        self._cookies = args.get('cookies',{})
-        self._method = args.get('method','GET')
-        self._data = args.get('data',{})
-        self._associate = False
+    dom:通过html生成的dom对象
+    url:网页地址,用来补全url
+    rule:抽取url的规则
 
+    fid:上一次生成数据的id
+    associate:生成的request是否与本页有关系
+    spider_name:生成的request所属spider
+    """
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+        self.__dom = dom
+        self.__url = url
+        self.__page_rule = rule
+        
+        self._allow_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(rule.get('allow',[]))]
+        self._deny_regexes = [re.compile(regex,re.I) for regex in SET.revise_value(rule.get('deny',[]))]
+        self._headers = rule.get('headers',{})
+        self._cookies = rule.get('cookies',{})
+        self._method = UTLH.validate_method(rule.get('method','GET'))
+        self._data = rule.get('data',{})
+        self._auth = rule.get('auth',{})
+        self._proxies = rule.get('proxies',{})
+
+        self._spider_name = spider_name
+        self._associate = associate
+        self._rule_number = rule_number
         self._fid = fid
+        self._cookies = dict(self._cookies,**cookies)
 
         self._urls = []
         self._allow_urls = []
         self._allow_requests = []
+
         self._extract_urls()
         self._extract_allow_urls()
 
-    def __call__(self):
-        self._url2request()
-        return self._allow_requests
-    
-    def extract(self):
-        return self._allow_urls
-
     def _extract_urls(self):
         self._urls = self.__dom.xpath('//a//@href')
+        print self._urls
 
     def _extract_allow_urls(self):
         """
@@ -112,17 +111,37 @@ class UrlExtractor(BaseExtractor):
 
     def _url2request(self):
         #附加上次爬去后的cookies
-        cookies = dict(self._cookies,**self.__response.cookies)
+        cookies = dict(self._cookies,**self._cookies)
 
-        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
+        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
 
         for url in self._allow_urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number).set_associate(self._associate)
+            request = REQ.Request(UTLH.replenish_url(self.__url,url),**request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number).set_associate(self._associate)
             
             self._allow_requests.append(request)
+  
+    def extract(self):
+        self._url2request()
+        return self._allow_requests
+
+    def set_spider_name(self,spider_name):
+        self._spider_name = spider_name
+        return self
+
+    def set_fid(self,fid):
+        self._fid = fid
+        return self
+
+    def set_rule_number(self,rule_number):
+        self._rule_number = rule_number
+        return self
 
     def set_associate(self,associate):
         self._associate = associate
+        return self
+    
+    def add_cookies(self,cookies):
+        self._cookies = dict(self._cookies,**cookies)
         return self
 
     @property
@@ -133,44 +152,45 @@ class UrlExtractor(BaseExtractor):
     def allow_urls(self):
         return self._allow_urls
 
+    @property
+    def url(self):
+        return self.__url
 
 
-class UrlFormatExtractor(BaseExtractor):
+class UrlFormatExtractor(object):
     """
     抽取格式化的url
     """
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+        self.__dom = dom
+        self.__url = url
+        self.__rule = rule
 
-    def __init__(self,spider_name,response,page_rule,fid):
-        self.__spider_name = spider_name
-        self.__response = response
-        self.__rule = page_rule
-        self.__dom = UTLC.response2dom(response)
-        self.__response_url = response.url
-
-        args = page_rule.extract_url_element
-        self._format_url = args.get('format_url')
+        self._format_url = rule.get('format_url')
 
         if not self._format_url:
             raise TypeError('format url配置中必须有format_url')
 
-        #format_data中可以存在一些特殊的用法
         self._format_data = args.get('format_data')
 
-        self._method = args.get('method','GET')
-        self._data = args.get('data')
-        self._headers = args.get('headers',None)
-        self._cookies = args.get('cookies',None)
+        self._headers = rule.get('headers',{})
+        self._cookies = rule.get('cookies',{})
+        self._method = UTLH.validate_method(rule.get('method','GET'))
+        self._data = rule.get('data',{})
+        self._auth = rule.get('auth',{})
+        self._proxies = rule.get('proxies',{})
 
+        self._spider_name = spider_name
+        self._associate = associate
         self._fid = fid
+        self._rule_number = rule_number
+
+        self._cookies = dict(self._cookies,**cookies)
 
         self._urls = []
         self._requests = []
 
         self._splice_urls()
-        self._url2request()
-
-    def __call__(self):
-        return self._requests
 
     def _splice_urls(self):
         data_dict = {}
@@ -231,39 +251,57 @@ class UrlFormatExtractor(BaseExtractor):
         request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self.__rule.next_number)
+            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self._rule_number)
             self._requests.append(request)
+
+    def extract(self):
+        self._url2request()
+        return self._requests
+
+    def set_spider_name(self,spider_name):
+        self._spider_name = spider_name
+
+    def set_fid(self,fid):
+        self._fid = fid
+
+    def set_rule_number(self,rule_number):
+        self._rule_number = rule_number
+
+    def set_associate(self,associate):
+        self._associate = associate
+
+    def add_cookies(self,cookies):
+        self._cookies = dict(self._cookies,cookies)
+        return self
+
 
 DEFAULT_TYPE = 'xpath'
 DEFAULT_MULTIPLE = False
 
-class DataExtractor(BaseExtractor):
+class DataExtractor(object):
     """
     数据抽取类
     抽取数据可以分为两种，一种mutiple 用于生成多个data对象,一种single 只生成单个data对象
     ?????????如何构建一个通用的数据抽取模型
     """
-    def __init__(self,response,page_rule,fid = ''):
-        self.__response = response
-        self.__dom = UTLC.response2dom(response)
-        self._extract_data_elements = page_rule.scrawl_data_element
-        self._page_rule = page_rule
+    def __init__(self,dom,url,rule,fid = None,rule_number = -1):
+        self.__dom = dom
+        self.__url = url
+        self.__rule = rule
 
-        self._parent_datas = {}
-        self._datas = []
+        #用来知道存储在哪个库中
+        self._rule_number = rule_number
         self._fid = fid
-       
+
+        self._datas = []
         self._group_regex = re.compile(r'\[\?(\d*)\]')
 
         self._extract_data()
 
-    def __call__(self,type = None):
-        return self._datas
-
     def _extract_data(self):
         parent_datas = None
 
-        for idx_element,element in enumerate(self._extract_data_elements):
+        for idx_element,element in enumerate(self.__rule):
             tp = element.get('type',DEFAULT_TYPE)
             expression = element.get('expression')
 
@@ -333,7 +371,7 @@ class DataExtractor(BaseExtractor):
                         group_flag = True
 
                         group_idx = match.group(1)
-                        print '匹配索引:' + group_idx
+                        #print '匹配索引:' + group_idx
 
                         if group_idx.isdigit():
                             group_idx = int(group_idx)
@@ -424,8 +462,7 @@ class DataExtractor(BaseExtractor):
                   
                 if multiple:
                     data = DT.Data(**raw_data)
-                    data.fid = self._fid
-                    data.rule_number = self._page_rule.number
+                    data.rule_number = self._rule_number
                     #print 'DATA'
                     #print json.dumps(raw_data,ensure_ascii = False)
                     datas.append(data)
@@ -439,10 +476,8 @@ class DataExtractor(BaseExtractor):
                     if len(value) == 1:
                         raw_data[field] = value[0]
                         
-                data =  DT.Data(**raw_data)
-                data.set_url(self.__response.url)
-                data.fid = self._fid
-                data.rule_number = self._page_rule.number
+                data =  DT.Data(**raw_data) 
+                data.rule_number = self._rule_number
                 datas.append(data)
 
             #关联parent
@@ -456,7 +491,6 @@ class DataExtractor(BaseExtractor):
                             #print 'DATA'
                             #print json.dumps(data(),ensure_ascii = False)
                             new_data = p_data + data
-                            new_data.set_url(self.__response.url)
                             new_datas.append(new_data)
                             #print 'NEW'
                             #print new_data
@@ -470,15 +504,60 @@ class DataExtractor(BaseExtractor):
 
         self._datas = parent_datas
 
+    def extract(self):
+        for data in self._datas:
+            data.set_url(self.__url)
+                
+            if self._fid:
+                data.set_fid(self._fid)
+
+        return self._datas
+
     def set_fid(self,fid):
         self._fid = fid
+        return self
+
+    def set_rule_number(self,rule_number):
+        self._rule_number = rule_number
         return self
 
     @property
     def fid(self):
         return self._fid
-
    
     @fid.setter
     def fid(self,fid):
         self._fid = fid
+
+
+class FileExtractor(UrlExtractor):
+
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+        self._field = rule.get('field')
+
+        if not self._field:
+            raise TypeError('下载文件必须有field字段')
+
+        #文件下载存储路径
+        self.__file_path = spider_name + '/' + str(rule_number) + '/'
+
+        self._files = []
+
+        super(FileExtractor,self).__init__(dom,url,rule,spider_name,rule_number,fid,associate,cookies)
+
+    def _url2file(self):
+        cookies = dict(self._cookies,**self._cookies)
+        file_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
+
+        for url in self._allow_urls:
+            file_name = hashlib.md5(url).hexdigest()
+            file_args['file_name'] = self.__file_path
+            file_obj = FILE.File(UTLH.replenish_url(self.url,url),**file_args)
+            data = DT.Data(**{'%s_download'%self._field:file_name})
+            
+            self._files.append((data,file_obj))
+       
+    def extract(self):
+        self._url2file()
+        return self._files
+
