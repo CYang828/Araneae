@@ -26,7 +26,7 @@ class UrlExtractor(object):
     associate:生成的request是否与本页有关系
     spider_name:生成的request所属spider
     """
-    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {},headers = {}):
         self.__dom = dom
         self.__url = url
         self.__page_rule = rule
@@ -45,6 +45,7 @@ class UrlExtractor(object):
         self._rule_number = rule_number
         self._fid = fid
         self._cookies = dict(self._cookies,**cookies)
+        self._headers = dict(self._headers,**headers)
 
         self._urls = []
         self._allow_urls = []
@@ -110,10 +111,7 @@ class UrlExtractor(object):
             return 
 
     def _url2request(self):
-        #附加上次爬去后的cookies
-        cookies = dict(self._cookies,**self._cookies)
-
-        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
+        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
 
         for url in self._allow_urls:
             request = REQ.Request(UTLH.replenish_url(self.__url,url),**request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number).set_associate(self._associate)
@@ -144,6 +142,10 @@ class UrlExtractor(object):
         self._cookies = dict(self._cookies,**cookies)
         return self
 
+    def add_headers(self,headers):
+        self._headers = dict(self._headers,**headers)
+        return self
+
     @property
     def urls(self):
         return self._urls
@@ -161,7 +163,7 @@ class UrlFormatExtractor(object):
     """
     抽取格式化的url
     """
-    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {},headers = {}):
         self.__dom = dom
         self.__url = url
         self.__rule = rule
@@ -186,6 +188,7 @@ class UrlFormatExtractor(object):
         self._rule_number = rule_number
 
         self._cookies = dict(self._cookies,**cookies)
+        self._headers = dict(self._headers,**headers)
 
         self._urls = []
         self._requests = []
@@ -272,6 +275,10 @@ class UrlFormatExtractor(object):
 
     def add_cookies(self,cookies):
         self._cookies = dict(self._cookies,cookies)
+        return self
+
+    def add_headers(self,headers):
+        self._headers = dict(self._headers,headers)
         return self
 
 
@@ -532,26 +539,22 @@ class DataExtractor(object):
 
 class FileExtractor(UrlExtractor):
 
-    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {}):
+    def __init__(self,dom,url,rule,spider_name = '',rule_number = -1,fid = None,associate = False,cookies = {},headers = {}):
         self._field = rule.get('field')
 
         if not self._field:
             raise TypeError('下载文件必须有field字段')
 
-        #文件下载存储路径
-        self.__file_path = spider_name + '/' + str(rule_number) + '/'
-
         self._files = []
 
-        super(FileExtractor,self).__init__(dom,url,rule,spider_name,rule_number,fid,associate,cookies)
+        super(FileExtractor,self).__init__(dom,url,rule,spider_name,rule_number,fid,associate,cookies,headers)
 
     def _url2file(self):
-        cookies = dict(self._cookies,**self._cookies)
-        file_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
+        file_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid,'auth':self._auth,'proxies':self._proxies}
 
         for url in self._allow_urls:
             file_name = hashlib.md5(url).hexdigest()
-            file_args['file_name'] = self.__file_path
+            file_args['file_name'] = file_name
             file_obj = FILE.File(UTLH.replenish_url(self.url,url),**file_args)
             data = DT.Data(**{'%s_download'%self._field:file_name})
             

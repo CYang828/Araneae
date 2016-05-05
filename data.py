@@ -5,7 +5,7 @@ import json
 class Data(object):
     __kv = {}
     __fid = None
-    __rule_number = None
+    __rule_number = -1
    
     def __init__(self,**kvargs):
         """

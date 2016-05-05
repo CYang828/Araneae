@@ -1,20 +1,22 @@
 #*-*coding:utf8*-*
 
+import json
+
 class File(object):
     __url = None
     __method = None
     __file_name = None
    
-    def __init__(self,url,**kvargs):
+    def __init__(self,url,file_name,**kvargs):
         self.__url = url
+        self.__file_name = file_name
         self.__method = kvargs.get('method','get')
-        self.__file_path = kvargs.get('file_path')
 
-        self._cookies = kvargs.get('cookies')
-        self._headers = kvargs.get('headers')
-        self._proxies = kvargs.get('proxies')
-        self._auth = kvargs.get('auth')
-        self._data = kvargs.get('data')
+        self._cookies = kvargs.get('cookies',{})
+        self._headers = kvargs.get('headers',{})
+        self._proxies = kvargs.get('proxies',{})
+        self._auth = kvargs.get('auth',{})
+        self._data = kvargs.get('data',{})
 
     def set_user_agent(self,user_agent):
         self.__headers['User-Agent'] = user_agent
@@ -46,12 +48,12 @@ class File(object):
         return self._cookies
 
     @property
-    def file_path(self):
-        return self.__file_path
+    def file_name(self):
+        return self.__file_name
 
-    @file_path.setter
-    def file_path(self,file_path):
-        self.__file_path = file_path
+    @file_name.setter
+    def file_name(self,file_name):
+        self.__file_name = file_name
 
     @property
     def headers(self):
@@ -62,8 +64,8 @@ class File(object):
         self._headers = dict(self._headers,**header)
 
     @property
-    def proxies(self,proxy):
-        return self.__proxies
+    def proxies(self):
+        return self._proxies
 
     def json(self):
         file_json = {}
@@ -74,19 +76,19 @@ class File(object):
         if self.__method:
             file_json['method'] = self.__method
 
-        if self.__cookies:
-            file_json['cookie'] = self.__cookies
+        if self.__file_name:
+            file_json['file_name'] = self.__file_name
 
-        if self.__file_path:
-            file_json['file_path'] = self.__file_path
+        if self._cookies:
+            file_json['cookies'] = self._cookies
 
-        if self.__headers:
-            file_json['header'] = self._headers
+        if self._headers:
+            file_json['headers'] = self._headers
 
-        if self.__proxies:
-            file_json['proxy'] = self._proxies
+        if self._proxies:
+            file_json['proxies'] = self._proxies
 
-        if self.__data:
+        if self._data:
             file_json['data'] = self._data
 
         file_json = json.dumps(file_json,ensure_ascii = True)

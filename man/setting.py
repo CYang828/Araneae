@@ -21,7 +21,7 @@ SCHEDULER_RETRY_INTERVAL = 1
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
 #请求休眠时间,单位秒
-REQUEST_SLEEP_TIME = 1
+REQUEST_SLEEP_TIME = 5
 #请求超时时间,单位秒
 REQUEST_TIMEOUT = 2
 
@@ -47,7 +47,7 @@ LASTING         =   {
 
 
 #登录的headers
-LOGIN_HEADER = {'DWRSESSIONID':'IvCebsu7Ifbcx*H5o*jyP','JSESSIONID':'abcbwytCNeNmn6E0J40pv','jsessionid':'CECE9ED64DAE21A218B284CE0E33E6AC','Hm_lvt_acbe332524305cf7430995bc4404a862':'1460101950','Hm_lpvt_acbe332524305cf7430995bc4404a862':'1460101950'}
+LOGIN_HEADER = {'Cookie':'DWRSESSIONID=4Mwqy0JpJdZjMt9FF*lymjsJ$hl; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F; JSESSIONID=abcE071wq2xkD_FDBT-rv'}
 
 #爬虫初始地址
 FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
@@ -124,13 +124,19 @@ PAGE2           =   {
                             'allow':r'/jty/tbkt/showDetail\.action\?articleId=\d*',
                         }
                     }
-"""
 PAGE3           =   {
-                        'extract_urls':
+                        'extract_files':
                         {
-                            'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm',
+                            'allow':r'/jty/tbkt/downLoadAttach\.action\?articleId=\d*',
+                            'field':'file'
                         }
+
+#                       'extract_urls':
+#                       {
+#                           'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm',
+#                       }
                     }
+"""
 PAGE4           =   {
                         'extract_urls':
                         {

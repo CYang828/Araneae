@@ -40,6 +40,8 @@ class DNA(SET.Setting):
         return spider_obj
 
 if __name__ == '__main__':                                                                                                                                      
+    from gevent import monkey; monkey.patch_all()
+
     c = DNA('Araneae.man.setting')
     spider = c.generator()
     spider.start()
