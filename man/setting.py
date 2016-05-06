@@ -27,7 +27,7 @@ REQUEST_TIMEOUT = 2
 
 
 #爬虫名
-SPIDER_NAME     =   'demo'
+SPIDER_NAME     =   'jintaiyang_chuzhong'
 #爬虫类型
 SPIDER_TYPE     =   'rulelink'
 
@@ -47,7 +47,7 @@ LASTING         =   {
 
 
 #登录的headers
-LOGIN_HEADER = {'Cookie':'DWRSESSIONID=4Mwqy0JpJdZjMt9FF*lymjsJ$hl; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F; JSESSIONID=abcE071wq2xkD_FDBT-rv'}
+LOGIN_HEADER = {'Cookie':'DWRSESSIONID=JIvEqVolOFF8u2H2XTxcG4LJ5il; JSESSIONID=abcE071wq2xkD_FDBT-rv; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F'}
 
 #爬虫初始地址
 FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']

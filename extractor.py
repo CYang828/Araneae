@@ -190,6 +190,8 @@ class UrlFormatExtractor(object):
         self._cookies = dict(self._cookies,**cookies)
         self._headers = dict(self._headers,**headers)
 
+        #self._variable_regex = re.compile(r'^@([])$')
+
         self._urls = []
         self._requests = []
 
@@ -210,8 +212,6 @@ class UrlFormatExtractor(object):
                     data_dict[key] = dict_result
 
         for format_data in self._yield_data(data_dict):
-            #print self._format_url
-            print format_data
             try:
                 self._urls.append(self._format_url % format_data)
             except:
@@ -245,6 +245,10 @@ class UrlFormatExtractor(object):
             result = self.__dom.xpath(expression)
         elif type == 'css':
             result = self.__dom.cssselect(expression)
+        elif type == 'constant':
+            result = [{'@current_url':self.__url}[expression]]
+        elif type == 'function':
+            
 
         return result
 
