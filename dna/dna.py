@@ -42,7 +42,7 @@ class DNA(SET.Setting):
 if __name__ == '__main__':                                                                                                                                      
     from gevent import monkey; monkey.patch_all()
 
-    c = DNA('Araneae.man.setting')
+    c = DNA('Araneae.man.jintaiyang_setting')
     spider = c.generator()
     spider.start()
     spider.end()

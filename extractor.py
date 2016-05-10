@@ -173,7 +173,7 @@ class UrlFormatExtractor(object):
         if not self._format_url:
             raise TypeError('format url配置中必须有format_url')
 
-        self._format_data = args.get('format_data')
+        self._format_data = rule.get('format_data')
 
         self._headers = rule.get('headers',{})
         self._cookies = rule.get('cookies',{})
@@ -190,7 +190,10 @@ class UrlFormatExtractor(object):
         self._cookies = dict(self._cookies,**cookies)
         self._headers = dict(self._headers,**headers)
 
-        #self._variable_regex = re.compile(r'^@([])$')
+        self._variable_regex = re.compile(r'(@[A-Za-z_]\w*)')
+        #存储中间生成的变量结果
+        self._middle_variables = {}
+        self._middle_variables['@host_url'] = [self.__url]
 
         self._urls = []
         self._requests = []
@@ -198,6 +201,7 @@ class UrlFormatExtractor(object):
         self._splice_urls()
 
     def _splice_urls(self):
+        #存储最后构成url的结果
         data_dict = {}
 
         if self._format_data:
@@ -209,7 +213,15 @@ class UrlFormatExtractor(object):
                     data_dict[key] = formatter
                 elif isinstance(formatter,dict):
                     dict_result = self._parse_formatter(formatter)
-                    data_dict[key] = dict_result
+                    print '名称'
+                    print key
+                    if self._variable_regex.match(key):
+                        print '匹配'
+                        self._middle_variables[key] = dict_result
+                    else:
+                        data_dict[key] = dict_result
+                    print '结果'
+                    print dict_result
 
         for format_data in self._yield_data(data_dict):
             try:
@@ -246,19 +258,25 @@ class UrlFormatExtractor(object):
         elif type == 'css':
             result = self.__dom.cssselect(expression)
         elif type == 'constant':
-            result = [{'@current_url':self.__url}[expression]]
+            result = self._middle_variables[expression]
         elif type == 'function':
-            
+            iter_match = self._variable_regex.finditer(expression)
+
+            for match in iter_match:
+                variable_name = match.group(1)
+                variable_value = str(self._middle_variables[variable_name])
+                expression = expression.replace(variable_name,variable_value)
+                
+            print expression
+            result = eval(expression)
 
         return result
 
     def _url2request(self):
-        cookies = combine(self._cookies,**self.__response.cookies)
-
-        request_args = {'method':self._method,'headers':self._headers,'cookies':cookies,'data':self._data,'fid':self._fid}
+        request_args = {'method':self._method,'headers':self._headers,'cookies':self._cookies,'data':self._data,'fid':self._fid}
 
         for url in self._urls:
-            request = REQ.Request(UTLH.replenish_url(self.__response_url,url),**request_args).set_spider_name(self.__spider_name).set_rule_number(self._rule_number)
+            request = REQ.Request(UTLH.replenish_url(self.__url,url),**request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number)
             self._requests.append(request)
 
     def extract(self):
@@ -284,6 +302,10 @@ class UrlFormatExtractor(object):
     def add_headers(self,headers):
         self._headers = dict(self._headers,headers)
         return self
+
+    @property
+    def urls(self):
+        return self._urls
 
 
 DEFAULT_TYPE = 'xpath'
@@ -568,3 +590,23 @@ class FileExtractor(UrlExtractor):
         self._url2file()
         return self._files
 
+if __name__ == '__main__':
+    from requests import get
+    import Araneae.utils.contrib as UTLC
+    from collections import OrderedDict
+
+    url = 'http://czy.jtyhjy.com/Jty/tbkt/getTbkt2.action?currentBitCode=001001001001001001001'
+    response = get(url)
+    dom = UTLC.response2dom(response)
+    rule =  {   
+                'format_url':'%(url)s&pageSize=20&showPage=%(page)s',
+                'format_data':OrderedDict(
+                                [('url',{'type':'constant','expression':'@host_url'}),
+                                ('@pages',{'type':'xpath','expression':r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}),
+                                ('@max_page',{'type':'function','expression':'max(@pages)'}),
+                                ('page',{'type':'function','expression':'range(2,@max_page+1)'})]
+                              ),  
+            }   
+
+    url_fromat_extractor = UrlFormatExtractor(dom,url,rule) 
+    print url_fromat_extractor.urls

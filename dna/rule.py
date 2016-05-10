@@ -43,7 +43,7 @@ class PageRule(object):
 
         elif 'format_next_page' in map.keys():
             self.__next_page_url_type  = FORMAT_URL_TYPE
-            self.__next_page_url_element = map['extract_next_page']
+            self.__next_page_url_element = map['format_next_page']
 
         if 'extract_data' in map.keys():
             if isinstance(map['extract_data'],dict):
