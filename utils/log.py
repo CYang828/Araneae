@@ -6,6 +6,38 @@ import thread
 from Araneae.net.rpc import RPCNativeBase
 from termcolor import colored
 
+
+def set_logging(level,filename,fmt,datefmt):
+    logging.basicConfig(level=level,
+                    format=fmt,
+                    datefmt=datefmt,
+                    filename=filename)
+
+#更换颜色
+def color_string(string,color):
+    return colored(string,color)
+
+def Plog(msg,color = None):
+    msg = color_string(msg,color = color) if color else msg
+    print msg
+
+def debug(msg,color = None):
+    msg = color_string(msg,color = color) if color else msg
+    logging.debug(msg)
+
+def info(msg,color = None):
+    msg = color_string(msg,color = color) if color else msg
+    logging.info(msg)
+
+def error(msg,color = None):
+    msg = color_string(msg,color = color) if color else msg
+    logging.error(msg)
+
+def critical(msg,color = None):
+    msg = color_string(msg,color = color) if color else msg
+    logging.critical(msg)
+
+
 #  实现基本的 Logger 类，使用 logging.getLogger(logger_name) 获取对象
 #  当构造函数 name 参数字符串以 '.log' 结尾时，写入文件。否则直接打印在 console 上
 #  只有打印在 console 上的 message 才根据 logLevel 区分颜色

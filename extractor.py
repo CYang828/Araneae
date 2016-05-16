@@ -56,7 +56,6 @@ class UrlExtractor(object):
 
     def _extract_urls(self):
         self._urls = self.__dom.xpath('//a//@href')
-        print self._urls
 
     def _extract_allow_urls(self):
         """
