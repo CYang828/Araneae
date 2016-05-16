@@ -53,6 +53,7 @@ class BaseChromesome(SET.Setting):
         self.set_essential_keys('MIDDLE_DATA_COLLECTION','MERGE_DATA_COLLECTION','LASTING')
         self.set_essential_keys('SPIDER_NAME','SPIDER_TYPE','FIRST_URLS','LOGIN_HEADER')
         self.set_essential_keys('REQUEST_MIDDLEWARE','DATA_MIDDLEWARE','FILE_MIDDLEWARE')
+        self.set_essential_keys('LOG_PATH')
 
     def _set_essential_options(self):
         for key,opt_info in self.OPTIONS.items():
@@ -155,8 +156,10 @@ class BaseChromesome(SET.Setting):
     @property
     def file_middleware(self):
         return self.getlist('FILE_MIDDLEWARE')
-   
-   
+
+    @property
+    def log_path(self):
+        return self.get('LOG_PATH',None)
  
 class RuleLinkChromesome(BaseChromesome):
     """

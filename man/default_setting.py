@@ -41,6 +41,8 @@ HTTP_PROXY = False
 #proxy列表模块地址,键名为PROXY_IP
 HTTP_PROXY_MODULE = None
 
+#日志路径
+LOG_PATH = None
 
 #爬虫名
 SPIDER_NAME     =   None

@@ -1,6 +1,7 @@
 #*-*coding:utf8*-*
 
 import re
+import sys
 import time
 import copy
 import types
@@ -21,8 +22,6 @@ import Araneae.net.request as REQ
 import Araneae.man.exception as EXP
 import Araneae.utils.contrib as UTLC
 import Araneae.dna.chromesome as CHM 
-
-from Araneae.utils.log import Plog
 
 
 """
@@ -67,7 +66,11 @@ class BaseSpider(object):
         self.__pool = GEVP.Pool(chromesome.concurrent_requests)
         self.__scheduler = getattr(SCH,chromesome.scheduler)()
 
-        #self.__logger = 
+        #用于屏幕显示的logger
+        self.__console_logger = UTLL.BaseLogger(chromesome.spider_name)
+        #用于文件输出的logger
+        log_path = chromesome.log_path if chromesome.log_path else (sys.path[0]+'/'+chromesome.spider_name+'.log')
+        self.__file_logger = UTLL.BaseLogger(log_path)
 
         #调度器和rpc使用的都是request对象的json序列化
         #运行方式为单机时,rpc对象为调度器对象
@@ -180,6 +183,11 @@ class BaseSpider(object):
         等待pool中任务结束
         """
         self.__pool.join()
+
+    def recorder(self,level,msg,*args,**kwargs):
+        level = level.lower()
+        getattr(self.__console_logger,level)(msg,*args,**kwargs)
+        getattr(self.__file_logger,level)(msg,*args,**kwargs)
        
     def first_urls(self,first_urls):
         """
@@ -208,9 +216,7 @@ class BaseSpider(object):
         fisrt_urls中可以使用return和yield来进行返回Request对象,
         使用yield的时会优先处理别yield的请求，然后进行请求，直到当前深度到底会继续操作
         """
-        Plog('【%s】爬虫启动' % self.__name)
-
-        #self.merge_data()
+        self.recorder('DEBUG','【%s】爬虫启动'%self.__name)
 
         requests = []
         first_urls = self.__chromesome.first_urls
@@ -247,7 +253,7 @@ class BaseSpider(object):
             if not len(self.__scheduler):
                 GEV.sleep(self._scheduler_retry_interval)
                 self._scheduler_retry_time -= 1
-                Plog('cheduler里没有request了,等待一会吧')
+                self.recorder('INFO','cheduler里没有request了,等待一会吧')
             else:
                 self._scheduler_retry_time = self._scheduler_retry_time
                 request_json = self.scheduler_pull()
@@ -255,7 +261,7 @@ class BaseSpider(object):
                 self.fetch(request)
 
         self.merge_data()
-        Plog('爬取任务结束')
+        self.recorder('INFO','爬取任务结束')
         self.end()
 
     def merge_data(self):
@@ -356,7 +362,7 @@ class BaseSpider(object):
         """
         阻塞访问request,用于必须确保完成的任务
         """
-        Plog('阻塞爬取地址【%s】' % request.url.encode('utf8'))
+        self.recorder('INFO','阻塞爬取地址【%s】' % request.url.encode('utf8'))
         self.fetch(request,**args)
         self._join()
 
@@ -364,14 +370,14 @@ class BaseSpider(object):
         """
         非阻塞访问request
         """
-        Plog('非阻塞爬取地址【%s】' % request.url.encode('utf8'))
+        self.recorder('INFO','非阻塞爬取地址【%s】' % request.url.encode('utf8'))
         self.__pool.spawn(self._fetch,request,**args)
 
     def master_push(self,request):
         """
         向master推送medium
         """
-        print request.json
+        #print request.json
         self.__rpc.push(request.json)
 
     def data_pipeline_push(self,data):
@@ -388,7 +394,7 @@ class BaseSpider(object):
 
     def downloader_push(self,file_obj):
         self.__downloader.push(file_obj)
-        print '下载'
+        #print '下载'
 
     def scheduler_pull(self):
         """
@@ -433,7 +439,7 @@ class RuleLinkSpider(BaseSpider):
         生成Request,放入scheduler
         生成Data,自动放入数据管道中,进行存储(也可以为了效率采用批量的方式存储)
         """
-        Plog('规则号码【%d】' % (page_rule.number))
+        self.recorder('INFO','规则号码【%d】' % (page_rule.number))
 
         dom = UTLC.response2dom(response)
         url = response.url
@@ -444,7 +450,7 @@ class RuleLinkSpider(BaseSpider):
         rule_number = page_rule.number
         next_rule_number = page_rule.next_number
 
-        print associate
+        #print associate
 
         data_files = []
         datas = []

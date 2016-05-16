@@ -28,6 +28,8 @@ REQUEST_SLEEP_TIME = 3
 #请求超时时间,单位秒
 REQUEST_TIMEOUT = 2
 
+#日志路径,结尾必须为.log
+#LOG_PATH = '/home/zhangchunyang/log/spider.log'
 
 #爬虫名
 SPIDER_NAME     =   'jintaiyang_chuzhong'

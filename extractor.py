@@ -212,15 +212,15 @@ class UrlFormatExtractor(object):
                     data_dict[key] = formatter
                 elif isinstance(formatter,dict):
                     dict_result = self._parse_formatter(formatter)
-                    print '名称'
-                    print key
+                    #print '名称'
+                    #print key
                     if self._variable_regex.match(key):
-                        print '匹配'
+                        #print '匹配'
                         self._middle_variables[key] = dict_result
                     else:
                         data_dict[key] = dict_result
-                    print '结果'
-                    print dict_result
+                    #print '结果'
+                    #print dict_result
 
         for format_data in self._yield_data(data_dict):
             try:
@@ -266,7 +266,7 @@ class UrlFormatExtractor(object):
                 variable_value = str(self._middle_variables[variable_name])
                 expression = expression.replace(variable_name,variable_value)
                 
-            print expression
+            #print expression
             result = eval(expression)
 
         return result
@@ -608,4 +608,4 @@ if __name__ == '__main__':
             }   
 
     url_fromat_extractor = UrlFormatExtractor(dom,url,rule) 
-    print url_fromat_extractor.urls
+    #print url_fromat_extractor.urls

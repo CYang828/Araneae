@@ -1,7 +1,9 @@
 #*-*coding:utf8*-*
-import logging
+
 import re
 import thread
+import logging
+import inspect
 
 from Araneae.net.rpc import RPCNativeBase
 from termcolor import colored
@@ -43,11 +45,6 @@ def critical(msg,color = None):
 #  只有打印在 console 上的 message 才根据 logLevel 区分颜色
 class BaseLogger(logging.Logger):
 
-    @classmethod
-    def getInstance(cls, logName):
-        logging.setLoggerClass(cls)
-        return logging.getLogger(logName)
-
     def __init__(self, name):
         logging.Logger.__init__(self, name, logging.DEBUG)
 
@@ -58,38 +55,89 @@ class BaseLogger(logging.Logger):
         else:
             self.__fhandler = logging.StreamHandler()
 
-        formatter = logging.Formatter("%(asctime)s{%(process)d:%(thread)d}[%(filename)s:%(lineno)d] %(message)s")
+        formatter = logging.Formatter("%(asctime)s [%(process)d:%(thread)d] [%(chain)s] %(message)s")
         self.__fhandler.setFormatter(formatter)
 
         self.addHandler(self.__fhandler)
 
+    def get_class_from_frame(self,fr):
+        args, _, _, value_dict = inspect.getargvalues(fr)
+
+        if len(args) and args[0] == 'self':
+            instance = value_dict.get('self', None)
+
+            if instance:
+                return getattr(instance, '__class__', None)
+        return None
+
+    def get_file_name_in_full_path(self, file_path):
+        return file_path.split('/')[-1]
+
+    def get_meta_data(self):
+        frames = inspect.stack()
+        chain_list = []
+
+        for i in range(0, len(frames)):
+            _, file_path, _, func_name, _, _ = frames[i]
+            file_name = self.get_file_name_in_full_path(file_path)
+
+            try:
+                args = re.findall('\((.*)\)', frames[i+1][-2][0])[0]
+            except IndexError, e:
+                func_name = self.get_class_from_frame(frames[2][0]).__name__
+                args = ''
+
+            current_chain = '%s:%s(%s)' % (file_name, func_name, args)
+            chain_list.append(current_chain)
+        chain_list.reverse()
+        return ' --> '.join(chain_list[:-2])
+
+    def get_simple_meta_data(self):
+        frames = inspect.stack()
+        obj, file_path, line_no, func_name, _, _ =  frames[3]
+        return (func_name+':'+str(line_no))
+
     def debug(self, msg, *args, **kw):
+        chain = self.get_meta_data()
+
         if self.__isLogFile:
-            self.log(logging.DEBUG, "%s" % msg, *args, **kw)
+            self.log(logging.DEBUG, "%s" % msg, extra = {'chain':chain},*args, **kw)
         else:
             coloredMsg = colored(msg, color = 'green')
-            self.log(logging.DEBUG, "%s" % coloredMsg, *args, **kw)
+            self.log(logging.DEBUG, "%s" % coloredMsg, extra = {'chain':chain}, *args, **kw)
 
     def info(self, msg, *args, **kw):
+        chain = self.get_simple_meta_data()
+
         if self.__isLogFile:
-            self.log(logging.INFO, "%s" % msg, *args, **kw)
+            self.log(logging.INFO, "%s" % msg, extra = {'chain':chain},*args, **kw)
         else:
             coloredMsg = colored(msg, color = 'yellow')
-            self.log(logging.INFO, "%s" % coloredMsg, *args, **kw)
+            self.log(logging.INFO, "%s" % coloredMsg, extra = {'chain':chain}, *args, **kw)
 
     def warn(self, msg, *args, **kw):
+        chain = self.get_simple_meta_data()
+
         if self.__isLogFile:
-            self.log(logging.WARNING, "%s" % msg, *args, **kw)
+            self.log(logging.WARNING, "%s" % msg, extra = {'chain':chain},*args, **kw)
         else:
             coloredMsg = colored(msg, color = 'red')
-            self.log(logging.WARNING, "%s" % coloredMsg, *args, **kw)
+            self.log(logging.WARNING, "%s" % coloredMsg, extra = {'chain':chain}, *args, **kw)
 
     def error(self, msg, *args, **kw):
+        chain = self.get_meta_data()
+
         if self.__isLogFile:
-            self.log(logging.ERROR, "%s" % msg, *args, **kw)
+            self.log(logging.ERROR, "%s" % msg, extra = {'chain':chain},*args, **kw)
         else:
             coloredMsg = colored(msg, color = 'grey')
-            self.log(logging.ERROR, "%s" % coloredMsg, *args, **kw)
+            self.log(logging.ERROR, "%s" % coloredMsg, extra = {'chain':chain}, *args, **kw)
+
+    @classmethod
+    def instance(cls, logName):
+        logging.setLoggerClass(cls)
+        return logging.getLogger(logName)
+
 
 #  通过修改本地配置文件动态修改 log 级别
 class LocalLevelChangeLogger(BaseLogger):
@@ -125,7 +173,7 @@ class RPCLoggerManager(RPCNativeBase):
         except (BaseException) as e:
             print "loggerName[%s] can not found Exception[%s] ERROR!!" % (loggerName, str(e))
 
-g_rpcLogManager = RPCLoggerManager()
+#g_rpcLogManager = RPCLoggerManager()
 
 # 通过 RPC 接口调用动态修改 log 级别
 class RPCLevelChangeLogger(BaseLogger):
@@ -149,9 +197,9 @@ if __name__ == '__main__':
 
     import time
 
-    bl = BaseLogger.getInstance('baseSpider.log')
-    rl = RPCLevelChangeLogger.getInstance('rpcSpider.log')
-    ll = LocalLevelChangeLogger.getInstance('localSpider.log')
+    bl = BaseLogger.instance('baseSpider.log')
+    rl = RPCLevelChangeLogger.instance('rpcSpider.log')
+    ll = LocalLevelChangeLogger.instance('localSpider.log')
 
     bl.debug("DEBUG message")
     rl.info("INFO message2")
