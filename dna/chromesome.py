@@ -23,6 +23,7 @@ DEFAULT_SCHEDULER_RETRY_INTERVAL = 5
 DEFAULT_CONCURRENT_REQUESTS = 5
 DEFAULT_REQUEST_SLEEP_TIME = 0
 DEFAULT_REQUEST_TIMEOUT = 2
+DEFAULT_REQUEST_RETRY_TIME = 3
 DEFAULT_MIDDLE_DATA_COLLECTION = 'rule'
 DEFAULT_MERGE_DATA_COLLECTION = 'merge_result'
 DEFAULT_USER_AGENT = True
@@ -49,7 +50,7 @@ class BaseChromesome(SET.Setting):
         self.set_essential_keys('RUNNING_TYPE')
         self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
         self.set_essential_keys('SCHEDULER','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
-        self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT')
+        self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT','REQUEST_RETRY_TIME')
         self.set_essential_keys('MIDDLE_DATA_COLLECTION','MERGE_DATA_COLLECTION','LASTING')
         self.set_essential_keys('SPIDER_NAME','SPIDER_TYPE','FIRST_URLS','LOGIN_HEADER')
         self.set_essential_keys('REQUEST_MIDDLEWARE','DATA_MIDDLEWARE','FILE_MIDDLEWARE')
@@ -94,6 +95,10 @@ class BaseChromesome(SET.Setting):
     @property
     def request_sleep_time(self):
         return self.getint('REQUEST_SLEEP_TIME',DEFAULT_REQUEST_SLEEP_TIME)
+
+    @property
+    def request_retry_time(self):
+        return self.getint('REQUEST_RETRY_TIME',DEFAULT_REQUEST_RETRY_TIME)
 
     @property
     def request_timeout(self):

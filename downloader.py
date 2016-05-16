@@ -3,6 +3,7 @@ import os
 import re
 import time
 import requests
+import gevent as GEV
 import gevent.lock as GEVL
 import gevent.pool as GEVP
 import gevent.queue as GEVQ
@@ -55,7 +56,8 @@ class BaseDownloader(object):
 
         self._queue = GEVQ.Queue()
         self._pool = GEVP.Pool()
-        GEVT.start_new_thread(self._processor)
+        #download_threads = [GEV.spawn(self._processor)]
+        download_threads = GEVT.start_new_thread(self._processor)
 
     def _processor(self):
         while True:

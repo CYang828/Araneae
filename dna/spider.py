@@ -63,8 +63,13 @@ class BaseSpider(object):
         self.__name = chromesome.spider_name
         self.__running_type = chromesome.running_type
 
+        #调度器和rpc使用的都是request对象的json序列化
+        #运行方式为单机时,rpc对象为调度器对象
+        if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
+            self.__scheduler = getattr(SCH,chromesome.scheduler)()
+            self.__rpc = self.__scheduler
+
         self.__pool = GEVP.Pool(chromesome.concurrent_requests)
-        self.__scheduler = getattr(SCH,chromesome.scheduler)()
 
         #用于屏幕显示的logger
         self.__console_logger = UTLL.BaseLogger(chromesome.spider_name)
@@ -72,10 +77,6 @@ class BaseSpider(object):
         log_path = chromesome.log_path if chromesome.log_path else (sys.path[0]+'/'+chromesome.spider_name+'.log')
         self.__file_logger = UTLL.BaseLogger(log_path)
 
-        #调度器和rpc使用的都是request对象的json序列化
-        #运行方式为单机时,rpc对象为调度器对象
-        if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
-            self.__rpc = self.__scheduler
         #运行方式为分布式时,rpc对象与master通信
         #master需要根据spider name不同分别放入不同的shceduler和dupefileter中
         elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
@@ -139,7 +140,18 @@ class BaseSpider(object):
         for request_middleware in self._request_middleware:
             request = request_middleware.transport(request)
 
-        response = request.fetch(self._request_timeout)
+        response = None
+        retry_time = self.__chromesome.request_retry_time
+
+        while(retry_time):
+            try:
+                response = request.fetch(self._request_timeout)
+                break
+            except (EXP.RequestConnectionException,EXP.RequestErrorException,EXP.RequestTimeoutException,EXP.RequestTooManyRedirectsException) as e:
+                self.recorder('ERROR',e)
+                retry_time -= 1
+                continue
+
         callback = request.callback
         rule = self.get_page_rule(request.rule_number)
         fid = request.fid
@@ -216,7 +228,7 @@ class BaseSpider(object):
         fisrt_urls中可以使用return和yield来进行返回Request对象,
         使用yield的时会优先处理别yield的请求，然后进行请求，直到当前深度到底会继续操作
         """
-        self.recorder('DEBUG','【%s】爬虫启动'%self.__name)
+        self.recorder('INFO','【%s】爬虫启动'%self.__name)
 
         requests = []
         first_urls = self.__chromesome.first_urls
@@ -357,6 +369,7 @@ class BaseSpider(object):
 
     def end(self):
         self.__pool.join()
+        GEV.wait()
 
     def fetch_sync(self,request,**args):
         """
@@ -486,7 +499,6 @@ class RuleLinkSpider(BaseSpider):
                     yield file_obj
 
         yield datas
-
         
         #应该在这里设置page_rule的number
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:

@@ -2,6 +2,8 @@
 
 import hashlib
 
+import Araneae.db as DB
+
 class BaseDupeFilter(object):
 
     def exist(self,key):
@@ -15,18 +17,38 @@ class BaseDupeFilter(object):
 class SingletonDupeFilter(BaseDupeFilter):
 
     def __init__(self):
-        self._set = set()
+        self._dupefilter = set()
 
     def exist(self,key):
-        key = hashlib.md5(key).hexdigest()
+        fingerprint = hashlib.md5(key).hexdigest()
 
-        return True if key in self._set else False
+        return True if fingerprint in self._dupefilter else False
 
     def put(self,key):
-        key = hashlib.md5(key).hexdigest()
+        fingerprint = hashlib.md5(key).hexdigest()
 
-        if not self.exist(key):
-            self._set.add(key)
+        if not self.exist(fingerprint):
+            self._dupefilter.add(fingerprint)
+            return True
+        else:
+            return False
+
+class RedisDupeFilter(BaseDupeFilter):
+
+    def def __init__(self,spider_name,**redis_conf):
+        self._dupefilter_key = 'Dupefilter:' + spider_name
+        self._dupefilter = DB.Redis(spider_name,**redis_conf)
+
+    def exist(self,key):
+        fingerprint = hashlib.md5(key).hexdigest()
+
+        return True if self._dupefilter.sismember(self._dupefilter_key,fingerprint) else False
+
+    def put(self,key):
+        fingerprint = hashlib.md5(key).hexdigest()
+
+        if not self.exist(fingerprint):
+            self._dupefilter.sadd(self._dupefilter_key,fingerprint)
             return True
         else:
             return False

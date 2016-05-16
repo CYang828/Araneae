@@ -6,8 +6,9 @@
 """
 #爬虫运行方式
 #可选类型:singleton,distributed
+#此选项是针对整个系统的
+#如果是distributed,需要多台机器的信息
 RUNNING_TYPE = 'singleton'
-
 
 #调度器类型
 #可选类型:singleton,redis,rabbitmq
@@ -24,7 +25,8 @@ CONCURRENT_REQUESTS = 1
 REQUEST_SLEEP_TIME = 2
 #请求超时时间,单位秒
 REQUEST_TIMEOUT = 2
-
+#请求重试次数
+REQUEST_RETRY_TIME = 3
 
 #中间数据结果集前缀
 MIDDLE_DATA_COLLECTION = 'rule'

@@ -135,7 +135,17 @@ class Request(object):
         """
         抓取页面信息
         """
-        response = getattr(requests,self.__method)(self.__url,proxies = self.__proxies,data = self.__data,headers = self.__headers,cookies = self.__cookies,timeout = timeout)
+        try:
+            response = getattr(requests,self.__method)(self.__url,proxies = self.__proxies,data = self.__data,headers = self.__headers,cookies = self.__cookies,timeout = timeout)
+        except requests.exceptions.ConnectionError:
+            raise EXP.RequestConnectionException('DNS查询失败或者拒绝连接')
+        except requests.exceptions.HTTPError:
+            raise EXP.RequestErrorException('无效HTTP响应')
+        except requests.exceptions.Timeout:
+            raise EXP.RequestTimeoutException('请求超时')
+        except requests.exceptions.TooManyRedirects:
+            raise EXP.RequestTooManyRedirectsException('超过最大重定向次数')
+
         return response
 
     @property

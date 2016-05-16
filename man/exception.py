@@ -17,7 +17,16 @@ class ChromesomeException(AraneaeException):
 class DNAException(AraneaeException):
     pass
 
-class RequestException(AraneaeException):
+class RequestConnectionException(AraneaeException):
+    pass
+
+class RequestErrorException(AraneaeException):
+    pass
+
+class RequestTimeoutException(AraneaeException):
+    pass
+
+class RequestTooManyRedirectsException(AraneaeException):
     pass
 
 

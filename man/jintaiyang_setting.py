@@ -14,7 +14,7 @@ RUNNING_TYPE = 'singleton'
 
 #调度器类型
 #可选类型:singleton,redis,rabbitmq
-SCHEDULER = 'singleton'
+SCHEDULER = 'redis'
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒
@@ -29,7 +29,7 @@ REQUEST_SLEEP_TIME = 3
 REQUEST_TIMEOUT = 2
 
 #日志路径,结尾必须为.log
-#LOG_PATH = '/home/zhangchunyang/log/spider.log'
+LOG_PATH = '/home/zhangchunyang/log/spider.log'
 
 #爬虫名
 SPIDER_NAME     =   'jintaiyang_chuzhong'
