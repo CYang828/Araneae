@@ -15,6 +15,7 @@ import Araneae.pipeline as PPL
 import Araneae.downloader as DL
 import Araneae.scheduler as SCH
 import Araneae.extractor as EXT 
+import Araneae.utils.log as UTLL
 import Araneae.middleware as MID
 import Araneae.net.request as REQ 
 import Araneae.man.exception as EXP
@@ -65,6 +66,8 @@ class BaseSpider(object):
 
         self.__pool = GEVP.Pool(chromesome.concurrent_requests)
         self.__scheduler = getattr(SCH,chromesome.scheduler)()
+
+        #self.__logger = 
 
         #调度器和rpc使用的都是request对象的json序列化
         #运行方式为单机时,rpc对象为调度器对象
