@@ -11,6 +11,11 @@ from termcolor import colored
 #  只有打印在 console 上的 message 才根据 logLevel 区分颜色
 class BaseLogger(logging.Logger):
 
+    @classmethod
+    def getInstance(cls, logName):
+        logging.setLoggerClass(cls)
+        return logging.getLogger(logName)
+
     def __init__(self, name):
         logging.Logger.__init__(self, name, logging.DEBUG)
 
@@ -111,6 +116,16 @@ def test_logger_threadFunction(loggerObject):
 if __name__ == '__main__':
 
     import time
+
+    bl = BaseLogger.getInstance('baseSpider.log')
+    rl = RPCLevelChangeLogger.getInstance('rpcSpider.log')
+    ll = LocalLevelChangeLogger.getInstance('localSpider.log')
+
+    bl.debug("DEBUG message")
+    rl.info("INFO message2")
+    ll.error("ERROR message")
+
+    ##################################################################################
 
     #  先设置要使用哪个类型的 logger，然后获取该类型的 logger 对象
     logging.setLoggerClass(BaseLogger)
