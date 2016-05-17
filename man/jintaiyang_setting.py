@@ -11,15 +11,35 @@ from collections import OrderedDict
 #可选类型:singleton,distributed
 RUNNING_TYPE = 'singleton'
 
+#调度器
+#调度器的类路径
+SCHEDULER = 'Araneae.scheduler.RedisScheduler'
+#调度器配置
+SCHEDULER_CONF = {
+                    'host':'172.18.4.52',
+                    'port':6379,
+                    'db':8,
+                    'password':None,
+                    'timeout':5,
+                    'charset':'utf8'
+                 }
+#去重器
+#去重器类路径
+DUPEFILTER = 'Araneae.dupefilter.RedisDupeFilter'                                                                                                                  
+#去重器配置
+DUPEFILTER_CONF= {
+                'host':'172.18.4.52',
+                'port':6379,
+                'db':8,
+                'password':None,
+                'timeout':5,
+                'charset':'utf8'
+             }
 
-#调度器类型
-#可选类型:singleton,redis,rabbitmq
-SCHEDULER = 'redis'
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒
 SCHEDULER_RETRY_INTERVAL = 1
-
 
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
@@ -80,13 +100,13 @@ PAGE3           =   {
 PAGE4           =   {
                         'extract_urls':
                         {
-                            'allow':r'/Jty/tbkt/getTbkt2.action?currentBitCode=\d{21}',
+                            'allow':r'/Jty/tbkt/getTbkt2.action\?currentBitCode=\d{21}',
                         }
                     }
 PAGE5           =   {
                         'extract_urls':
                         {
-                            'allow':r'/jty/tbkt/showDetail.action?articleId=\d*',
+                            'allow':r'/jty/tbkt/showDetail.action\?articleId=\d*',
                         },
                         'format_next_page':
                         {

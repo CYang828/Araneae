@@ -63,11 +63,17 @@ class BaseSpider(object):
         self.__name = chromesome.spider_name
         self.__running_type = chromesome.running_type
 
+        #运行方式为分布式时,rpc对象与master通信
+        #master需要根据spider name不同分别放入不同的shceduler和dupefileter中
         #调度器和rpc使用的都是request对象的json序列化
         #运行方式为单机时,rpc对象为调度器对象
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
-            self.__scheduler = getattr(SCH,chromesome.scheduler)()
+            scheduler = UTLC.load_class(chromesome.scheduler,chromesome.spider_name,**chromesome.scheduler_conf)
+            dupefilter = UTLC.load_class(chromesome.dupefilter,chromesome.spider_name,**chromesome.dupefilter_conf)
+            self.__scheduler = SCH.SingletonScheduler(scheduler,dupefilter)
             self.__rpc = self.__scheduler
+        elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
+            pass
 
         self.__pool = GEVP.Pool(chromesome.concurrent_requests)
 
@@ -77,11 +83,6 @@ class BaseSpider(object):
         log_path = chromesome.log_path if chromesome.log_path else (sys.path[0]+'/'+chromesome.spider_name+'.log')
         self.__file_logger = UTLL.BaseLogger(log_path)
 
-        #运行方式为分布式时,rpc对象与master通信
-        #master需要根据spider name不同分别放入不同的shceduler和dupefileter中
-        elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
-            pass
-               
         #一个spider产生的数据放入一个与spider同名的库中 
         if chromesome.lasting:
             self.__data_pipeline = PPL.generate_pipeline(**chromesome.lasting)

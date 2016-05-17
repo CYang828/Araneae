@@ -1,26 +1,27 @@
 # *-* coding:utf-8 *-*
 
-from base import Base,INFO,ERROR
 from copy import deepcopy
-from exception import MysqlException,RedisException,MongoException
 
 try:
     import MySQLdb 
 except ImportError:
-    ERROR('MySQLdb moudle not in os')
+    #ERROR('MySQLdb moudle not in os')
+    pass
 
 try:
     import redis
     from redis.exceptions import RedisError
 except ImportError:
-    ERROR('reids moudle not in os')
+    #ERROR('reids moudle not in os')
+    pass
 
 try:
     from pymongo import MongoClient
     from pymongo.errors import ConnectionFailure,ServerSelectionTimeoutError,PyMongoError
     from pymongo.cursor import CursorType
 except ImportError:
-    ERROR('pymongo moudle not in os')
+    #ERROR('pymongo moudle not in os')
+    pass
 
 MYSQL_RETRY_TIMES = 10
 
@@ -57,7 +58,7 @@ class Mysql(object):
 
         except MySQLdb.Error,e:
             self._connect_flag = False
-            ERROR('Mysql Error -- msg[Connect Failed]')
+            #ERROR('Mysql Error -- msg[Connect Failed]')
             raise MysqlException('Connect Failed')
 
     def start_event(self):
@@ -76,7 +77,7 @@ class Mysql(object):
             return res
 
         else:
-            ERROR('Mysql Error -- [Not Start Event]')
+            #ERROR('Mysql Error -- [Not Start Event]')
             raise MysqlException('Not Start Event')
 
     def end_event(self):
@@ -91,19 +92,19 @@ class Mysql(object):
                 self._sql = sql
                 self._kwds = kwds
                 sql = sql % kwds
-                INFO('Mysql -- execute SQL[%s]' % (sql))
+                #INFO('Mysql -- execute SQL[%s]' % (sql))
                 self._cur.execute(sql)  
                 self._sql = ''
             except MySQLdb.OperationalError,e:
                 self.reconnect()
-                ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Gone Away or Operate Error!%s]' % (sql,e))
+                #ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Gone Away or Operate Error!%s]' % (sql,e))
                 continue
             except MySQLdb.Error,e:
                 self._event_flag = False
-                ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Execute Failed!%s]' % (sql,e))
+                #ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Execute Failed!%s]' % (sql,e))
                 raise MysqlException('Mysql Execute Failed')
             except:
-                ERROR('Mysql Error -- msg[Sql Format Failed!] -- SQL[%s] -- Data[%s]' % (sql,kwds))
+                #ERROR('Mysql Error -- msg[Sql Format Failed!] -- SQL[%s] -- Data[%s]' % (sql,kwds))
                 raise MysqlException('Sql Format Failed')
                 
             effect = self._cur.rowcount
@@ -111,14 +112,14 @@ class Mysql(object):
             if not self._event_flag:
                 self.commit()
 
-            INFO('Mysql Effect Row [%d]' % effect)
+            #INFO('Mysql Effect Row [%d]' % effect)
             return effect
         
         raise MysqlException('Mysql Gone Away or Operate Error')
 
     def reconnect(self):
         self.reset(self._mysql_config)
-        INFO('Mysql Reconnect')
+        #INFO('Mysql Reconnect')
 
     def rollback(self):
         self._conn.rollback()
@@ -165,31 +166,66 @@ class Redis(object):
                         'db':int(args['db']),'socket_timeout':int(args['timeout']),'charset':args['charset']}
 
         self._redis = redis.StrictRedis(**redis_config)
+        #self._redis = redis.Redis(**redis_config)
 
     def srem(self,name,*values):
         try:
             ret = self._redis.srem(name,*values)       
-            INFO('Redis srem  -- redis command[srem %s %s]' % (name,values))
+            #INFO('Redis srem  -- redis command[srem %s %s]' % (name,values))
             
         except RedisError:
             raise RedisException
 
         return ret
+
+    def rpop(self,name):
+        try:
+            ret = self._redis.rpop(name)       
+        except RedisError:
+            raise RedisException
+
+        return ret
+
+    def lpush(self,name,*value):
+        try:
+            ret = self._redis.lpush(name,*value)       
+        except RedisError as e:
+            print e
+            raise RedisException
+
+        return ret
+
+    def llen(self,name):
+        try:
+            ret = self._redis.llen(name)
+        except RedisError as e:
+            print e
+
+        return ret
+            
+
 
     def sismember(self,name,value):
         try:
             ret = self._redis.sismember(name,value)       
-            INFO('Redis sismember -- redis command[sismember %s %s]' % (name,value))
+            #INFO('Redis sismember -- redis command[sismember %s %s]' % (name,value))
             
-        except RedisError:
+        except RedisError as e:
+            print e
             raise RedisException
 
         return ret
 
+    def sadd(self,name,value):
+        try:
+            ret = self._redis.sadd(name,value)
+        except RedisError as e:
+            print e
+
     def incr(self,name,amount = 1):
         try:
             ret = self._redis.incr(name,amount)       
-            INFO('Redis incr -- redis command[incr %s %d]' % (name,amount))
+            #INFO('Redis incr -- redis command[incr %s %d]' % (name,amount))
             
         except RedisError:
             raise RedisException
@@ -199,7 +235,7 @@ class Redis(object):
     def get(self,name):
         try:
             ret = self._redis.get(name)       
-            INFO('Redis get -- redis command[get %s]' % name)
+            #INFO('Redis get -- redis command[get %s]' % name)
 
         except RedisError:
             raise RedisException
@@ -209,7 +245,7 @@ class Redis(object):
     def setnx(self,name,value):
         try:
             ret = self._redis.setnx(name,value)       
-            INFO('Redis setnx -- redis command[setnx %s %s]' % (name,value))
+            #INFO('Redis setnx -- redis command[setnx %s %s]' % (name,value))
 
         except RedisError:
             raise RedisException
@@ -219,7 +255,7 @@ class Redis(object):
     def hmset(self,name,arg_dict):
         try:
             ret = self._redis.hmset(name,arg_dict)       
-            INFO('Redis hmset -- redis command[hmset %s %s]' % (name,arg_dict))
+            #INFO('Redis hmset -- redis command[hmset %s %s]' % (name,arg_dict))
 
         except RedisError:
             raise RedisException
@@ -229,7 +265,7 @@ class Redis(object):
     def hset(self,name,key,value):
         try:
             ret = self._redis.hset(name,key,value)       
-            INFO('Redis hset -- redis command[hset %s %s %s]' % (name,key,value))
+            #INFO('Redis hset -- redis command[hset %s %s %s]' % (name,key,value))
 
         except RedisError:
             raise RedisException
@@ -239,7 +275,7 @@ class Redis(object):
     def hget(self,name,key):
         try:
             ret = self._redis.hget(name,key)
-            INFO('Redis hget -- redis command[hget %s %s]' % (name,key))
+            #INFO('Redis hget -- redis command[hget %s %s]' % (name,key))
 
         except RedisError:
             raise RedisException
@@ -249,7 +285,7 @@ class Redis(object):
     def hmget(self,name,*args):
         try:
             ret = self._redis.hmget(name,*args)  
-            INFO('Redis hmget -- redis command[hmget %s %s]' % (name,args))
+            #INFO('Redis hmget -- redis command[hmget %s %s]' % (name,args))
 
         except RedisError:
             raise RedisException
@@ -260,7 +296,7 @@ class Redis(object):
     def hgetall(self,name):
         try:
             ret =  self._redis.hgetall(name)       
-            INFO('Redis hgetall -- redis command[hgetall %s]' % name)
+            #INFO('Redis hgetall -- redis command[hgetall %s]' % name)
 
         except RedisError:
             raise RedisException
@@ -270,10 +306,10 @@ class Redis(object):
     def exists(self,name):
         try:
             ret = self._redis.exists(name)       
-            INFO('Redis exists -- redis command[exists %s]' % (name))
+            #INFO('Redis exists -- redis command[exists %s]' % (name))
 
         except RedisError,e:
-            ERROR('Redis Error -- exists[%s] -- msg[%s]' % (name,e))
+            #ERROR('Redis Error -- exists[%s] -- msg[%s]' % (name,e))
             raise RedisException
 
         return ret 
@@ -281,7 +317,7 @@ class Redis(object):
     def setex(self,name,time,value):
         try:
             ret = self._redis.setex(name,time,value)
-            INFO('Redis setex -- redis command[setex %s %d %s]' % (name,time,value))
+            #INFO('Redis setex -- redis command[setex %s %d %s]' % (name,time,value))
 
         except ReidsError:
             raise RedisExceptions
@@ -291,7 +327,7 @@ class Redis(object):
     def set(self,name,value):
         try:
             ret = self._redis.set(name,value)
-            INFO('Redis set -- redis command[set %s %s]' % (name,value))
+            #INFO('Redis set -- redis command[set %s %s]' % (name,value))
 
         except ReidsError:
             raise RedisExceptions
@@ -301,7 +337,7 @@ class Redis(object):
     def expire(self,name,time):
         try:
             ret = self._redis.expire(name,time)
-            INFO('Redis expire -- redis command[expire %s %d]' % (name,time))
+            #INFO('Redis expire -- redis command[expire %s %d]' % (name,time))
 
         except ReidsError:
             raise RedisExceptions
@@ -311,7 +347,7 @@ class Redis(object):
     def delete(self,*name):
         try:
             ret = self._redis.delete(*name)
-            INFO('Redis delete -- redis command[delete %s]' % name)
+            #INFO('Redis delete -- redis command[delete %s]' % name)
 
         except ReidsError:
             raise RedisException
@@ -359,7 +395,7 @@ class Mongo(object):
     def insert_one(self,data):
         try:
             obj_id = str(self._collection.insert_one(data).inserted_id)
-            INFO('Mongo insert -- data[%s] -- ret[%s]' % (data,obj_id))
+            #INFO('Mongo insert -- data[%s] -- ret[%s]' % (data,obj_id))
             return obj_id
         except PyMongoError:    
             raise MongoException
@@ -369,3 +405,7 @@ class Mongo(object):
         
     
 
+if __name__ == '__main__':
+    redis_conf = {'host':'10.60.0.165','port':6379,'db':8,'password':None,'timeout':5,'charset':'utf8'}
+    redis = Redis(**redis_conf)
+    redis.sadd('dupe','11')

@@ -1,11 +1,9 @@
 #*-*coding:utf8*-*
-# import sys
 
 from collections import deque
 
 import Araneae.db as DB
-from Araneae.utils.log import Plog
-from Araneae.dupefilter import SingletonDupeFilter,RedisDupeFilter
+import Araneae.dupefilter as DFT
 
 
 class BaseScheduler(object):
@@ -21,9 +19,12 @@ class BaseScheduler(object):
 
 class MemoryScheduler(BaseScheduler):
     
-    def __init__(self,spider_name):
+    def __init__(self,spider_name,**conf):
         self._scheduler_key = 'Scheduler:' + spider_name
         self._queue = deque([])
+
+    def __len__(self):
+        return len(self._queue)
 
     def push(self,data):
         self._queue.append(data)
@@ -31,8 +32,8 @@ class MemoryScheduler(BaseScheduler):
     def pull(self):
         return self._queue.popleft()
 
-    def __len__(self):
-        return len(self._queue)
+    def clear(self):
+        self._queue.clear()
 
 class RedisScheduler(BaseScheduler):
 
@@ -40,14 +41,17 @@ class RedisScheduler(BaseScheduler):
         self._scheduler_key = 'Scheduler:' + spider_name
         self._redis = DB.Redis(**redis_conf)
 
+    def __len__(self):
+        return self._redis.llen(self._scheduler_key)
+
     def push(self, data):
         self._redis.lpush(self._scheduler_key,data)
     
     def pull(self):
         return self._redis.rpop(self._scheduler_key)
 
-    def __len__(self):
-        return self._redis.llen(self._scheduler_key)
+    def clear(self):
+        self._redis.delete(self._scheduler_key)
 
 class RabbitmqScheduler(BaseScheduler):
     pass
@@ -65,15 +69,30 @@ class SingletonScheduler(object):
         return len(self._scheduler)
 
     def push(self,data):
-       if not self._dupefilter.exist(data):
+        if not self._dupefilter.exist(data):
             self._scheduler.push(data)
+            self._dupefilter.put(data)
             return True
         else:
             return False
 
     def pull(self):
         return self._scheduler.pull()
+
+    def clear(self):
+        self._scheduler.clear()
+        self._dupefilter.clear()
     
 
 if __name__ == '__main__':
-    pass
+    redis_conf = {'host':'172.18.4.52','port':6379,'db':8,'password':None,'timeout':5,'charset':'utf8'}
+    mem_scheduler = MemoryScheduler('demo')
+    redis_scheduler = RedisScheduler('demo',**redis_conf)
+ 
+    mem_dupefilter = DFT.MemoryDupeFilter('demo')
+    redis_dupefilter = DFT.RedisDupeFilter('demo',**redis_conf)
+ 
+    singleton = SingletonScheduler(redis_scheduler,redis_dupefilter)
+    singleton.push('aaa')
+    print singleton.push('aaa')
+    print singleton.pull()

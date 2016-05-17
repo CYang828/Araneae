@@ -10,9 +10,17 @@
 #如果是distributed,需要多台机器的信息
 RUNNING_TYPE = 'singleton'
 
-#调度器类型
-#可选类型:singleton,redis,rabbitmq
-SCHEDULER = 'singleton'
+#调度器
+#调度器的类路径
+SCHEDULER = 'Araneae.scheduler.MemoryScheduler'
+#调度器配置
+SCHEDULER_CONF = {}
+#去重器
+#去重器类路径
+DUPEFILTER = 'Araneae.dupefilter.MemoryDupeFilter'
+#去重器配置
+DUPEFILTER_CONF = {}
+
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒

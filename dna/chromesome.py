@@ -10,14 +10,11 @@ import Araneae.man.exception as EXP
 RUNNING_TYPE_SINGLETON = 1
 RUNNING_TYPE_DISTRIBUTED = 2
 
-SCHEDULER_SINGLETON = 'SingletonScheduler'
-SCHEDULER_REDIS = 'RedisScheduler'
-SCHEDULER_RABBITMQ = 'RabbitMqScheduler'
-
 SPIDER_TYPE_RUlELINK = 'RuleLink'
 
-DEFAULT_RUNNING_TYPE = SCHEDULER_SINGLETON
-DEFAULT_SCHEDULER = SCHEDULER_SINGLETON
+DEFAULT_RUNNING_TYPE = RUNNING_TYPE_SINGLETON
+DEFAULT_SCHEDULER = 'Araneae.scheduler.MemoryScheduler'
+DEFAULT_DUPEFILTER = 'Araneae.dupefilter.MemoryDupeFilter'
 DEFAULT_SCHEDULER_RETRY_TIME = 2 
 DEFAULT_SCHEDULER_RETRY_INTERVAL = 5
 DEFAULT_CONCURRENT_REQUESTS = 5
@@ -37,7 +34,6 @@ class BaseChromesome(SET.Setting):
     #可选项配置
     OPTIONS = {
                 'RUNNING_TYPE':{'singleton':RUNNING_TYPE_SINGLETON,'distributed':RUNNING_TYPE_DISTRIBUTED},
-                'SCHEDULER'   :{'singleton':SCHEDULER_SINGLETON,'redis':SCHEDULER_REDIS,'rabbitmq':SCHEDULER_RABBITMQ},
               }
 
     def __init__(self,chromesome):
@@ -49,7 +45,7 @@ class BaseChromesome(SET.Setting):
         #self.set_essential_keys('LOG_PATH','LOG_FORMAT','LOG_LEVEL','LOG_DATE_FORMAT')
         self.set_essential_keys('RUNNING_TYPE')
         self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
-        self.set_essential_keys('SCHEDULER','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
+        self.set_essential_keys('SCHEDULER','SCHEDULER_CONF','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
         self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT','REQUEST_RETRY_TIME')
         self.set_essential_keys('MIDDLE_DATA_COLLECTION','MERGE_DATA_COLLECTION','LASTING')
         self.set_essential_keys('SPIDER_NAME','SPIDER_TYPE','FIRST_URLS','LOGIN_HEADER')
@@ -78,7 +74,19 @@ class BaseChromesome(SET.Setting):
 
     @property
     def scheduler(self):
-        return self.OPTIONS['SCHEDULER'][self.get('SCHEDULER',DEFAULT_SCHEDULER)]
+        return self.get('SCHEDULER',DEFAULT_SCHEDULER)
+
+    @property
+    def scheduler_conf(self):
+        return self.getdict('SCHEDULER_CONF')
+
+    @property
+    def dupefilter(self):
+        return self.get('DUPEFILTER',DEFAULT_DUPEFILTER)
+
+    @property
+    def dupefilter_conf(self):
+        return self.getdict('DUPEFILTER_CONF')
 
     @property
     def scheduler_retry_time(self):

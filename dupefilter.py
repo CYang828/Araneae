@@ -14,14 +14,14 @@ class BaseDupeFilter(object):
 
     #序列化和反序列化方法
 
-class SingletonDupeFilter(BaseDupeFilter):
+class MemoryDupeFilter(BaseDupeFilter):
 
-    def __init__(self):
+    def __init__(self,spider_name,**conf):
+        self._dupefilter_key = spider_name
         self._dupefilter = set()
 
     def exist(self,key):
         fingerprint = hashlib.md5(key).hexdigest()
-
         return True if fingerprint in self._dupefilter else False
 
     def put(self,key):
@@ -35,13 +35,12 @@ class SingletonDupeFilter(BaseDupeFilter):
 
 class RedisDupeFilter(BaseDupeFilter):
 
-    def def __init__(self,spider_name,**redis_conf):
+    def __init__(self,spider_name,**redis_conf):
         self._dupefilter_key = 'Dupefilter:' + spider_name
-        self._dupefilter = DB.Redis(spider_name,**redis_conf)
+        self._dupefilter = DB.Redis(**redis_conf)
 
     def exist(self,key):
         fingerprint = hashlib.md5(key).hexdigest()
-
         return True if self._dupefilter.sismember(self._dupefilter_key,fingerprint) else False
 
     def put(self,key):
