@@ -127,6 +127,10 @@ class Request(object):
         self.__headers = dict(self._headers,**header_dict)
         return self
 
+    def set_headers(self,header_dict):
+        self.__headers = header_dict
+        return self
+
     def add_cookies(self,cookie_dict):
         self.__cookies = dict(self._cookies,**cookie_dict)
         return self

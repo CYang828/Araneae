@@ -72,7 +72,7 @@ LASTING         =   {
 
 
 #登录的headers
-LOGIN_HEADER = {'Cookie':'DWRSESSIONID=JIvEqVolOFF8u2H2XTxcG4LJ5il; JSESSIONID=abcE071wq2xkD_FDBT-rv; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F'}
+LOGIN_HEADER = {'Cookie':'DWRSESSIONID=8zh0Kq2cVhme*zXyxk8144dz3jl; jsessionid=55B7BD7151B07F1CC7478AE79CDF5F71; JSESSIONID=abcZbVnPl69NfeDcRCctv'}
 
 #爬虫初始地址
 FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
@@ -121,13 +121,66 @@ PAGE5           =   {
                     }
 PAGE6           =   {
                         'extract_data':
-                        {
-                            'type':'xpath',
-                            'expression':'//*[@id="mainContent"]/table[1]/tbody/tr/td/text()'
-                        },
+                        [
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[2]/text()',
+                                'field':'subject',
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[3]/text()',
+                                'field':'grade',
+                                'parent':0,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[4]/text()',
+                                'field':'publishing_house',
+                                'parent':1,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[5]/text()',
+                                'field':'unit',
+                                'parent':2,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[6]/text()',
+                                'field':'name',
+                                'parent':3,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[1]/tbody/tr/td/a[7]/text()',
+                                'field':'resource_type',
+                                'parent':4,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr[1]/td/div/text()',
+                                'field':'title',
+                                'parent':5,
+                                'mutiple':False
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr[4]/td/div/text()',
+                                'field':'description',
+                                'parent':6,
+                                'mutiple':False
+                            }
+                        ],
                         'extract_files':
                         {
-                            'allow':r'/jty/tbkt/downLoadAttach\.action\?articleId=\d*',
+                            'allow':r'/jty/tbkt/downLoadAttach\.action\?articleId=\d*&urlId=1',
                             'field':'file'
                         }
                     }

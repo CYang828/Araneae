@@ -55,7 +55,8 @@ class UrlExtractor(object):
         self._extract_allow_urls()
 
     def _extract_urls(self):
-        self._urls = self.__dom.xpath('//a//@href')
+        urls = self.__dom.xpath('//a//@href')
+        self._urls = sorted(set(urls),key=urls.index)   
 
     def _extract_allow_urls(self):
         """
@@ -313,8 +314,6 @@ DEFAULT_MULTIPLE = False
 class DataExtractor(object):
     """
     数据抽取类
-    抽取数据可以分为两种，一种mutiple 用于生成多个data对象,一种single 只生成单个data对象
-    ?????????如何构建一个通用的数据抽取模型
     """
     def __init__(self,dom,url,rule,fid = None,rule_number = -1):
         self.__dom = dom
@@ -359,11 +358,11 @@ class DataExtractor(object):
             if tp == 'xpath':
                 for exp in expression:
                     results = self.__dom.xpath(exp)
-
+                    #print results
                     for i_result,result in enumerate(results):
                         if isinstance(result,lxml.etree.ElementBase):
                             results[i_result] = result.text
-
+                
                 middle.append(results)
             elif tp == 'css':
                 for exp in expression:
@@ -426,7 +425,6 @@ class DataExtractor(object):
                                 for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
                                     for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
                                         sub_xpath = re.sub(self._group_regex,'[%d]' % (i_result + 1),exp)
-                                        print sub_xpath
                                         sub_xpathes.append(sub_xpath)    
                                 
                             res_register[exp_idx]['xpath'] = sub_xpathes
@@ -488,9 +486,9 @@ class DataExtractor(object):
                     else:
                         if f not in raw_data.keys():
                             raw_data[f] = []
-                            raw_data[f].append(mid[i_f])
+                            raw_data[f].append(mid)
                         else:
-                            raw_data[f].append(mid[i_f])
+                            raw_data[f].append(mid)
                   
                 if multiple:
                     data = DT.Data(**raw_data)
@@ -501,12 +499,13 @@ class DataExtractor(object):
                     raw_data = {}
             
             if not multiple:
+                #import json
                 #print 'DATA'
                 #print json.dumps(raw_data,ensure_ascii = False)
                 #消除非multiple时field中只有一个
                 for field,value in raw_data.items():
                     if len(value) == 1:
-                        raw_data[field] = value[0]
+                        raw_data[field] = value
                         
                 data =  DT.Data(**raw_data) 
                 data.rule_number = self._rule_number

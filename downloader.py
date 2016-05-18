@@ -34,7 +34,8 @@ class DownloadProcessor(object):
 
         if match:
             file_name = match.group(1)
-            file_path = file_path +file_obj.file_name
+            file_type = file_name[file_name.rfind('.'):]
+            file_path = file_path +file_obj.file_name + file_type
 
             with open(file_path, "wb") as f:
                 f.write(response.content)       

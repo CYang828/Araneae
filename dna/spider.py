@@ -271,6 +271,7 @@ class BaseSpider(object):
                 self._scheduler_retry_time = self._scheduler_retry_time
                 request_json = self.scheduler_pull()
                 request = REQ.json2request(request_json)
+                request.set_headers(self.__chromesome.login_header)
                 self.fetch(request)
 
         self.merge_data()
@@ -429,6 +430,10 @@ class BaseSpider(object):
     def name(self):
         return self.__name
 
+    @property
+    def chromesome(self):
+        return self.__chromesome
+
 class RuleLinkSpider(BaseSpider):
     
     def first_urls(self,requests):
@@ -464,7 +469,6 @@ class RuleLinkSpider(BaseSpider):
         rule_number = page_rule.number
         next_rule_number = page_rule.next_number
 
-        #print associate
 
         data_files = []
         datas = []
@@ -485,6 +489,9 @@ class RuleLinkSpider(BaseSpider):
                 datas = EXT.DataExtractor(dom,url,page_rule.scrawl_data_element,fid = fid,rule_number = rule_number).extract()
             else:
                 datas = EXT.DataExtractor(dom,url,page_rule.scrawl_data_element,rule_number = rule_number).extract()
+
+        print '文件数量%d' % len(data_files)
+        print '数据数量%d' % len(datas)
     
         #只有数据和文件的数量相同时才能进行下载,否则没办法存储
         if datas and data_files:

@@ -43,14 +43,10 @@ class RedisDupeFilter(BaseDupeFilter):
         fingerprint = hashlib.md5(key).hexdigest()
         return True if self._dupefilter.sismember(self._dupefilter_key,fingerprint) else False
 
+    #添加成功返回True,重复返回False
     def put(self,key):
         fingerprint = hashlib.md5(key).hexdigest()
-
-        if not self.exist(fingerprint):
-            self._dupefilter.sadd(self._dupefilter_key,fingerprint)
-            return True
-        else:
-            return False
+        return self._dupefilter.sadd(self._dupefilter_key,fingerprint)
 
 
 
