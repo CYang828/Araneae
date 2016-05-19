@@ -44,6 +44,7 @@ class BaseChromesome(SET.Setting):
     def _essential_set(self):
         #self.set_essential_keys('LOG_PATH','LOG_FORMAT','LOG_LEVEL','LOG_DATE_FORMAT')
         self.set_essential_keys('RUNNING_TYPE')
+        self.set_essential_keys('DOWNLOAD_PATH')
         self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
         self.set_essential_keys('SCHEDULER','SCHEDULER_CONF','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
         self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT','REQUEST_RETRY_TIME')
@@ -59,6 +60,10 @@ class BaseChromesome(SET.Setting):
     @property
     def user_agent(self):
         return  self.getbool('USER_AGENT',DEFAULT_USER_AGENT)
+
+    @property
+    def download_path(self):
+        return  self.get('DOWNLOAD_PATH')
 
     @property
     def http_proxy(self):

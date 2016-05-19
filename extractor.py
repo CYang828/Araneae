@@ -267,9 +267,7 @@ class UrlFormatExtractor(object):
                 variable_value = str(self._middle_variables[variable_name])
                 expression = expression.replace(variable_name,variable_value)
                 
-            #print expression
             result = eval(expression)
-
         return result
 
     def _url2request(self):

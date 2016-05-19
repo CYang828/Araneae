@@ -10,6 +10,7 @@ import gevent.queue as GEVQ
 import gevent.thread as GEVT
 
 import Araneae.file as FILE
+import Araneae.scheduler as SCH
 import Araneae.utils.http as UTLH
 
 DEFAULT_DOWNLOAD_TIMEOUT = 30
@@ -45,9 +46,12 @@ class DownloadProcessor(object):
     def image_jpeg(self,content):
         pass
 
+DEFAULT_DOWNLOAD_SCHEDULER_TIMEOUT = 5
+
 class BaseDownloader(object):
 
-    def __init__(self,file_path):
+    def __init__(self,file_path,scheduler,dupefilter):
+        self._gag = False
         self._file_path = file_path
  
         try:
@@ -55,7 +59,8 @@ class BaseDownloader(object):
         except OSError:
             pass
 
-        self._queue = GEVQ.Queue()
+        #self._queue = GEVQ.Queue()
+        self._scheduler = SCH.DupeScheduler(scheduler,dupefilter)
         self._pool = GEVP.Pool()
         #download_threads = [GEV.spawn(self._processor)]
         download_threads = GEVT.start_new_thread(self._processor)
@@ -63,7 +68,15 @@ class BaseDownloader(object):
     def _processor(self):
         while True:
             #队列为空时阻塞
-            file_obj = self._queue.get() 
+            file_json = self._scheduler.pull(DEFAULT_DOWNLOAD_SCHEDULER_TIMEOUT)
+
+            if not file_json and self._gag:
+                break
+            elif not file_json:
+                continue
+
+            file_obj = FILE.File.instance(file_json)
+                 
             self._pool.spawn(self._download,file_obj)
             time.sleep(10)
             
@@ -71,7 +84,7 @@ class BaseDownloader(object):
     def _download(self,file_obj):
         method = UTLH.validate_method(file_obj.method)
 
-        print '下载文件,请求体%s' % file_obj.json()
+        print '下载文件,请求体%s' % file_obj
         #try:
         response = getattr(requests,method)(file_obj.url,
                                             proxies = file_obj.proxies,
@@ -89,20 +102,20 @@ class BaseDownloader(object):
     def full(self):
         raise NotImplementedError('下载器必须实现full方法')
 
+    @property
+    def gag(self):
+        return self._gag
+
+    @gag.setter
+    def gag(self,gag):
+        self._gag = gag
+
 class LocalDownloader(BaseDownloader):
     
-    def push(self,file_obj):
-        if isinstance(file_obj,FILE.File):
-            try:
-                #队列满抛出异常,由生产者决定操作
-                self._queue.put_nowait(file_obj)
-            except Full:
-                raise TypeError('队列满')
-        else:
-            raise TypeError('下载类型必须为File')
-
-    def full(self):
-        return self._queue.full()
+    def push(self,file_json):
+        #self._queue.put_nowait(file_obj)
+        print file_json
+        self._scheduler.push(file_json)
 
 
 if __name__ == '__main__':

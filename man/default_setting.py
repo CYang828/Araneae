@@ -21,6 +21,8 @@ DUPEFILTER = 'Araneae.dupefilter.MemoryDupeFilter'
 #去重器配置
 DUPEFILTER_CONF = {}
 
+DOWNLOAD_PATH = ''
+
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒

@@ -18,6 +18,37 @@ class File(object):
         self._auth = kvargs.get('auth',{})
         self._data = kvargs.get('data',{})
 
+    def __str__(self):
+        return self._sequence_json()
+
+    def _sequence_json(self):
+        file_json = {}
+
+        if self.__url:
+            file_json['url'] = self.__url
+
+        if self.__method:
+            file_json['method'] = self.__method
+
+        if self.__file_name:
+            file_json['file_name'] = self.__file_name
+
+        if self._cookies:
+            file_json['cookies'] = self._cookies
+
+        if self._headers:
+            file_json['headers'] = self._headers
+
+        if self._proxies:
+            file_json['proxies'] = self._proxies
+
+        if self._data:
+            file_json['data'] = self._data
+
+        file_json = json.dumps(file_json,ensure_ascii = True)
+
+        return file_json
+
     def set_user_agent(self,user_agent):
         self.__headers['User-Agent'] = user_agent
 
@@ -67,35 +98,11 @@ class File(object):
     def proxies(self):
         return self._proxies
 
+    @property
     def json(self):
-        file_json = {}
-
-        if self.__url:
-            file_json['url'] = self.__url
-
-        if self.__method:
-            file_json['method'] = self.__method
-
-        if self.__file_name:
-            file_json['file_name'] = self.__file_name
-
-        if self._cookies:
-            file_json['cookies'] = self._cookies
-
-        if self._headers:
-            file_json['headers'] = self._headers
-
-        if self._proxies:
-            file_json['proxies'] = self._proxies
-
-        if self._data:
-            file_json['data'] = self._data
-
-        file_json = json.dumps(file_json,ensure_ascii = True)
-
-        return file_json
+        return self._sequence_json()
 
     @classmethod
-    def instance(cls,json):
-        json = json.loads(json)
-        return cls(**json)
+    def instance(cls,file_json):
+        file_json = json.loads(file_json)
+        return cls(**file_json)

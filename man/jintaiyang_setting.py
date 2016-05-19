@@ -41,6 +41,8 @@ SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒
 SCHEDULER_RETRY_INTERVAL = 1
 
+DOWNLOAD_PATH = '/image'
+
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
 #请求休眠时间,单位秒
@@ -49,7 +51,7 @@ REQUEST_SLEEP_TIME = 3
 REQUEST_TIMEOUT = 2
 
 #日志路径,结尾必须为.log
-LOG_PATH = '/home/zhangchunyang/log/spider.log'
+LOG_PATH = '/home/zhangchunyang/log/jintaiyang_chuzhong.log'
 
 #爬虫名
 SPIDER_NAME     =   'jintaiyang_chuzhong'
@@ -72,10 +74,10 @@ LASTING         =   {
 
 
 #登录的headers
-LOGIN_HEADER = {'Cookie':'DWRSESSIONID=8zh0Kq2cVhme*zXyxk8144dz3jl; jsessionid=55B7BD7151B07F1CC7478AE79CDF5F71; JSESSIONID=abcZbVnPl69NfeDcRCctv'}
+LOGIN_HEADER = {'Cookie':'DWRSESSIONID=tZ56UZNvjzrmcllZbdZm1Uuk9jl; JSESSIONID=abcIZey1zYnTu7K793htv; jsessionid=5F85C23AE025113931546CA80B37239E'}
 
 #爬虫初始地址
-FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
+FIRST_URLS       =   ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001002.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001003.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001004.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001005.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001006.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001007.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001008.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001009.shtm','http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001010.shtm',]
 
 #页面爬取规则
 PAGE1           =   {
@@ -113,7 +115,7 @@ PAGE5           =   {
                             'format_url':'%(url)s&pageSize=20&showPage=%(page)s',
                             'format_data':OrderedDict([
                                             ('url',{'type':'constant','expression':'@host_url'}),
-                                            ('@pages',{'type':'xpath','expression':'//*[@id="ddd"]/nobr/select[1]/option[*]/text()'}),
+                                            ('@pages',{'type':'xpath','expression':r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}),
 											('@max_page',{'type':'function','expression':'max(@pages)'}),
 											('page',{'type':'function','expression':'range(2,@max_page+1)'})
                                           ]),
@@ -176,7 +178,14 @@ PAGE6           =   {
                                 'field':'description',
                                 'parent':6,
                                 'mutiple':False
-                            }
+                            },
+                            {
+                                'type':'xpath',
+                                'expression':'//*[@id="mainContent"]/form/table[2]/tbody/tr[2]/td/div/text()',
+                                'field':'resource_info',
+                                'parent':7,
+                                'mutiple':False
+                            },
                         ],
                         'extract_files':
                         {

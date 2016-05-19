@@ -19,8 +19,8 @@ class BaseScheduler(object):
 
 class MemoryScheduler(BaseScheduler):
     
-    def __init__(self,spider_name,**conf):
-        self._scheduler_key = 'Scheduler:' + spider_name
+    def __init__(self,scheduler_name,**conf):
+        self._scheduler_key = 'Scheduler:' + scheduler_name
         self._queue = deque([])
 
     def __len__(self):
@@ -35,10 +35,12 @@ class MemoryScheduler(BaseScheduler):
     def clear(self):
         self._queue.clear()
 
+DEFAULT_PULL_TIMEOUT = 5
+
 class RedisScheduler(BaseScheduler):
 
-    def __init__(self,spider_name,**redis_conf):
-        self._scheduler_key = 'Scheduler:' + spider_name
+    def __init__(self,scheduler_name,**redis_conf):
+        self._scheduler_key = 'Scheduler:' + scheduler_name
         self._redis = DB.Redis(**redis_conf)
 
     def __len__(self):
@@ -47,8 +49,13 @@ class RedisScheduler(BaseScheduler):
     def push(self, data):
         self._redis.lpush(self._scheduler_key,data)
     
-    def pull(self):
-        return self._redis.rpop(self._scheduler_key)
+    def pull(self,timeout = 5):
+        data = self._redis.brpop(self._scheduler_key,timeout)
+        
+        if data:
+            return data[1]
+        else:
+            return None
 
     def clear(self):
         self._redis.delete(self._scheduler_key)
@@ -59,7 +66,7 @@ class RabbitmqScheduler(BaseScheduler):
 
 #单机调度器,包含dupefilter
 #分布式的dupefilter在master中
-class SingletonScheduler(object):
+class DupeScheduler(object):
     
     def __init__(self,scheduler,dupefilter):
         self._scheduler = scheduler
@@ -76,8 +83,8 @@ class SingletonScheduler(object):
         else:
             return False
 
-    def pull(self):
-        return self._scheduler.pull()
+    def pull(self,timeout):
+        return self._scheduler.pull(timeout)
 
     def clear(self):
         self._scheduler.clear()

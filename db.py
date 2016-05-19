@@ -202,9 +202,15 @@ class Redis(object):
             print e
 
         return ret
+
+    def brpop(self,key,timeout):
+        try:
+            ret = self._redis.brpop(key,timeout)
+        except RedisError as e:
+            ret = None
+
+        return ret
             
-
-
     def sismember(self,name,value):
         try:
             ret = self._redis.sismember(name,value)       
