@@ -12,6 +12,7 @@ DEFAULT_REQUEST_TIMEOUT = 2
 DEFAULT_CALLBACK = 'parse'
 DEFAULT_ASSOCIATE = False
 
+
 class Request(object):
     """
     spider_name:爬虫名
@@ -38,24 +39,24 @@ class Request(object):
     __rule_number = None
     __associate = False
 
-    def __init__(self,url,**args):
+    def __init__(self, url, **args):
         if not url:
             raise EXP.RequestException('request对象必须有url')
-        
+
         self.__url = UTLH.revise_url(url)
 
-        self.__method = UTLH.validate_method(args.get('method','GET')) 
-        self.__headers = args.get('headers',{})
-        self.__data = args.get('data',{})
-        self.__cookies = args.get('cookies',{})
-        self.__auth = args.get('auth',{})
-        self.__proxies = args.get('proxies',None)
+        self.__method = UTLH.validate_method(args.get('method', 'GET'))
+        self.__headers = args.get('headers', {})
+        self.__data = args.get('data', {})
+        self.__cookies = args.get('cookies', {})
+        self.__auth = args.get('auth', {})
+        self.__proxies = args.get('proxies', None)
 
-        self.__spider_name = args.get('spider_name','')
-        self.__fid = args.get('fid',None)
-        self.__rule_number = args.get('rule_number',None)
-        self.__callback = args.get('callback',DEFAULT_CALLBACK)
-        self.__associate = args.get('associate',DEFAULT_ASSOCIATE)
+        self.__spider_name = args.get('spider_name', '')
+        self.__fid = args.get('fid', None)
+        self.__rule_number = args.get('rule_number', None)
+        self.__callback = args.get('callback', DEFAULT_CALLBACK)
+        self.__associate = args.get('associate', DEFAULT_ASSOCIATE)
 
     def _sequence_json(self):
         request_json = {}
@@ -89,58 +90,63 @@ class Request(object):
 
         request_json['associate'] = self.__associate
 
-        return json.dumps(request_json,ensure_ascii = False)
+        return json.dumps(request_json, ensure_ascii=False)
 
-    def set_spider_name(self,spider_name):
+    def set_spider_name(self, spider_name):
         self.__spider_name = spider_name
         return self
 
-    def set_rule_number(self,rule_number):
+    def set_rule_number(self, rule_number):
         self.__rule_number = rule_number
         return self
 
-    def set_fid(self,fid):
+    def set_fid(self, fid):
         self.__fid = fid
         return self
 
-    def set_auth(self,auth):
+    def set_auth(self, auth):
         self.__auth = auth
         return self
 
-    def set_user_agent(self,user_agent):
+    def set_user_agent(self, user_agent):
         self.__headers['User-Agent'] = user_agent
         return self
 
-    def set_http_proxy(self,proxy):
-        self.__proxy = {'http':proxy}
+    def set_http_proxy(self, proxy):
+        self.__proxy = {'http': proxy}
         return self
 
-    def set_https_proxy(self,proxy):
-        self.__proxy = {'https':proxy}
+    def set_https_proxy(self, proxy):
+        self.__proxy = {'https': proxy}
         return self
 
-    def set_associate(self,associate):
+    def set_associate(self, associate):
         self.__associate = associate
         return self
 
-    def add_headers(self,header_dict):
-        self.__headers = dict(self._headers,**header_dict)
+    def add_headers(self, header_dict):
+        self.__headers = dict(self._headers, **header_dict)
         return self
 
-    def set_headers(self,header_dict):
+    def set_headers(self, header_dict):
         self.__headers = header_dict
         return self
 
-    def add_cookies(self,cookie_dict):
-        self.__cookies = dict(self._cookies,**cookie_dict)
+    def add_cookies(self, cookie_dict):
+        self.__cookies = dict(self._cookies, **cookie_dict)
         return self
 
-    def fetch(self,timeout = DEFAULT_REQUEST_TIMEOUT):
+    def fetch(self, timeout=DEFAULT_REQUEST_TIMEOUT):
         """
         抓取页面信息
         """
         try:
-            response = getattr(requests,self.__method)(self.__url,proxies = self.__proxies,data = self.__data,headers = self.__headers,cookies = self.__cookies,timeout = timeout)
+            response = getattr(requests, self.__method)(self.__url,
+                                                        proxies=self.__proxies,
+                                                        data=self.__data,
+                                                        headers=self.__headers,
+                                                        cookies=self.__cookies,
+                                                        timeout=timeout)
         except requests.exceptions.ConnectionError:
             raise EXP.RequestConnectionException('DNS查询失败或者拒绝连接')
         except requests.exceptions.HTTPError:
@@ -165,7 +171,7 @@ class Request(object):
         return self.__rule_number
 
     @rule_number.setter
-    def rule_number(self,rule_number):
+    def rule_number(self, rule_number):
         self.__rule_number = rule_number
 
     @property
@@ -185,7 +191,7 @@ class Request(object):
         return self.__callback
 
     @callback.setter
-    def callback(self,callback):
+    def callback(self, callback):
         self.__callback = callback
 
     @property
@@ -197,7 +203,7 @@ class Request(object):
         return self.__fid
 
     @fid.setter
-    def fid(self,fid):
+    def fid(self, fid):
         self.__fid = fid
 
     @property
@@ -205,8 +211,9 @@ class Request(object):
         return self.__associate
 
     @associate.setter
-    def associate(self,associate):
+    def associate(self, associate):
         self.__associate = associate
+
 
 def json2request(request_json):
     """

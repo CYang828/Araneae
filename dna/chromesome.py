@@ -15,7 +15,7 @@ SPIDER_TYPE_RUlELINK = 'RuleLink'
 DEFAULT_RUNNING_TYPE = RUNNING_TYPE_SINGLETON
 DEFAULT_SCHEDULER = 'Araneae.scheduler.MemoryScheduler'
 DEFAULT_DUPEFILTER = 'Araneae.dupefilter.MemoryDupeFilter'
-DEFAULT_SCHEDULER_RETRY_TIME = 2 
+DEFAULT_SCHEDULER_RETRY_TIME = 2
 DEFAULT_SCHEDULER_RETRY_INTERVAL = 5
 DEFAULT_CONCURRENT_REQUESTS = 5
 DEFAULT_REQUEST_SLEEP_TIME = 0
@@ -33,10 +33,11 @@ class BaseChromesome(SET.Setting):
     """
     #可选项配置
     OPTIONS = {
-                'RUNNING_TYPE':{'singleton':RUNNING_TYPE_SINGLETON,'distributed':RUNNING_TYPE_DISTRIBUTED},
-              }
+        'RUNNING_TYPE': {'singleton': RUNNING_TYPE_SINGLETON,
+                         'distributed': RUNNING_TYPE_DISTRIBUTED},
+    }
 
-    def __init__(self,chromesome):
+    def __init__(self, chromesome):
         self._attributes = chromesome._attributes
         self._essential_set()
         self._set_essential_options()
@@ -45,41 +46,49 @@ class BaseChromesome(SET.Setting):
         #self.set_essential_keys('LOG_PATH','LOG_FORMAT','LOG_LEVEL','LOG_DATE_FORMAT')
         self.set_essential_keys('RUNNING_TYPE')
         self.set_essential_keys('DOWNLOAD_PATH')
-        self.set_essential_keys('USER_AGENT','HTTP_PROXY','HTTP_PROXY_MODULE')
-        self.set_essential_keys('SCHEDULER','SCHEDULER_CONF','SCHEDULER_RETRY_TIME','SCHEDULER_RETRY_INTERVAL')
-        self.set_essential_keys('CONCURRENT_REQUESTS','REQUEST_SLEEP_TIME','REQUEST_TIMEOUT','REQUEST_RETRY_TIME')
-        self.set_essential_keys('MIDDLE_DATA_COLLECTION','MERGE_DATA_COLLECTION','LASTING')
-        self.set_essential_keys('SPIDER_NAME','SPIDER_TYPE','FIRST_URLS','LOGIN_HEADER')
-        self.set_essential_keys('REQUEST_MIDDLEWARE','DATA_MIDDLEWARE','FILE_MIDDLEWARE')
+        self.set_essential_keys('USER_AGENT', 'HTTP_PROXY',
+                                'HTTP_PROXY_MODULE')
+        self.set_essential_keys('SCHEDULER', 'SCHEDULER_CONF',
+                                'SCHEDULER_RETRY_TIME',
+                                'SCHEDULER_RETRY_INTERVAL')
+        self.set_essential_keys('CONCURRENT_REQUESTS', 'REQUEST_SLEEP_TIME',
+                                'REQUEST_TIMEOUT', 'REQUEST_RETRY_TIME')
+        self.set_essential_keys('MIDDLE_DATA_COLLECTION',
+                                'MERGE_DATA_COLLECTION', 'LASTING')
+        self.set_essential_keys('SPIDER_NAME', 'SPIDER_TYPE', 'FIRST_URLS',
+                                'LOGIN_HEADER')
+        self.set_essential_keys('REQUEST_MIDDLEWARE', 'DATA_MIDDLEWARE',
+                                'FILE_MIDDLEWARE')
         self.set_essential_keys('LOG_PATH')
 
     def _set_essential_options(self):
-        for key,opt_info in self.OPTIONS.items():
-            self.set_options(key,*opt_info.keys())
+        for key, opt_info in self.OPTIONS.items():
+            self.set_options(key, *opt_info.keys())
 
     @property
     def user_agent(self):
-        return  self.getbool('USER_AGENT',DEFAULT_USER_AGENT)
+        return self.getbool('USER_AGENT', DEFAULT_USER_AGENT)
 
     @property
     def download_path(self):
-        return  self.get('DOWNLOAD_PATH')
+        return self.get('DOWNLOAD_PATH')
 
     @property
     def http_proxy(self):
-        return  self.getbool('HTTP_PROXY',DEFAULT_HTTP_PROXY)
+        return self.getbool('HTTP_PROXY', DEFAULT_HTTP_PROXY)
 
     @property
     def http_proxy_module(self):
-        return self.getbool('HTTP_PROXY_MODULE',None)
+        return self.getbool('HTTP_PROXY_MODULE', None)
 
     @property
     def running_type(self):
-        return self.OPTIONS['RUNNING_TYPE'][self.get('RUNNING_TYPE',DEFAULT_RUNNING_TYPE)]
+        return self.OPTIONS['RUNNING_TYPE'][self.get('RUNNING_TYPE',
+                                                     DEFAULT_RUNNING_TYPE)]
 
     @property
     def scheduler(self):
-        return self.get('SCHEDULER',DEFAULT_SCHEDULER)
+        return self.get('SCHEDULER', DEFAULT_SCHEDULER)
 
     @property
     def scheduler_conf(self):
@@ -87,7 +96,7 @@ class BaseChromesome(SET.Setting):
 
     @property
     def dupefilter(self):
-        return self.get('DUPEFILTER',DEFAULT_DUPEFILTER)
+        return self.get('DUPEFILTER', DEFAULT_DUPEFILTER)
 
     @property
     def dupefilter_conf(self):
@@ -95,52 +104,55 @@ class BaseChromesome(SET.Setting):
 
     @property
     def scheduler_retry_time(self):
-        return self.getint('SCHEDULER_RETRY_TIME',DEFAULT_SCHEDULER_RETRY_TIME)
+        return self.getint('SCHEDULER_RETRY_TIME',
+                           DEFAULT_SCHEDULER_RETRY_TIME)
 
     @property
     def scheduler_retry_interval(self):
-        return self.getint('SCHEDULER_RETRY_INTERVAL',DEFAULT_SCHEDULER_RETRY_INTERVAL)
+        return self.getint('SCHEDULER_RETRY_INTERVAL',
+                           DEFAULT_SCHEDULER_RETRY_INTERVAL)
 
     @property
     def concurrent_requests(self):
-        return self.getint('CONCURRENT_REQUESTS',DEFAULT_CONCURRENT_REQUESTS)
+        return self.getint('CONCURRENT_REQUESTS', DEFAULT_CONCURRENT_REQUESTS)
 
     @property
     def request_sleep_time(self):
-        return self.getint('REQUEST_SLEEP_TIME',DEFAULT_REQUEST_SLEEP_TIME)
+        return self.getint('REQUEST_SLEEP_TIME', DEFAULT_REQUEST_SLEEP_TIME)
 
     @property
     def request_retry_time(self):
-        return self.getint('REQUEST_RETRY_TIME',DEFAULT_REQUEST_RETRY_TIME)
+        return self.getint('REQUEST_RETRY_TIME', DEFAULT_REQUEST_RETRY_TIME)
 
     @property
     def request_timeout(self):
-        return self.getint('REQUEST_TIMEOUT',DEFAULT_REQUEST_TIMEOUT)
+        return self.getint('REQUEST_TIMEOUT', DEFAULT_REQUEST_TIMEOUT)
 
     @property
     def middle_data_collection(self):
-        return self.get('MIDDLE_DATA_COLLECTION',DEFAULT_MIDDLE_DATA_COLLECTION)
-   
+        return self.get('MIDDLE_DATA_COLLECTION',
+                        DEFAULT_MIDDLE_DATA_COLLECTION)
+
     @property
     def merge_data_collection(self):
-        return self.get('MERGE_DATA_COLLECTION',DEFAULT_MERGE_DATA_COLLECTION)
+        return self.get('MERGE_DATA_COLLECTION', DEFAULT_MERGE_DATA_COLLECTION)
 
     @property
     def lasting(self):
-        return self.getdict('LASTING',None)
+        return self.getdict('LASTING', None)
 
     @property
     def spider_name(self):
-        spider_name = self.get('SPIDER_NAME',None)
+        spider_name = self.get('SPIDER_NAME', None)
 
         if not spider_name:
             raise EXP.SettingException('爬虫SPIDER_NAME不能为空')
 
         return spider_name
-        
+
     @property
     def spider_type(self):
-        spider_type = self.get('SPIDER_TYPE',None)
+        spider_type = self.get('SPIDER_TYPE', None)
 
         if not spider_type:
             raise EXP.ChromesomeException('爬虫SPIDER_TYPE不能为空')
@@ -149,17 +161,17 @@ class BaseChromesome(SET.Setting):
 
     @property
     def login_header(self):
-        return self.getdict('LOGIN_HEADER',None)
+        return self.getdict('LOGIN_HEADER', None)
 
     @property
     def first_urls(self):
-        first_urls = self.get('FIRST_URLS',None)
+        first_urls = self.get('FIRST_URLS', None)
 
         if not first_urls:
             raise EXP.ChromesomeException('爬虫FIRST_URLS不能为空')
 
-        if isinstance(first_urls,str):
-            self.set_from_value('FISRT_URLS',[first_urls])
+        if isinstance(first_urls, str):
+            self.set_from_value('FISRT_URLS', [first_urls])
 
         return self.getlist('FIRST_URLS')
 
@@ -177,8 +189,9 @@ class BaseChromesome(SET.Setting):
 
     @property
     def log_path(self):
-        return self.get('LOG_PATH',None)
- 
+        return self.get('LOG_PATH', None)
+
+
 class RuleLinkChromesome(BaseChromesome):
     """
     链式爬虫配置文件规则
@@ -187,8 +200,8 @@ class RuleLinkChromesome(BaseChromesome):
     __page_rules = collections.OrderedDict()
     __essential_page_keys = set([])
 
-    def __init__(self,chromesome):
-        super(RuleLinkChromesome,self).__init__(chromesome)
+    def __init__(self, chromesome):
+        super(RuleLinkChromesome, self).__init__(chromesome)
         self._essential()
 
     def __len__(self):
@@ -202,51 +215,57 @@ class RuleLinkChromesome(BaseChromesome):
 
     def _sort_page(self):
         page_sort_tmp = {}
-        
+
         for key in self._attributes.keys():
             page_match = self._page_exp.match(key)
- 
+
             if page_match:
                 page_num = int(page_match.group(1))
                 page_sort_tmp[page_num] = key
 
-
-        page_sort_tmp = {rule_number:PR.PageRule(self._attributes[sort_tmp_item]).set_number(rule_number) for rule_number,sort_tmp_item in page_sort_tmp.items()}
-        self.__page_rules = collections.OrderedDict(sorted(page_sort_tmp.items(),key = lambda i:i[0]))
+        page_sort_tmp = {
+            rule_number: PR.PageRule(self._attributes[
+                sort_tmp_item]).set_number(rule_number)
+            for rule_number, sort_tmp_item in page_sort_tmp.items()
+        }
+        self.__page_rules = collections.OrderedDict(sorted(page_sort_tmp.items(
+        ), key=lambda i: i[0]))
 
         first_flag = True
         upper_page_rule = None
 
-        for rule_number,page_rule in self.__page_rules.items():
+        for rule_number, page_rule in self.__page_rules.items():
             if first_flag:
                 first_flag = False
                 upper_page_rule = page_rule
                 continue
-            
+
             upper_page_rule.next_number = page_rule.number
             upper_page_rule = page_rule
- 
+
     def iter_page_rule(self):
-        for rule_number,page_rule in self.__page_rules.items():
+        for rule_number, page_rule in self.__page_rules.items():
             yield page_rule
 
-    def get_page_rule(self,number):
-        return self.__page_rules[number] if number in self.__page_rules.keys() else None
+    def get_page_rule(self, number):
+        return self.__page_rules[number] if number in self.__page_rules.keys(
+        ) else None
 
     @property
     def first_rule_number(self):
-        return  min(self.__page_rules.keys())
+        return min(self.__page_rules.keys())
 
     @property
     def first_rule(self):
         return self.__page_rules[self.first_rule_number]
 
-       
+
 class BroadPriorityChromesome(BaseChromesome):
     """
     广度优先爬虫配置文件规则
     """
-    def __init__(self,chromesome):
+
+    def __init__(self, chromesome):
         pass
 
 
@@ -254,6 +273,6 @@ class DeepPriorityChromesome(BaseChromesome):
     """
     深度优先爬虫配置文件规则
     """
-    def __init__(self,chromesome):
-        pass
 
+    def __init__(self, chromesome):
+        pass

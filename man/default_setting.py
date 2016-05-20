@@ -1,5 +1,4 @@
 #*-*coding:utf8*-*
-
 """
 爬虫配置文件
 ============
@@ -28,7 +27,6 @@ SCHEDULER_RETRY_TIME = 5
 #调度器重试间隔,单位秒
 SCHEDULER_RETRY_INTERVAL = 1
 
-
 #爬虫最大并发数
 CONCURRENT_REQUESTS = 1
 #请求休眠时间,单位秒
@@ -43,8 +41,7 @@ MIDDLE_DATA_COLLECTION = 'rule'
 #合并后结果集前缀
 MERGE_DATA_COLLECTION = 'merge_result'
 #持久化存储配置
-LASTING         =   {}
-
+LASTING = {}
 
 #随机获取user agent
 USER_AGENT = True
@@ -57,22 +54,20 @@ HTTP_PROXY_MODULE = None
 LOG_PATH = None
 
 #爬虫名
-SPIDER_NAME     =   None
+SPIDER_NAME = None
 #爬虫类型
 #可选类型:rulelink
-SPIDER_TYPE     =   None
+SPIDER_TYPE = None
 #登录的headers
 LOGIN_HEADER = {}
 #爬虫初始地址
-FIRST_URLS       =   []
+FIRST_URLS = []
 #request中间件
 REQUEST_MIDDLEWARE = ['Araneae.middleware.UserAgentMiddleware']
 #data中间件
 DATA_MIDDLEWARE = []
 #file中间件
 FILE_MIDDLEWARE = []
-
-
 """
 页面爬去规则
 PAGE + 数字编号,爬去会按照编号的的从小到大的顺序进行爬去
