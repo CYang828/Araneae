@@ -29,8 +29,11 @@ class Data(object):
             else:
                 self.__kv = dict(self.__kv, **kvargs)
 
-    def __get__(self, data):
-        pass
+    def __get__(self, field):
+        return self.__kv[field]
+
+    def __getitem__(self, field):
+        return self.__kv[field]
 
     def __add__(self, data):
         tmp_kv = {}

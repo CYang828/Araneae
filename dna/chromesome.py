@@ -260,19 +260,24 @@ class RuleLinkChromesome(BaseChromesome):
         return self.__page_rules[self.first_rule_number]
 
 
-class BroadPriorityChromesome(BaseChromesome):
+class BreadthFirstChromesome(BaseChromesome):
     """
     广度优先爬虫配置文件规则
     """
+    _page_rule_exp = 'PAGE_RULE'
 
     def __init__(self, chromesome):
-        pass
+        super(BreadthFirstChromesome,self).__init__(chromesome)
+        self.first_rule_number = 1
+        self._page_rule_info = self._attributes[self._page_rule_exp]
 
+    def get_page_rule(self,number):
+        return self._page_rule_info
 
 class DeepPriorityChromesome(BaseChromesome):
     """
     深度优先爬虫配置文件规则
     """
-
-    def __init__(self, chromesome):
+    def __init__(self,chromesome):
         pass
+

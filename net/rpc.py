@@ -75,8 +75,7 @@ class RPCProxyManager(object):
                       proxyName,
                       packet_name='Araneae.rpc', ):
 
-        _module_home = __import__(packet_name, globals(), locals(), [proxyType
-                                                                     ])
+        _module_home = __import__(packet_name, globals(), locals(), [proxyType])
         bpBinder = getattr(_module_home, proxyType)(remoteInfo, proxyName)
 
         if not self.__inner_proxy_bucket.has_key(proxyType):

@@ -110,6 +110,112 @@ class MongoDataPipeline(BaseDataPipeline):
     def collection_names(self, system=False):
         return self._db.collection_names(include_system_collections=system)
 
+###############################################   MongoTreeTitleDataPipeline   ###############################################
+class MongoTreeTitleDataPipeline(MongoDataPipeline):
+
+    def __init__(self, **kwargs):
+        super(MongoTreeTitleDataPipeline, self).__init__(**kwargs)
+
+    def insert(self, collection, data):
+        self.select_collection(collection)
+
+        node_route = data['node_route']
+        filePath = data['file_path']
+        listSize = len(node_route)
+
+        self.logger.info('Collection[%s], File[%s], Insert[%s]' % \
+                          (collection, filePath, "->".join(node_route)))
+
+        for i in range(listSize):
+            temp = self._collection.find_one({'node_route' : "->".join(node_route[:i+1])})
+
+            if temp is None:
+                temp = {}
+                temp['title'] = node_route[i]
+                temp['children'] = []
+                temp['parent'] = ""
+                temp['level'] = i
+                temp['node_route'] = "->".join(node_route[:i+1])
+
+                # self.logger.info('add new Title[%s], Route[%s], Level[%d]' % \
+                #                  temp['title'], temp['node_route'], temp['level'])
+
+                self._collection.save(temp)
+
+        for i in range(listSize):
+            needUpdate = False
+            temp = self._collection.find_one({'node_route' : "->".join(node_route[:i+1])})
+
+            if i > 0:  #  Only non-root node has 'parent' attribute
+                if temp['parent'] == "":
+                    parent = self._collection.find_one({'node_route' : "->".join(node_route[:i])})
+                    temp['parent'] = parent['_id']
+
+                    # self.logger.debug('ID[%s], Title[%s], Route[%s], Parent[%s]' % \
+                    #                   temp['_id'], temp['title'], temp['node_route'], temp['parent'])
+
+                    needUpdate = True
+
+            if i < listSize - 1:  #  Only non-leaf node has 'children' attribute
+                child = self._collection.find_one({'node_route' : "->".join(node_route[:i+2])})
+
+                if not isinstance(temp['children'], list):
+                    temp['children'] = []
+
+                if child['_id'] not in temp['children']:
+                    temp['children'].append(child['_id'])
+                    needUpdate = True
+
+                    # self.logger.info('ID[%s], Title[%s], Route[%s], Add Child[%s] ChildRT[%s]' % \
+                    #                  temp['_id'], temp['title'], temp['node_route'], child['_id'], child['node_route'])
+
+            else:  #  Only leaf node has 'file_path' attribute
+                if filePath == "":
+                    self.logger.error('Leaf-Node Route[%s] has no FilePath Error' % "->".join(node_route))
+                elif (not temp.has_key('file_path')) or temp['file_path'] == "":
+                    temp['file_path'] = filePath
+                    needUpdate = True
+
+            if needUpdate:
+                self._collection.save(temp)
+
+                self.logger.info('Save Route[%s] Title[%s] File[%s]' % \
+                                  (temp['node_route'], temp['title'], filePath))
+
+    def __find_by_id(self, object_id, result_list):
+        temp = self._collection.find_one({'_id' : object_id})
+
+        if temp is None:
+            return
+        elif len(temp['children']) == 0:
+            result_list.append(temp)
+            return temp
+        else:
+            for child_id in temp['children']:
+                self.__find_by_id(child_id, result_list)
+
+    #  TODO 根据传入的 node_title ，找到这个 Node 树的所有叶子节点
+    def find_title(self, node_title):
+        pass
+
+    def find_by_route(self, node_route):
+        temp = self._collection.find_one({'node_route' : node_route})
+        result_list = []
+
+        if temp is None:
+            print 'Node Route[%s] no found' % node_route
+            return None
+        else:
+            children_list = temp['children']
+
+            for child_id in children_list:
+                self.__find_by_id(child_id, result_list)
+
+            for result in result_list:
+                print 'ID[%s], Title[%s], Route[%s], Level[%d]' % \
+                      (result['_id'], result['title'], result['node_route'], result['level'])
+
+            return result_list
 
 MYSQL_RETRY_TIMES = 10
 
@@ -191,12 +297,12 @@ class Mysql(object):
                 self.reconnect()
                 ERROR(
                     'Mysql Error -- SQL[%s] -- msg[Mysql Gone Away or Operate Error!%s]'
-                    % (sql, e))
+                    % (sql, str(e)))
                 continue
             except MySQLdb.Error, e:
                 self._event_flag = False
                 ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Execute Failed!%s]'
-                      % (sql, e))
+                      % (sql, str(e)))
                 raise MysqlException('Mysql Execute Failed')
             except:
                 ERROR(
@@ -434,7 +540,8 @@ def generate_pipeline(**args):
     pipeline_type = args.get('type', DEFAULT_PIPELINE_TYPE).lower()
 
     #后续可以支持更多种类
-    option_type = {'mongo': 'MongoDataPipeline'}
+    option_type = {'mongo':'MongoDataPipeline',
+                   'mongo_tree':'MongoTreeTitleDataPipeline'}
 
     pipeline_obj = None
 
@@ -442,7 +549,6 @@ def generate_pipeline(**args):
         raise TypeError('不支持该类型pipeline，目前只支持mongo')
     else:
         pipeline_module = import_module('Araneae.pipeline')
-        pipeline_obj = getattr(pipeline_module, option_type[pipeline_type])(
-            **args)
+        pipeline_obj = getattr(pipeline_module,option_type[pipeline_type])(**args)
 
     return pipeline_obj

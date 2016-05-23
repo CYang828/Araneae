@@ -79,12 +79,12 @@ class BaseDownloader(object):
         self._scheduler = SCH.DupeScheduler(scheduler, dupefilter)
         self._pool = GEVP.Pool(pool_size)
         download_threads = GEVT.start_new_thread(self._processor)
+        self._run = True
 
     def _processor(self):
-        while True:
+        while self._run:
             #队列为空时阻塞
-            file_json = self._scheduler.pull(
-                DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)
+            file_json = self._scheduler.pull(DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)
             print file_json
 
             if not file_json and self._gag:

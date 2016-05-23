@@ -5,6 +5,8 @@ import sys
 import time
 import copy
 import types
+import urlparse
+import hashlib
 import bson as BS
 import gevent as GEV
 import gevent.pool as GEVP
@@ -165,7 +167,7 @@ class BaseSpider(object):
             except (EXP.RequestConnectionException, EXP.RequestErrorException,
                     EXP.RequestTimeoutException,
                     EXP.RequestTooManyRedirectsException) as e:
-                self.recorder('ERROR', e)
+                self.recorder('ERROR', str(e))
                 retry_time -= 1
                 continue
 
@@ -182,6 +184,8 @@ class BaseSpider(object):
         if isinstance(objs, types.GeneratorType):
             for obj in objs:
                 self._fetch_route(obj)
+        elif objs == False:
+            self.recorder('ERROR', 'Ignore URL[%s]' % request.url)
         else:
             self._fetch_route(objs)
 
@@ -231,7 +235,7 @@ class BaseSpider(object):
         """
         raise NotImplementedError('爬虫必须实现first_url方法')
 
-    def parse(self, response):
+    def parse(self, request, response):
         """
         response默认转发函数
 
@@ -254,13 +258,12 @@ class BaseSpider(object):
 
         for first_url in first_urls:
             if isinstance(first_url, str):
-                request = REQ.Request(
-                    first_url, headers=self._login_header).set_spider_name(
-                        self.__name).set_rule_number(
-                            self.__chromesome.first_rule_number)
+                request = REQ.Request(first_url,headers = self._login_header)\
+                                     .set_spider_name(self.__name)\
+                                     .set_rule_number(self.__chromesome.first_rule_number)
+
             elif isinstance(fisrt_url, dict):
-                request = REQ.json2request(
-                    **first_url).add_header(self._login_header)
+                request = REQ.json2request(**first_url).add_header(self._login_header)
 
             requests.append(request)
 
@@ -340,16 +343,12 @@ class BaseSpider(object):
             collections = []
             merge_collection = None
 
-            merge_collection_name = self._merge_data_collection + ('_%d' %
-                                                                   idx_result)
-            merge_collection = data_pipelines.pop().select_collection(
-                merge_collection_name)
+            merge_collection_name = self._merge_data_collection + ('_%d' % idx_result)
+            merge_collection = data_pipelines.pop().select_collection(merge_collection_name)
 
             for idx, number in enumerate(sorted(merge_number, reverse=True)):
-                collection_name = self._middle_data_collection + ('_%d' %
-                                                                  number)
-                collection = data_pipelines.pop().select_collection(
-                    collection_name)
+                collection_name = self._middle_data_collection + ('_%d' % number)
+                collection = data_pipelines.pop().select_collection(collection_name)
 
                 if idx == 0:
                     lower_cursor = collection.find()
@@ -371,8 +370,7 @@ class BaseSpider(object):
                     for collection in collections:
                         if fid:
                             #只能查询到一条数据
-                            doc = collection.find(filter={'_id':
-                                                          BS.ObjectId(fid)})
+                            doc = collection.find(filter = {'_id':BS.ObjectId(fid)})
 
                             if doc.count():
                                 doc = doc[0]
@@ -456,7 +454,7 @@ class BaseSpider(object):
         """
         return self.__chromesome.get_page_rule(number)
 
-    def page_rule_parse(self, response, page_rule, fid):
+    def page_rule_parse(self, request, response,page_rule,fid):
         raise NotImplementedError('spider必须实现page_rule_parse方法')
 
     @property
@@ -475,18 +473,17 @@ class RuleLinkSpider(BaseSpider):
 
         return requests
 
-    def first_parse(self, response, rule, fid, associate):
+    def first_parse(self, request, response, rule, fid, associate):
         first_page_rule = rule
-        requests = self.page_rule_parse(response, first_page_rule, fid,
-                                        associate)
+        requests = self.page_rule_parse(request, response, first_page_rule, fid, associate)
         return requests
 
-    def parse(self, response, rule, fid, associate):
-        requests = self.page_rule_parse(response, rule, fid, associate)
+    def parse(self,request, response, rule, fid, associate):
+        requests = self.page_rule_parse(request, response, rule, fid, associate)
         return requests
 
     #返回一个Request对象，或者Request的对象列表,返回的Request自动发送到scheduler
-    def page_rule_parse(self, response, page_rule, fid, associate):
+    def page_rule_parse(self, requset, response, page_rule, fid, associate):
         """
         PageRule规则解析
         生成File放入downloader中下载
@@ -594,3 +591,147 @@ class RuleLinkSpider(BaseSpider):
         self.recorder('DEBUG', '抽取数据数量[%d]' % len(datas))
         self.recorder('DEBUG', '抽取链接数量[%d]' % len(requests))
         self.recorder('DEBUG', '抽取下一页链接数量[%d]' % len(next_page_requests))
+
+
+# 广度优先策略找到终端目标页面，爬取最终数据
+class BreadthFirstSpider(BaseSpider):
+
+    def first_urls(self, requests):
+        for request in requests:
+            request.callback = 'page_rule_parse'
+            yield request
+
+    def __isLeafPage(self, responseContent, page_rule):
+
+        leafFlag = page_rule['leaf_page']['leaf_flag']
+
+        if leafFlag in responseContent:
+            # print 'Found Leaf Page'
+            return True
+        else:
+            return False
+
+    def __leafPageHandle(self, dom, page_rule, request):
+        routeXPathList = page_rule['leaf_page']['leaf_extract_regular']['leaf_route_path_extract']
+        routePathStr = ""
+        routePathList = None
+
+        for xpathStr in routeXPathList:
+            routePathList = dom.xpath(xpathStr)
+
+            if len(routePathList) > 0:
+                routePathStr = "_".join(routePathList)
+
+        if routePathStr == "":
+            self.recorder('ERROR', 'Can not find route path ERROR!!')
+            return None
+
+        leafURL = dom.xpath(page_rule['leaf_page']['leaf_extract_regular']['leaf_download_extract'])
+
+        if len(leafURL) > 0:
+            url_info = urlparse.urlparse(leafURL[0])
+
+            if not url_info.scheme and not url_info.hostname:
+                req_info = urlparse.urlparse(request.url)
+                leafURL[0] = req_info.scheme + '://' + req_info.hostname + leafURL[0]
+
+            self.recorder('INFO', 'Leaf-Page[%s] URL[%s]' % (routePathStr, leafURL[0]))
+
+            file_name = hashlib.md5(leafURL[0]).hexdigest()
+            routePathList.append(request.get_title())
+
+            fileObj = FILE.File(leafURL[0],
+                                file_name,
+                                method = request.method,
+                                headers = request.headers,
+                                cookies = request.cookies,
+                                data = request.data)
+
+            dataObj = DT.Data(node_route = routePathList, file_path = file_name)
+            dataObj.rule_number = request.rule_number
+
+            return [dataObj, fileObj]
+        else:
+            self.recorder('ERROR', "Can not find download URL ERROR!!")
+            return None
+
+    #  忽略掉 deny urls
+    def __isDenyUrl(self, cur_url, page_url):
+
+        for denyReg in page_url['content_filter']['deny_urls']:
+            if re.match(denyReg, cur_url):
+                return True
+
+        return False
+
+    #   忽略掉 invalid urls
+    def __isInvalidUrl(self, cur_url, page_url):
+
+        for validReg in page_url['content_filter']['valid_urls']:
+            if re.match(validReg, cur_url):
+                return False
+
+        return True
+
+    def page_rule_parse(self, request, response, page_rule, fid, associate):
+        self.recorder('DEBUG', "get in BreadthFirstSpider for URL[%s][%s][%d]" %
+                                (request.url, request.get_title(), request.rule_number))
+
+        dom = UTLC.response2dom(response)
+
+        if dom == False:
+            self.recorder('ERROR', 'HTML Parse to Dom ERROR!!')
+            yield None
+        else:
+            if self.__isLeafPage(response.content, page_rule):
+                downloadInfo = self.__leafPageHandle(dom, page_rule, request)
+
+                time.sleep(1)
+                yield downloadInfo
+            else:
+                url_list = dom.xpath('//a//@href|//a[normalize-space(text())!=\'\']/text()|//a/span/text()')
+
+                # for url_content in url_list:
+                #     self.log.debug('Content[%s]' % url_content)
+
+                self.recorder('INFO', 'URL Count[%d]' % len(url_list))
+                config_header = self.get_chromesome().login_header
+
+                for i in range(0, len(url_list)):
+
+                    if (i % 2) == 0:
+                        cur_url = url_list[i]
+
+                        if 'javascript' in cur_url:
+                            cur_url = EXT.UrlSubstituteExtractor(page_rule).extract(cur_url, dom)
+                            print 'Get extracted URL[%s]' % cur_url
+
+                        if self.__isDenyUrl(cur_url, page_rule) or self.__isInvalidUrl(cur_url, page_rule):
+                            self.recorder('INFO', 'Ignore URL[%s]' % cur_url)
+                            continue
+
+                        url_info = urlparse.urlparse(cur_url)
+
+                        if not url_info.scheme and not url_info.hostname:
+                            req_info = urlparse.urlparse(request.url)
+                            cur_url = req_info.scheme + '://' + req_info.hostname + cur_url
+
+                        if cur_url != request.url:
+                            curRequest = REQ.Request(cur_url,
+                                                     headers = config_header,
+                                                     callback = "page_rule_parse",
+                                                     url_route= request.url_route,
+                                                     title_route = request.title_route)
+
+                            curRequest.set_spider_name(self.name)
+                            curRequest.set_rule_number(request.rule_number + 1)
+                            curRequest.add_url_route_element((url_list[i], url_list[i + 1]))
+
+                            self.recorder('INFO', 'URL[%s], Title[%s], Layer[%d]' %
+                                                   (cur_url, '->'.join(curRequest.title_route), request.rule_number + 1))
+
+                            time.sleep(1)
+                            yield curRequest
+                        else:
+                            #  直接忽略当前页自回访 url
+                            pass

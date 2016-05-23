@@ -60,8 +60,7 @@ class BaseLogger(logging.Logger):
         else:
             self.__fhandler = logging.StreamHandler()
 
-        formatter = logging.Formatter(
-            "%(asctime)s [%(process)d:%(thread)d] [%(chain)s] %(message)s")
+        formatter = logging.Formatter("%(asctime)s [%(process)d:%(thread)d] [%(chain)s] %(message)s")
         self.__fhandler.setFormatter(formatter)
 
         self.addHandler(self.__fhandler)
@@ -207,8 +206,7 @@ class RPCLoggerManager(RPCNativeBase):
             loggerObject = self.__loggers[loggerName]
             loggerObject.setLevel(levelNum)
         except (BaseException) as e:
-            print "loggerName[%s] can not found Exception[%s] ERROR!!" % (
-                loggerName, str(e))
+            print "loggerName[%s] can not found Exception[%s] ERROR!!" % (loggerName, str(e))
 
 #g_rpcLogManager = RPCLoggerManager()
 
