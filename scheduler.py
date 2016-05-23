@@ -46,7 +46,7 @@ class RedisScheduler(BaseScheduler):
 
     def push(self, d):
         self._redis.lpush(self._scheduler_key, d)
-
+    
     def pull(self, timeout=5):
         data = self._redis.brpop(self._scheduler_key, timeout)
 
@@ -78,9 +78,8 @@ class DupeScheduler(object):
         return len(self._scheduler)
 
     def push(self, data):
-        if not self._dupefilter.exist(data):
+        if self._dupefilter.put(data):
             self._scheduler.push(data)
-            self._dupefilter.put(data)
             return True
         else:
             return False

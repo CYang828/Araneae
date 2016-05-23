@@ -232,8 +232,10 @@ class Redis(object):
     def sadd(self, name, value):
         try:
             ret = self._redis.sadd(name, value)
+            return ret
         except RedisError as e:
-            print e
+            print str(e)
+            return -1
 
     def incr(self, name, amount=1):
         try:

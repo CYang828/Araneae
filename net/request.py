@@ -58,6 +58,11 @@ class Request(object):
         self.__callback = args.get('callback', DEFAULT_CALLBACK)
         self.__associate = args.get('associate', DEFAULT_ASSOCIATE)
 
+        #  为了方便使用 '->'.join() 方法连接字符串，无法以 tuple 的形式存储到 list 中
+        #  因此，只能把 url_route(list) 和 title_route(list) 分别存储
+        self.__url_route = args.get('url_route', [])
+        self.__title_route = args.get('title_route', [])
+
     def _sequence_json(self):
         request_json = {}
         request_json['url'] = self.__url
@@ -90,6 +95,9 @@ class Request(object):
 
         request_json['associate'] = self.__associate
 
+        request_json['url_route'] = self.__url_route[:]
+        request_json['title_route'] = self.__title_route[:]
+
         return json.dumps(request_json, ensure_ascii=False)
 
     def set_spider_name(self, spider_name):
@@ -112,20 +120,20 @@ class Request(object):
         self.__headers['User-Agent'] = user_agent
         return self
 
-    def set_http_proxy(self, proxy):
-        self.__proxy = {'http': proxy}
+    def set_http_proxy(self,proxy):
+        self.__proxies = {'http':proxy}
         return self
 
-    def set_https_proxy(self, proxy):
-        self.__proxy = {'https': proxy}
+    def set_https_proxy(self,proxy):
+        self.__proxies = {'https':proxy}
         return self
 
-    def set_associate(self, associate):
+    def set_associate(self,associate):
         self.__associate = associate
         return self
 
-    def add_headers(self, header_dict):
-        self.__headers = dict(self._headers, **header_dict)
+    def add_headers(self,header_dict):
+        self.__headers = dict(self._headers,**header_dict)
         return self
 
     def set_headers(self, header_dict):
@@ -134,6 +142,12 @@ class Request(object):
 
     def add_cookies(self, cookie_dict):
         self.__cookies = dict(self._cookies, **cookie_dict)
+
+    #  为了方便使用 '->'.join() 方法连接字符串
+    #  此处把 url_list 和 title_list 分别存储
+    def add_url_route_element(self, route_element):
+        self.__url_route.append(route_element[0])
+        self.__title_route.append(route_element[1])
         return self
 
     def fetch(self, timeout=DEFAULT_REQUEST_TIMEOUT):
@@ -214,6 +228,26 @@ class Request(object):
     def associate(self, associate):
         self.__associate = associate
 
+    @property
+    def url_route(self):
+        #  返回拷贝，不是引用
+        return self.__url_route[:]
+
+    @property
+    def title_route(self):
+        return self.__title_route[:]
+
+    def get_title(self, ind = -1):
+
+        lastIndex = len(self.__title_route) - 1
+
+        if lastIndex >= 0 and ind < lastIndex:
+            if ind == -1:
+                return self.__title_route[lastIndex]
+            else:
+                return self.__title_route[ind]
+        else:
+            return "None"
 
 def json2request(request_json):
     """

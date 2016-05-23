@@ -13,8 +13,7 @@ def response2dom(response):
     #try:
     #    dom = lxml.html.fromstring(response.content)
     #except UnicodeDecodeError:
-    dom = lxml.html.soupparser.fromstring(response.content,
-                                          features='html5lib')
+    dom = lxml.html.soupparser.fromstring(response.content, features='html5lib')
 
     return dom
 

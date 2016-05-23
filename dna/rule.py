@@ -53,8 +53,7 @@ class PageRule(object):
             elif isinstance(map['extract_data'], list):
                 self.__scrawl_data_element = map['extract_data']
 
-            if self.__scrawl_data_element[len(self.__scrawl_data_element) -
-                                          1].get('associate'):
+            if self.__scrawl_data_element[len(self.__scrawl_data_element) - 1].get('associate'):
                 self.__associate = True
 
             for data_item in self.__scrawl_data_element:

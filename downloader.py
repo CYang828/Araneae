@@ -62,7 +62,6 @@ class BaseDownloader(object):
 
     可以根据需求替换下载器中的调度器和去重器
     """
-    _gag = False
 
     def __init__(self,
                  file_path,
@@ -81,9 +80,10 @@ class BaseDownloader(object):
         self._scheduler = SCH.DupeScheduler(scheduler, dupefilter)
         self._pool = GEVP.Pool(pool_size)
         download_threads = GEVT.start_new_thread(self._processor)
+        self._run = True
 
     def _processor(self):
-        while True:
+        while self._run:
             #队列为空时阻塞
             file_json = self._scheduler.pull(
                 DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)

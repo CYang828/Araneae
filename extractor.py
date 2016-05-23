@@ -657,6 +657,72 @@ class FileExtractor(UrlExtractor):
         self._url2file()
         return self._files
 
+#  通过参数替换生成最终 URL
+class UrlSubstituteExtractor(object):
+
+    def __init__(self, rule):
+        self.__rule = rule
+        self.__name = 'substitute_urls'
+
+    #  1.  先从 rule 中找到  'substitute_urls'  字典
+    #  2.  遍历字典 key ，找到 orig_content 中属于那种正则匹配
+    #  3.  根据字典 key 对应 value 中的 'extract_regular' 正则表达式找到 parameters
+    #  4.  根据字典 key 对应 value 中的 'format_url' 项，把抽取出的 parameters 对应填入生成 url 并返回
+    def extract(self, orig_url_content, dom_content):
+
+        try:
+            regular_map = self.__rule[self.__name]
+        except (BaseException) as e:
+            print 'Can not find [%s] map in Page_Rule ERROR[%s]!!' % (self.__name, str(e))
+            return ""
+
+        for regular_key in regular_map.keys():
+            if regular_key in orig_url_content:
+                return self.__extract(orig_url_content, dom_content, regular_map[regular_key])
+
+        print 'Can not find correspond [regular] of [%s]' % orig_url_content
+        return ""
+
+    #  regular_rule 中包含了 'format_url'  'extract_regular'  和  'extract_xpath'  三项
+    #  'format_url'  为最终要转化成的 url 模板，其中包含了 [@X]，[$X] 参数，分别对应正则和xpath取值替换
+    #  'extract_regular' 为从 orig_content 中抽取参数的正则表达式，取出的 N 个参数依次对应 [@X]
+    #  'extract_xpath' 是一个数组，数组各元素都是 xpath
+    def __extract(self, orig_url_content, dom_content, regular_rule):
+        result_url = self.__handleRegularExtract(orig_url_content, regular_rule)
+        return self.__handleXPathExtract(dom_content, regular_rule, result_url)
+
+    #  从正则中替换 [@X]
+    def __handleRegularExtract(self, orig_url_content, regular_rule):
+        params = re.findall(regular_rule['extract_regular'], orig_url_content)
+        format_url = regular_rule['format_url']
+        param_count = format_url.count('[@')
+
+        # print 'Content[%s], Regular[%s], Format[%s], ParamCount[%d], FormatCount[%d]' % \
+        #       (orig_content, regular_rule['extract_regular'], format_url, len(params), param_count)
+
+        for i in range(0, param_count):
+            sub_format = '\[@' + str(i) + '\]'
+            format_url = re.sub(sub_format, params[i], format_url)
+
+        print 'setting format_url[%s]' % regular_rule['format_url']
+        return format_url
+
+    #  从 xpath 中替换 [$X]
+    def __handleXPathExtract(self, dom_content, regular_rule, current_url):
+        param_count = current_url.count('[$')
+        xpath_count = len(regular_rule['extract_xpath'])
+
+        if param_count > 0 and xpath_count > 0:
+            for i in range(0, xpath_count):
+                value = dom_content.xpath(regular_rule['extract_xpath'][i])
+
+                if value[0] and value[0] is not '' :
+                    sub_format = '\[\$' + str(i) + '\]'
+                    current_url = re.sub(sub_format, value[0], current_url)
+
+            return current_url
+        else:
+            return current_url
 
 if __name__ == '__main__':
     from requests import get
