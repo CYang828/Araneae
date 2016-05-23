@@ -71,11 +71,13 @@ class BaseSpider(object):
         #运行方式为单机时,rpc对象为调度器对象
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
             scheduler = UTLC.load_class(chromesome.scheduler,
-                                        chromesome.spider_name, **
-                                        chromesome.scheduler_conf)
+                                        chromesome.spider_name,
+                                        **chromesome.scheduler_conf)
+
             dupefilter = UTLC.load_class(chromesome.dupefilter,
-                                         chromesome.spider_name, **
-                                         chromesome.dupefilter_conf)
+                                         chromesome.spider_name,
+                                         **chromesome.dupefilter_conf)
+
             self.__scheduler = SCH.DupeScheduler(scheduler, dupefilter)
             self.__rpc = self.__scheduler
         elif chromesome.running_type == CHM.RUNNING_TYPE_DISTRIBUTED:
@@ -85,9 +87,9 @@ class BaseSpider(object):
 
         #用于屏幕显示的logger
         self.__console_logger = UTLL.BaseLogger(chromesome.spider_name)
+
         #用于文件输出的logger
-        log_path = chromesome.log_path if chromesome.log_path else (
-            sys.path[0] + '/' + chromesome.spider_name + '.log')
+        log_path = chromesome.log_path if chromesome.log_path else (sys.path[0] + '/' + chromesome.spider_name + '.log')
         self.__file_logger = UTLL.BaseLogger(log_path)
 
         #一个spider产生的数据放入一个与spider同名的库中
@@ -124,8 +126,7 @@ class BaseSpider(object):
             request_middleware = UTLC.load_class(request_middleware)
 
             if not isinstance(request_middleware, MID.RequestMiddleware):
-                raise EXP.MiddlewareException(
-                    'request中间件必须继承RequestMiddleware')
+                raise EXP.MiddlewareException('request中间件必须继承RequestMiddleware')
 
             self._request_middleware.append(request_middleware)
 
@@ -164,7 +165,8 @@ class BaseSpider(object):
             try:
                 response = request.fetch(self._request_timeout)
                 break
-            except (EXP.RequestConnectionException, EXP.RequestErrorException,
+            except (EXP.RequestConnectionException,
+                    EXP.RequestErrorException,
                     EXP.RequestTimeoutException,
                     EXP.RequestTooManyRedirectsException) as e:
                 self.recorder('ERROR', str(e))
@@ -176,9 +178,14 @@ class BaseSpider(object):
         fid = request.fid
         associate = request.associate
 
+<<<<<<< HEAD
         objs = getattr(self, callback)(request,response, rule, fid,
                                        associate) if callback else self.parse(
                                            response, rule, fid, associate)
+=======
+        objs = getattr(self, callback)(request, response, rule, fid, associate) \
+                   if callback else self.parse(request, response, rule, fid, associate)
+>>>>>>> 37e1794ea43001e837b13845b072d9d618ca8f63
 
         #迭代器判断
         if isinstance(objs, types.GeneratorType):
@@ -480,7 +487,7 @@ class RuleLinkSpider(BaseSpider):
         requests = self.page_rule_parse(request, response, first_page_rule, fid, associate)
         return requests
 
-    def parse(self,request, response, rule, fid, associate):
+    def parse(self, request, response, rule, fid, associate):
         requests = self.page_rule_parse(request, response, rule, fid, associate)
         return requests
 
@@ -552,15 +559,20 @@ class RuleLinkSpider(BaseSpider):
 
         #应该在这里设置page_rule的number
         if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlExtractor(
-                dom, url, page_rule.extract_url_element, spider_name,
-                next_rule_number, fid, next_associate, cookies,
-                headers).extract()
+            requests = EXT.UrlExtractor(dom, url,
+                                        page_rule.extract_url_element,
+                                        spider_name,
+                                        next_rule_number,
+                                        fid, next_associate,
+                                        cookies, headers).extract()
+
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlFormatExtractor(
-                dom, url, page_rule.extract_url_element, spider_name,
-                next_rule_number, fid, next_associate, cookies,
-                headers).extract()
+            requests = EXT.UrlFormatExtractor(dom, url,
+                                              page_rule.extract_url_element,
+                                              spider_name,
+                                              next_rule_number, fid,
+                                              next_associate,
+                                              cookies, headers).extract()
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE and page_rule.next_number:
             pass
 
@@ -577,23 +589,24 @@ class RuleLinkSpider(BaseSpider):
 
         #下一页链接抽取和普通抽取的唯一区别是page_rule的number
         if page_rule.next_page_url_type == PR.EXTRACT_URL_TYPE:
-            next_page_requests = EXT.UrlExtractor(
-                dom, url, page_rule.next_page_url_element, spider_name,
-                rule_number, fid, associate, cookies, headers).extract()
+            next_page_requests = EXT.UrlExtractor(dom, url,
+                                                  page_rule.next_page_url_element,
+                                                  spider_name, rule_number,
+                                                  fid, associate,
+                                                  cookies, headers).extract()
         elif page_rule.next_page_url_type == PR.FORMAT_URL_TYPE:
-            next_page_requests = EXT.UrlFormatExtractor(
-                dom, url, page_rule.next_page_url_element, spider_name,
-                rule_number, fid, next_associate, cookies, headers).extract()
+            next_page_requests = EXT.UrlFormatExtractor(dom, url,
+                                                        page_rule.next_page_url_element,
+                                                        spider_name, rule_number,
+                                                        fid, next_associate,
+                                                        cookies, headers).extract()
         elif page_rule.next_page_url_type == PR.NONE_URL_TYPE:
             pass
 
         yield next_page_requests
 
-        self.recorder('DEBUG', '下载文件数量[%d]' % len(data_files))
-        self.recorder('DEBUG', '抽取数据数量[%d]' % len(datas))
-        self.recorder('DEBUG', '抽取链接数量[%d]' % len(requests))
-        self.recorder('DEBUG', '抽取下一页链接数量[%d]' % len(next_page_requests))
-
+        self.recorder('DEBUG', '下载文件数量[%d]\n抽取数据数量[%d]\n抽取链接数量[%d]\n抽取下一页链接数量[%d]'
+                      % (len(data_files), len(datas), len(requests), len(next_page_requests)))
 
 # 广度优先策略找到终端目标页面，爬取最终数据
 class BreadthFirstSpider(BaseSpider):
