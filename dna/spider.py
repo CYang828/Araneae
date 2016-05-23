@@ -284,12 +284,14 @@ class BaseSpider(object):
             self.walk()
 
     def walk(self):
-        while self._scheduler_retry_time:
+        scheduler_retry_time = self._scheduler_retry_time
+
+        while scheduler_retry_time:
             request_json = self.scheduler_pull(self._scheduler_retry_interval)
 
             if not request_json:
                 self.recorder('INFO', 'cheduler里没有request了,等待一会吧')
-                self._scheduler_retry_time -= 1
+                scheduler_retry_time -= 1
                 continue
 
             request = REQ.json2request(request_json)
