@@ -71,12 +71,12 @@ class BaseSpider(object):
         #运行方式为单机时,rpc对象为调度器对象
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
             scheduler = UTLC.load_class(chromesome.scheduler,
-                                        chromesome.spider_name, **
-                                        chromesome.scheduler_conf)
+                                        chromesome.spider_name,
+                                        **chromesome.scheduler_conf)
 
             dupefilter = UTLC.load_class(chromesome.dupefilter,
-                                         chromesome.spider_name, **
-                                         chromesome.dupefilter_conf)
+                                         chromesome.spider_name,
+                                         **chromesome.dupefilter_conf)
 
             self.__scheduler = SCH.DupeScheduler(scheduler, dupefilter)
             self.__rpc = self.__scheduler
@@ -98,9 +98,16 @@ class BaseSpider(object):
             self.__data_pipeline.select_db(self.__name)
 
         #初始化下载器
-        download_scheduler = UTLC.load_class(chromesome.scheduler, 'Downloader:' + chromesome.spider_name, **chromesome.scheduler_conf)
-        download_dupefilter = UTLC.load_class(chromesome.dupefilter, 'Downloader:' + chromesome.spider_name, **chromesome.dupefilter_conf)
-        self.__downloader = DL.WorkerDownloader('%s/%s/' % (chromesome.download_path, self.__name), download_scheduler, download_dupefilter)
+        download_scheduler = UTLC.load_class(chromesome.scheduler,
+                                             'Downloader:' + chromesome.spider_name,
+                                             **chromesome.scheduler_conf)
+
+        download_dupefilter = UTLC.load_class(chromesome.dupefilter,
+                                              'Downloader:' + chromesome.spider_name,
+                                              **chromesome.dupefilter_conf)
+
+        self.__downloader = DL.WorkerDownloader('%s/%s/' % (chromesome.download_path, self.__name),
+                                                download_scheduler, download_dupefilter)
 
         self._scheduler_retry_time = chromesome.scheduler_retry_time
         self._scheduler_retry_interval = chromesome.scheduler_retry_interval
