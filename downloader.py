@@ -16,6 +16,8 @@ DEFAULT_DOWNLOADER_SLEEP_TIME = 5
 DEFAULT_DOWNLOADER_POOL_SIZE = 10
 DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT = 5
 
+DOWNLOADER_FINISH_FLAG = 'downloader_finish'
+
 
 class DownloadProcessor(object):
     """
@@ -60,6 +62,7 @@ class BaseDownloader(object):
 
     可以根据需求替换下载器中的调度器和去重器
     """
+    _gag = False
 
     def __init__(self,
                  file_path,
@@ -67,7 +70,6 @@ class BaseDownloader(object):
                  dupefilter,
                  download_sleep_time=DEFAULT_DOWNLOADER_SLEEP_TIME,
                  pool_size=DEFAULT_DOWNLOADER_POOL_SIZE):
-        self._gag = False
         self._file_path = file_path
         self._download_sleep_time = download_sleep_time
 
@@ -85,9 +87,9 @@ class BaseDownloader(object):
             #队列为空时阻塞
             file_json = self._scheduler.pull(
                 DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)
-            print file_json
 
-            if not file_json and self._gag:
+            if file_json == DOWNLOADER_FINISH_FLAG: 
+                print '下载器结束'
                 break
             elif not file_json:
                 continue
@@ -176,17 +178,18 @@ if __name__ == '__main__':
     memory_dupefilter = UTLC.load_class('Araneae.dupefilter.MemoryDupeFilter',
                                         'demo')
 
-    redis_scheduler = UTLC.load_class('Araneae.scheduler.RedisScheduler',
-                                      'demo', **redis_conf)
-    redis_dupefilter = UTLC.load_class('Araneae.dupefilter.RedisDupeFilter',
-                                       'demo', **redis_conf)
+    #redis_scheduler = UTLC.load_class('Araneae.scheduler.RedisScheduler',
+    #                                  'demo', **redis_conf)
+    #redis_dupefilter = UTLC.load_class('Araneae.dupefilter.RedisDupeFilter',
+    #                                   'demo', **redis_conf)
 
     memory_worker = WorkerDownloader('/home/zhangchunyang/download/',
                                      memory_scheduler, memory_dupefilter)
     memory_worker.push(file_obj.json)
 
-    redis_worker = WorkerDownloader('/home/zhangchunyang/download/',
-                                    redis_scheduler, redis_dupefilter)
-    redis_worker.push(file_obj.json)
+    #redis_worker = WorkerDownloader('/home/zhangchunyang/download/',
+    #                                redis_scheduler, redis_dupefilter)
+    #redis_worker.push(file_obj.json)
+    memory_worker.push(DOWNLOADER_FINISH_FLAG)
 
     gevent.wait()

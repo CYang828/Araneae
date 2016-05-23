@@ -31,8 +31,10 @@ class MemoryScheduler(BaseScheduler):
         self._queue.put_nowait(d)
 
     def pull(self, timeout = DEFAULT_PULL_TIMEOUT):
-        return self._queue.get(timeout = timeout)
-
+        try:
+            return self._queue.get(timeout = timeout)
+        except GEVQ.Empty:
+            pass
 
 class RedisScheduler(BaseScheduler):
     def __init__(self, scheduler_name, **redis_conf):
@@ -43,7 +45,6 @@ class RedisScheduler(BaseScheduler):
         return self._redis.llen(self._scheduler_key)
 
     def push(self, d):
-        print d
         self._redis.lpush(self._scheduler_key, d)
 
     def pull(self, timeout=5):

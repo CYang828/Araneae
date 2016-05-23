@@ -94,15 +94,15 @@ class BaseSpider(object):
             self.__data_pipeline.select_db(self.__name)
 
         #初始化下载器
-        download_scheduler = UTLC.load_class(
+        downloader_scheduler = UTLC.load_class(
             chromesome.scheduler, 'Downloader:' + chromesome.spider_name, **
             chromesome.scheduler_conf)
-        download_dupefilter = UTLC.load_class(
+        downloader_dupefilter = UTLC.load_class(
             chromesome.dupefilter, 'Downloader:' + chromesome.spider_name, **
             chromesome.dupefilter_conf)
         self.__downloader = DL.WorkerDownloader('%s/%s/' % (
-            chromesome.download_path, self.__name), download_scheduler,
-                                               download_dupefilter)
+            chromesome.downloader_path, self.__name), downloader_scheduler,
+                                               downloader_dupefilter)
 
         self._scheduler_retry_time = chromesome.scheduler_retry_time
         self._scheduler_retry_interval = chromesome.scheduler_retry_interval
@@ -405,7 +405,7 @@ class BaseSpider(object):
 
     def end(self):
         #通知下载器不进行push
-        self.__downloader.gap = True
+        self.__downloader.push(DL.DOWNLOADER_FINISH_FLAG)
         self.__pool.join()
         GEV.wait()
 
