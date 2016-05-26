@@ -16,10 +16,10 @@ SPIDER_TYPE_BREADTHFIRST = 'BreadthFirst'
 
 DEFAULT_SETTING = 'Araneae.man.default_setting'
 
+
 class DNA(SET.Setting):
 
-    SPIDER_TYPE_OPTIONS = {'rulelink':SPIDER_TYPE_RULELINK,
-                           'breadthfirst' : SPIDER_TYPE_BREADTHFIRST}
+    SPIDER_TYPE_OPTIONS = {'rulelink': SPIDER_TYPE_RULELINK, 'breadthfirst': SPIDER_TYPE_BREADTHFIRST}
 
     __spider_objs = {}
 
@@ -34,7 +34,7 @@ class DNA(SET.Setting):
 
         if spider_type:
             chromesome_obj = getattr(CHM, SPIDER_TYPE[spider_type][0])(self)
-            spider_obj = getattr(SPD,SPIDER_TYPE[spider_type][1])(chromesome_obj)
+            spider_obj = getattr(SPD, SPIDER_TYPE[spider_type][1])(chromesome_obj)
         else:
             raise EXP.DNAException('没有指定spider类型')
 
@@ -46,7 +46,8 @@ if __name__ == '__main__':
     from gevent import monkey
     monkey.patch_all()
 
-    c = DNA('Araneae.man.jintaiyang_setting')
+    #c = DNA('Araneae.man.jintaiyang_setting')
+    c = DNA('Araneae.man.jintaiyang_gaozhong_setting')
     spider = c.generator()
     spider.start()
     spider.end()

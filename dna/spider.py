@@ -70,13 +70,8 @@ class BaseSpider(object):
         #调度器和rpc使用的都是request对象的json序列化
         #运行方式为单机时,rpc对象为调度器对象
         if chromesome.running_type == CHM.RUNNING_TYPE_SINGLETON:
-            scheduler = UTLC.load_class(chromesome.scheduler,
-                                        chromesome.spider_name,
-                                        **chromesome.scheduler_conf)
-
-            dupefilter = UTLC.load_class(chromesome.dupefilter,
-                                         chromesome.spider_name,
-                                         **chromesome.dupefilter_conf)
+            scheduler = UTLC.load_class(chromesome.scheduler, chromesome.spider_name, **chromesome.scheduler_conf)
+            dupefilter = UTLC.load_class(chromesome.dupefilter, chromesome.spider_name, **chromesome.dupefilter_conf)
 
             self.__scheduler = SCH.DupeScheduler(scheduler, dupefilter)
             self.__rpc = self.__scheduler
@@ -98,15 +93,9 @@ class BaseSpider(object):
             self.__data_pipeline.select_db(self.__name)
 
         #初始化下载器
-        downloader_scheduler = UTLC.load_class(
-            chromesome.scheduler, 'Downloader:' + chromesome.spider_name, **
-            chromesome.scheduler_conf)
-        downloader_dupefilter = UTLC.load_class(
-            chromesome.dupefilter, 'Downloader:' + chromesome.spider_name, **
-            chromesome.dupefilter_conf)
-        self.__downloader = DL.WorkerDownloader('%s/%s/' % (
-            chromesome.downloader_path, self.__name), downloader_scheduler,
-                                               downloader_dupefilter)
+        downloader_scheduler = UTLC.load_class(chromesome.scheduler, 'Downloader:' + chromesome.spider_name, **chromesome.scheduler_conf)
+        downloader_dupefilter = UTLC.load_class(chromesome.dupefilter, 'Downloader:' + chromesome.spider_name, **chromesome.dupefilter_conf)
+        self.__downloader = DL.WorkerDownloader('%s/%s/' % (chromesome.downloader_path, self.__name), downloader_scheduler, downloader_dupefilter)
 
         self._scheduler_retry_time = chromesome.scheduler_retry_time
         self._scheduler_retry_interval = chromesome.scheduler_retry_interval
@@ -165,10 +154,7 @@ class BaseSpider(object):
             try:
                 response = request.fetch(self._request_timeout)
                 break
-            except (EXP.RequestConnectionException,
-                    EXP.RequestErrorException,
-                    EXP.RequestTimeoutException,
-                    EXP.RequestTooManyRedirectsException) as e:
+            except (EXP.RequestConnectionError, EXP.RequestErrorError, EXP.RequestTimeoutError, EXP.RequestTooManyRedirectsError) as e:
                 self.recorder('ERROR', str(e))
                 retry_time -= 1
                 continue
@@ -178,14 +164,8 @@ class BaseSpider(object):
         fid = request.fid
         associate = request.associate
 
-<<<<<<< HEAD
-        objs = getattr(self, callback)(request,response, rule, fid,
-                                       associate) if callback else self.parse(
-                                           response, rule, fid, associate)
-=======
         objs = getattr(self, callback)(request, response, rule, fid, associate) \
                    if callback else self.parse(request, response, rule, fid, associate)
->>>>>>> 37e1794ea43001e837b13845b072d9d618ca8f63
 
         #迭代器判断
         if isinstance(objs, types.GeneratorType):
@@ -270,7 +250,7 @@ class BaseSpider(object):
                                      .set_rule_number(self.__chromesome.first_rule_number)
 
             elif isinstance(fisrt_url, dict):
-                request = REQ.json2request(**first_url).add_header(self._login_header)
+                request = REQ.Request.instance(**first_url).add_header(self._login_header)
 
             requests.append(request)
 
@@ -304,7 +284,7 @@ class BaseSpider(object):
                 scheduler_retry_time -= 1
                 continue
 
-            request = REQ.json2request(request_json)
+            request = REQ.Request.instance(request_json)
 
             #下载前停止
             if request.rule_number == 6:
@@ -313,14 +293,15 @@ class BaseSpider(object):
             request.set_headers(self.__chromesome.login_header)
             self.fetch(request)
 
-        #self.merge_data()
+        self.merge_data()
         self.recorder('INFO', '爬取任务结束')
-        self.end()
 
     def merge_data(self):
         """
         合并数据
         """
+        self.recorder('INFO', '数据合并')
+
         merge_number = []
         upper_associate_stat = False
         merge_number_register = []
@@ -379,7 +360,7 @@ class BaseSpider(object):
                     for collection in collections:
                         if fid:
                             #只能查询到一条数据
-                            doc = collection.find(filter = {'_id':BS.ObjectId(fid)})
+                            doc = collection.find(filter={'_id': BS.ObjectId(fid)})
 
                             if doc.count():
                                 doc = doc[0]
@@ -434,7 +415,8 @@ class BaseSpider(object):
         向master推送medium
         """
         #print request.json
-        self.__rpc.push(request.json)
+        ret = self.__rpc.push(request.json)
+        self.recorder('DEBUG','push进入request调度器[%s]' % ret)
 
     def data_pipeline_push(self, data):
         """
@@ -449,7 +431,8 @@ class BaseSpider(object):
         data.set_fid(insert_id)
 
     def downloader_push(self, file_obj):
-        self.__downloader.push(file_obj.json)
+        ret = self.__downloader.push(file_obj.json)
+        self.recorder('DEBUG','push进入下载调度器[%s]' % ret)
 
     def scheduler_pull(self, timeout):
         """
@@ -463,7 +446,7 @@ class BaseSpider(object):
         """
         return self.__chromesome.get_page_rule(number)
 
-    def page_rule_parse(self, request, response,page_rule,fid):
+    def page_rule_parse(self, request, response, page_rule, fid):
         raise NotImplementedError('spider必须实现page_rule_parse方法')
 
     @property
@@ -520,27 +503,18 @@ class RuleLinkSpider(BaseSpider):
         #yield downloader
         #下载后的存储信息和data结合
         if page_rule.extract_file_element:
-            data_files = EXT.FileExtractor(dom,
-                                           url,
-                                           page_rule.extract_file_element,
-                                           spider_name=spider_name,
-                                           cookies=cookies,
-                                           headers=headers).extract()
+            data_files = EXT.FileExtractor(
+                dom, url, page_rule.extract_file_element,
+                spider_name=spider_name, cookies=cookies,
+                headers=headers).extract()
 
         #数据抽取
         #如果上一规则为关联,数据中才记录fid
         if page_rule.scrawl_data_element:
             if associate:
-                datas = EXT.DataExtractor(dom,
-                                          url,
-                                          page_rule.scrawl_data_element,
-                                          fid=fid,
-                                          rule_number=rule_number).extract()
+                datas = EXT.DataExtractor(dom, url, page_rule.scrawl_data_element, fid=fid, rule_number=rule_number).extract()
             else:
-                datas = EXT.DataExtractor(dom,
-                                          url,
-                                          page_rule.scrawl_data_element,
-                                          rule_number=rule_number).extract()
+                datas = EXT.DataExtractor(dom, url, page_rule.scrawl_data_element, rule_number=rule_number).extract()
 
         #只有数据和文件的数量相同时才能进行下载,否则没办法存储
         if datas and data_files:
@@ -558,26 +532,19 @@ class RuleLinkSpider(BaseSpider):
         yield datas
 
         #应该在这里设置page_rule的number
-        if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlExtractor(dom, url,
-                                        page_rule.extract_url_element,
-                                        spider_name,
-                                        next_rule_number,
-                                        fid, next_associate,
+        if page_rule.extract_url_type == PR.EXTRACT_URL_TYPE:
+            requests = EXT.UrlExtractor(response, dom, url, page_rule.extract_url_element, spider_name, next_rule_number, fid, next_associate,
                                         cookies, headers).extract()
 
-        elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE and page_rule.next_number:
-            requests = EXT.UrlFormatExtractor(dom, url,
-                                              page_rule.extract_url_element,
-                                              spider_name,
-                                              next_rule_number, fid,
-                                              next_associate,
-                                              cookies, headers).extract()
-        elif page_rule.extract_url_type == PR.NONE_URL_TYPE and page_rule.next_number:
+        elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
+            requests = EXT.UrlFormatExtractor(dom, url, page_rule.extract_url_element, spider_name, next_rule_number, fid, next_associate, cookies,
+                                              headers).extract()
+        elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
             pass
 
         if page_rule.associate:
             #数据产生的量必须和后续url产生量相同,这样才可以关联数据和链接
+            print len(datas),len(requests)
             if datas and requests:
                 if len(datas) != len(requests):
                     raise TypeError('生成的数据数量和链接数量不同,无法建立关系')
@@ -589,28 +556,21 @@ class RuleLinkSpider(BaseSpider):
 
         #下一页链接抽取和普通抽取的唯一区别是page_rule的number
         if page_rule.next_page_url_type == PR.EXTRACT_URL_TYPE:
-            next_page_requests = EXT.UrlExtractor(dom, url,
-                                                  page_rule.next_page_url_element,
-                                                  spider_name, rule_number,
-                                                  fid, associate,
-                                                  cookies, headers).extract()
+            next_page_requests = EXT.UrlExtractor(dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, associate, cookies,
+                                                  headers).extract()
         elif page_rule.next_page_url_type == PR.FORMAT_URL_TYPE:
-            next_page_requests = EXT.UrlFormatExtractor(dom, url,
-                                                        page_rule.next_page_url_element,
-                                                        spider_name, rule_number,
-                                                        fid, next_associate,
+            next_page_requests = EXT.UrlFormatExtractor(dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, next_associate,
                                                         cookies, headers).extract()
         elif page_rule.next_page_url_type == PR.NONE_URL_TYPE:
             pass
 
         yield next_page_requests
 
-        self.recorder('DEBUG', '下载文件数量[%d]\n抽取数据数量[%d]\n抽取链接数量[%d]\n抽取下一页链接数量[%d]'
-                      % (len(data_files), len(datas), len(requests), len(next_page_requests)))
+        self.recorder('DEBUG','下载文件数量[%d]\n抽取数据数量[%d]\n抽取链接数量[%d]\n抽取下一页链接数量[%d]' % (len(data_files), len(datas), len(requests), len(next_page_requests)))
+
 
 # 广度优先策略找到终端目标页面，爬取最终数据
 class BreadthFirstSpider(BaseSpider):
-
     def first_urls(self, requests):
         for request in requests:
             request.callback = 'page_rule_parse'
@@ -655,14 +615,9 @@ class BreadthFirstSpider(BaseSpider):
             file_name = hashlib.md5(leafURL[0]).hexdigest()
             routePathList.append(request.get_title())
 
-            fileObj = FILE.File(leafURL[0],
-                                file_name,
-                                method = request.method,
-                                headers = request.headers,
-                                cookies = request.cookies,
-                                data = request.data)
+            fileObj = FILE.File(leafURL[0], file_name, method=request.method, headers=request.headers, cookies=request.cookies, data=request.data)
 
-            dataObj = DT.Data(node_route = routePathList, file_path = file_name)
+            dataObj = DT.Data(node_route=routePathList, file_path=file_name)
             dataObj.rule_number = request.rule_number
 
             return [dataObj, fileObj]
@@ -689,8 +644,7 @@ class BreadthFirstSpider(BaseSpider):
         return True
 
     def page_rule_parse(self, request, response, page_rule, fid, associate):
-        self.recorder('DEBUG', "get in BreadthFirstSpider for URL[%s][%s][%d]" %
-                                (request.url, request.get_title(), request.rule_number))
+        self.recorder('DEBUG', "get in BreadthFirstSpider for URL[%s][%s][%d]" % (request.url, request.get_title(), request.rule_number))
 
         dom = UTLC.response2dom(response)
 
@@ -733,17 +687,17 @@ class BreadthFirstSpider(BaseSpider):
 
                         if cur_url != request.url:
                             curRequest = REQ.Request(cur_url,
-                                                     headers = config_header,
-                                                     callback = "page_rule_parse",
-                                                     url_route= request.url_route,
-                                                     title_route = request.title_route)
+                                                     headers=config_header,
+                                                     callback="page_rule_parse",
+                                                     url_route=request.url_route,
+                                                     title_route=request.title_route)
 
                             curRequest.set_spider_name(self.name)
                             curRequest.set_rule_number(request.rule_number + 1)
                             curRequest.add_url_route_element((url_list[i], url_list[i + 1]))
 
-                            self.recorder('INFO', 'URL[%s], Title[%s], Layer[%d]' %
-                                                   (cur_url, '->'.join(curRequest.title_route), request.rule_number + 1))
+                            self.recorder('INFO',
+                                          'URL[%s], Title[%s], Layer[%d]' % (cur_url, '->'.join(curRequest.title_route), request.rule_number + 1))
 
                             time.sleep(1)
                             yield curRequest

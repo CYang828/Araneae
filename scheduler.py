@@ -30,11 +30,12 @@ class MemoryScheduler(BaseScheduler):
     def push(self, d):
         self._queue.put_nowait(d)
 
-    def pull(self, timeout = DEFAULT_PULL_TIMEOUT):
+    def pull(self, timeout=DEFAULT_PULL_TIMEOUT):
         try:
-            return self._queue.get(timeout = timeout)
+            return self._queue.get(timeout=timeout)
         except GEVQ.Empty:
             pass
+
 
 class RedisScheduler(BaseScheduler):
     def __init__(self, scheduler_name, **redis_conf):
@@ -46,7 +47,7 @@ class RedisScheduler(BaseScheduler):
 
     def push(self, d):
         self._redis.lpush(self._scheduler_key, d)
-    
+
     def pull(self, timeout=5):
         data = self._redis.brpop(self._scheduler_key, timeout)
 
@@ -84,7 +85,7 @@ class DupeScheduler(object):
         else:
             return False
 
-    def pull(self, timeout = DEFAULT_PULL_TIMEOUT):
+    def pull(self, timeout=DEFAULT_PULL_TIMEOUT):
         return self._scheduler.pull(timeout)
 
     def clear(self):
@@ -93,12 +94,8 @@ class DupeScheduler(object):
 
 
 if __name__ == '__main__':
-    redis_conf = {'host': '172.18.4.52',
-                  'port': 6379,
-                  'db': 8,
-                  'password': None,
-                  'timeout': 5,
-                  'charset': 'utf8'}
+    import Araneae.net.request as REQ
+    redis_conf = {'host': '172.18.4.52', 'port': 6379, 'db': 8, 'password': None, 'timeout': 5, 'charset': 'utf8'}
     mem_scheduler = MemoryScheduler('demo')
     redis_scheduler = RedisScheduler('demo', **redis_conf)
 
@@ -106,6 +103,7 @@ if __name__ == '__main__':
     redis_dupefilter = DFT.RedisDupeFilter('demo', **redis_conf)
 
     singleton = DupeScheduler(redis_scheduler, redis_dupefilter)
-    singleton.push('aaa')
-    print singleton.push('aaa')
+    request = REQ.Request('www.baidu.com',rule_number = 1 ,spider_name = 'demo')
+    print singleton.push(request.json)
+    print singleton.push(request.json)
     print singleton.pull()

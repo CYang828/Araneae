@@ -6,7 +6,7 @@ class AraneaeException(Exception):
         self._msg = msg
 
     def __str__(self):
-        return repr(self._msg.encode('utf8'))
+        return repr(self._msg.decode('utf8'))
 
 
 class MiddlewareError(AraneaeException):
@@ -36,8 +36,10 @@ class RequestTimeoutError(AraneaeException):
 class RequestTooManyRedirectsError(AraneaeException):
     pass
 
+
 class DownloaderError(AraneaeException):
     pass
+
 
 class SchedulerError(AraneaeException):
     pass

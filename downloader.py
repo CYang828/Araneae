@@ -27,8 +27,7 @@ class DownloadProcessor(object):
     """
 
     def __init__(self, file_path, response, file_obj):
-        content_type_dict = {'application/octet-stream': self.octet_stream,
-                             'image/jpeg': self.image_jpeg}
+        content_type_dict = {'application/octet-stream': self.octet_stream, 'image/jpeg': self.image_jpeg}
 
         content_type = response.headers['Content-Type']
         method = content_type_dict.get(content_type)
@@ -63,12 +62,7 @@ class BaseDownloader(object):
     可以根据需求替换下载器中的调度器和去重器
     """
 
-    def __init__(self,
-                 file_path,
-                 scheduler,
-                 dupefilter,
-                 download_sleep_time=DEFAULT_DOWNLOADER_SLEEP_TIME,
-                 pool_size=DEFAULT_DOWNLOADER_POOL_SIZE):
+    def __init__(self, file_path, scheduler, dupefilter, download_sleep_time=DEFAULT_DOWNLOADER_SLEEP_TIME, pool_size=DEFAULT_DOWNLOADER_POOL_SIZE):
         self._file_path = file_path
         self._download_sleep_time = download_sleep_time
 
@@ -80,16 +74,14 @@ class BaseDownloader(object):
         self._scheduler = SCH.DupeScheduler(scheduler, dupefilter)
         self._pool = GEVP.Pool(pool_size)
         download_threads = GEVT.start_new_thread(self._processor)
-        self._run = True
 
     def _processor(self):
-        while self._run:
+        while True:
             #队列为空时阻塞
-            file_json = self._scheduler.pull(
-                DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)
+            file_json = self._scheduler.pull(DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT)
 
-            if file_json == DOWNLOADER_FINISH_FLAG: 
-                print '下载器结束'
+            if file_json == DOWNLOADER_FINISH_FLAG:
+                print '结束标志'
                 break
             elif not file_json:
                 continue
@@ -99,15 +91,16 @@ class BaseDownloader(object):
             self._pool.spawn(self._download, file_obj)
             time.sleep(self._download_sleep_time)
 
+        print '结束'
+
     def _download(self, file_obj):
         method = UTLH.validate_method(file_obj.method)
 
-        response = getattr(requests, method)(
-            file_obj.url,
-            proxies=file_obj.proxies,
-            headers=file_obj.headers,
-            cookies=file_obj.cookies,
-            timeout=DEFAULT_DOWNLOADER_TIMEOUT)
+        response = getattr(requests, method)(file_obj.url,
+                                             proxies=file_obj.proxies,
+                                             headers=file_obj.headers,
+                                             cookies=file_obj.cookies,
+                                             timeout=DEFAULT_DOWNLOADER_TIMEOUT)
 
         DownloadProcessor(self._file_path, response, file_obj)
 
@@ -116,14 +109,6 @@ class BaseDownloader(object):
 
     def full(self):
         raise NotImplementedError('下载器必须实现full方法')
-
-    @property
-    def gag(self):
-        return self._gag
-
-    @gag.setter
-    def gag(self, gag):
-        self._gag = gag
 
 
 class WorkerDownloader(BaseDownloader):
@@ -158,33 +143,22 @@ if __name__ == '__main__':
         'file_name': '1.zip',
         'headers':
         {'Cookie':
-         'DWRSESSIONID=6HgxZXzGbFaZ6JosPj9wOdDN*hl; JSESSIONID=abcymybCrWJaQcZz7F6rv; jsessionid=2F66B2CCE767E51051EFEF49CD81EFB8'
-         }
+         'DWRSESSIONID=6HgxZXzGbFaZ6JosPj9wOdDN*hl; JSESSIONID=abcymybCrWJaQcZz7F6rv; jsessionid=2F66B2CCE767E51051EFEF49CD81EFB8'}
     }
 
-    file_obj = FILE.File(
-        'http://czy.jtyhjy.com/jty/tbkt/downLoadAttach.action?articleId=3825793&urlId=1',
-        **file_info)
+    file_obj = FILE.File('http://czy.jtyhjy.com/jty/tbkt/downLoadAttach.action?articleId=3825793&urlId=1', **file_info)
 
-    redis_conf = {'host': '172.18.4.52',
-                  'port': 6379,
-                  'db': 0,
-                  'password': None,
-                  'timeout': 5,
-                  'charset': 'utf8'}
+    redis_conf = {'host': '172.18.4.52', 'port': 6379, 'db': 0, 'password': None, 'timeout': 5, 'charset': 'utf8'}
 
-    memory_scheduler = UTLC.load_class('Araneae.scheduler.MemoryScheduler',
-                                       'demo')
-    memory_dupefilter = UTLC.load_class('Araneae.dupefilter.MemoryDupeFilter',
-                                        'demo')
+    memory_scheduler = UTLC.load_class('Araneae.scheduler.MemoryScheduler', 'demo')
+    memory_dupefilter = UTLC.load_class('Araneae.dupefilter.MemoryDupeFilter', 'demo')
 
     #redis_scheduler = UTLC.load_class('Araneae.scheduler.RedisScheduler',
     #                                  'demo', **redis_conf)
     #redis_dupefilter = UTLC.load_class('Araneae.dupefilter.RedisDupeFilter',
     #                                   'demo', **redis_conf)
 
-    memory_worker = WorkerDownloader('/home/zhangchunyang/download/',
-                                     memory_scheduler, memory_dupefilter)
+    memory_worker = WorkerDownloader('/home/zhangchunyang/download/', memory_scheduler, memory_dupefilter)
     memory_worker.push(file_obj.json)
 
     #redis_worker = WorkerDownloader('/home/zhangchunyang/download/',

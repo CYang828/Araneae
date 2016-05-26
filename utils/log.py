@@ -10,10 +10,7 @@ from termcolor import colored
 
 
 def set_logging(level, filename, fmt, datefmt):
-    logging.basicConfig(level=level,
-                        format=fmt,
-                        datefmt=datefmt,
-                        filename=filename)
+    logging.basicConfig(level=level, format=fmt, datefmt=datefmt, filename=filename)
 
 
 #更换颜色
@@ -106,69 +103,37 @@ class BaseLogger(logging.Logger):
         chain = self.get_meta_data()
 
         if self.__isLogFile:
-            self.log(logging.DEBUG,
-                     "%s" % msg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.DEBUG, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
             coloredMsg = colored(msg, color='green')
-            self.log(logging.DEBUG,
-                     "%s" % coloredMsg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.DEBUG, "%s" % coloredMsg, extra={'chain': chain}, *args, **kw)
 
     def info(self, msg, *args, **kw):
         chain = self.get_simple_meta_data()
 
         if self.__isLogFile:
-            self.log(logging.INFO,
-                     "%s" % msg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.INFO, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
             coloredMsg = colored(msg, color='yellow')
-            self.log(logging.INFO,
-                     "%s" % coloredMsg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.INFO, "%s" % coloredMsg, extra={'chain': chain}, *args, **kw)
 
     def warn(self, msg, *args, **kw):
         chain = self.get_simple_meta_data()
 
         if self.__isLogFile:
-            self.log(logging.WARNING,
-                     "%s" % msg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.WARNING, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
             coloredMsg = colored(msg, color='red')
-            self.log(logging.WARNING,
-                     "%s" % coloredMsg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.WARNING, "%s" % coloredMsg, extra={'chain': chain}, *args, **kw)
 
     def error(self, msg, *args, **kw):
         chain = self.get_meta_data()
 
         if self.__isLogFile:
-            self.log(logging.ERROR,
-                     "%s" % msg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.ERROR, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
             coloredMsg = colored(msg, color='grey')
-            self.log(logging.ERROR,
-                     "%s" % coloredMsg,
-                     extra={'chain': chain},
-                     *args,
-                     **kw)
+            self.log(logging.ERROR, "%s" % coloredMsg, extra={'chain': chain}, *args, **kw)
 
     @classmethod
     def instance(cls, logName):

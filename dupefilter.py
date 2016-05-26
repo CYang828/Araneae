@@ -1,8 +1,7 @@
 #*-*coding:utf8*-*
 
-import hashlib
-
 import Araneae.db as DB
+import Araneae.utils.contrib as UTLC
 
 
 class BaseDupeFilter(object):
@@ -19,11 +18,11 @@ class MemoryDupeFilter(BaseDupeFilter):
         self._dupefilter = set()
 
     def exist(self, key):
-        fingerprint = hashlib.md5(key).hexdigest()
+        fingerprint = UTLC.printfinger_request(key)
         return True if fingerprint in self._dupefilter else False
 
     def put(self, key):
-        fingerprint = hashlib.md5(key).hexdigest()
+        fingerprint = UTLC.printfinger_request(key)
 
         if not self.exist(fingerprint):
             self._dupefilter.add(fingerprint)
@@ -38,14 +37,12 @@ class RedisDupeFilter(BaseDupeFilter):
         self._dupefilter = DB.Redis(**redis_conf)
 
     def exist(self, key):
-        fingerprint = hashlib.md5(key).hexdigest()
-        return True if self._dupefilter.sismember(self._dupefilter_key,
-                                                  fingerprint) else False
+        fingerprint = UTLC.printfinger_request(key)
+        return True if self._dupefilter.sismember(self._dupefilter_key, fingerprint) else False
 
     def put(self, key):
         """
         添加成功返回True,重复返回False
         """
-
-        fingerprint = hashlib.md5(key).hexdigest()
+        fingerprint = UTLC.printfinger_request(key)
         return self._dupefilter.sadd(self._dupefilter_key, fingerprint)

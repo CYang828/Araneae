@@ -378,9 +378,7 @@ class Mongo(object):
         self._db = None
         self._collection = None
 
-        mongo_config = {'host': args['host'],
-                        'port': int(args['port']),
-                        'connectTimeoutMS': int(args['timeout'])}
+        mongo_config = {'host': args['host'], 'port': int(args['port']), 'connectTimeoutMS': int(args['timeout'])}
 
         try:
             self._mongo = MongoClient(**mongo_config)
@@ -421,11 +419,6 @@ class Mongo(object):
 
 
 if __name__ == '__main__':
-    redis_conf = {'host': '10.60.0.165',
-                  'port': 6379,
-                  'db': 8,
-                  'password': None,
-                  'timeout': 5,
-                  'charset': 'utf8'}
+    redis_conf = {'host': '10.60.0.165', 'port': 6379, 'db': 8, 'password': None, 'timeout': 5, 'charset': 'utf8'}
     redis = Redis(**redis_conf)
     redis.sadd('dupe', '11')

@@ -60,10 +60,7 @@ class HeartBeatServer(DatagramServer):
         self.socket.sendto(SERVER_HEART_BEAT, address)
 
     def timer(self):
-        self._client_counter = {
-            client: counter + 1
-            for client, counter in six.iteritems(self._client_counter)
-        }
+        self._client_counter = {client: counter + 1 for client, counter in six.iteritems(self._client_counter)}
 
     def is_lost(self, client):
         counter = self._client_counter.get(client, False)
@@ -77,9 +74,7 @@ class HeartBeatServer(DatagramServer):
         return self._client_counter.keys()
 
     def list_lost_client(self):
-        return [client
-                for client, counter in six.iteritems(self._client_counter)
-                if self.is_lost(client)]
+        return [client for client, counter in six.iteritems(self._client_counter) if self.is_lost(client)]
 
 
 class HeartBeatClient(object):

@@ -1,5 +1,4 @@
 #*-*coding:utf8*-*
-
 """
 爬虫配置文件
 ============
@@ -14,27 +13,13 @@ RUNNING_TYPE = 'singleton'
 SCHEDULER = 'Araneae.scheduler.RedisScheduler'
 
 #调度器配置
-SCHEDULER_CONF = {
-                    'host':'localhost',
-                    'port':6379,
-                    'db':0,
-                    'password':None,
-                    'timeout':5,
-                    'charset':'utf8'
-                 }
+SCHEDULER_CONF = {'host': 'localhost', 'port': 6379, 'db': 0, 'password': None, 'timeout': 5, 'charset': 'utf8'}
 
 #去重器类路径
 DUPEFILTER = 'Araneae.dupefilter.RedisDupeFilter'
 
 #去重器配置
-DUPEFILTER_CONF= {
-                    'host':'localhost',
-                    'port':6379,
-                    'db':0,
-                    'password':None,
-                    'timeout':5,
-                    'charset':'utf8'
-                }
+DUPEFILTER_CONF = {'host': 'localhost', 'port': 6379, 'db': 0, 'password': None, 'timeout': 5, 'charset': 'utf8'}
 
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
@@ -70,25 +55,13 @@ MIDDLE_DATA_COLLECTION = 'breadth_first_'
 MERGE_DATA_COLLECTION = 'merge_result'
 
 #  持久化存储配置
-LASTING = {
-           'type':'mongo_tree',
-           'host':'localhost',
-           'port':'27017',
-           'password':'',
-           'timeout':5
-          }
+LASTING = {'type': 'mongo_tree', 'host': 'localhost', 'port': '27017', 'password': '', 'timeout': 5}
 
-MASTER_CONF = {
-                'host':'10.60.0.165',
-                'port':'',
-                'password':'',
-                'db':0,
-                'timeout':5,
-              }
+MASTER_CONF = {'host': '10.60.0.165', 'port': '', 'password': '', 'db': 0, 'timeout': 5, }
 
 # 登录的headers
 # TODO 如果爬取的过程时间过长，会不会出现 cookie 过期的现象。 目前没法动态获取合法 cookie。重新启动爬虫如何保证不重复
-LOGIN_HEADER = {'DWRSESSIONID':'nI68mNQi5qXP0aN680MnpzARcjl','JSESSIONID':'abcLQ55WxX8DfaJYdemtv'}
+LOGIN_HEADER = {'DWRSESSIONID': 'nI68mNQi5qXP0aN680MnpzARcjl', 'JSESSIONID': 'abcLQ55WxX8DfaJYdemtv'}
 
 #爬虫初始地址
 # FIRST_URLS = ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
@@ -146,4 +119,3 @@ PAGE_RULE = \
         }
     }
 }
-

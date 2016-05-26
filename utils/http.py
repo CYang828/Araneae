@@ -1,6 +1,7 @@
 #*-*coding:utf8*-*
 
 import urlparse
+from w3lib import html
 
 
 def revise_url(url):
@@ -10,15 +11,18 @@ def revise_url(url):
         return url
 
 
-def replenish_url(response_url, url):
+def replenish_url(response, url):
     """
     补全url的域名
     """
+    base_url = html.get_base_url(response.content, response.url, response.encoding)
     url_info = urlparse.urlparse(url)
-    response_url_info = urlparse.urlparse(response_url)
 
     if not url_info.scheme and not url_info.hostname:
-        return response_url_info.scheme + '://' + response_url_info.hostname + url
+        if url[0] != '/':
+            return base_url + url
+        else:
+            return base_url + url[1:]
     else:
         return url
 

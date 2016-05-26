@@ -27,24 +27,14 @@ class UrlExtractor(object):
     spider_name:生成的request所属spider
     """
 
-    def __init__(self,
-                 dom,
-                 url,
-                 rule,
-                 spider_name='',
-                 rule_number=-1,
-                 fid=None,
-                 associate=False,
-                 cookies={},
-                 headers={}):
+    def __init__(self, response, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
+        self.__response = response
         self.__dom = dom
         self.__url = url
         self.__page_rule = rule
 
-        self._allow_regexes = [re.compile(
-            regex, re.I) for regex in SET.revise_value(rule.get('allow', []))]
-        self._deny_regexes = [re.compile(
-            regex, re.I) for regex in SET.revise_value(rule.get('deny', []))]
+        self._allow_regexes = [re.compile(regex, re.I) for regex in SET.revise_value(rule.get('allow', []))]
+        self._deny_regexes = [re.compile(regex, re.I) for regex in SET.revise_value(rule.get('deny', []))]
         self._headers = rule.get('headers', {})
         self._cookies = rule.get('cookies', {})
         self._method = UTLH.validate_method(rule.get('method', 'GET'))
@@ -67,7 +57,14 @@ class UrlExtractor(object):
         self._extract_allow_urls()
 
     def _extract_urls(self):
-        urls = self.__dom.xpath('//a//@href')
+        #urls = self.__dom.xpath('//a//@href')
+        urls = []
+        iter_urls = self.__dom.iterlinks()
+
+        for url in iter_urls:
+            if url[1] == 'href':
+                urls.append(url[2])
+
         self._urls = sorted(set(urls), key=urls.index)
 
     def _extract_allow_urls(self):
@@ -133,10 +130,8 @@ class UrlExtractor(object):
 
         for url in self._allow_urls:
             request = REQ.Request(
-                UTLH.replenish_url(
-                    self.__url, url), **request_args).set_spider_name(
-                        self._spider_name).set_rule_number(
-                            self._rule_number).set_associate(self._associate)
+                UTLH.replenish_url(self.__response, url),
+                **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number).set_associate(self._associate)
 
             self._allow_requests.append(request)
 
@@ -186,16 +181,7 @@ class UrlFormatExtractor(object):
     抽取格式化的url
     """
 
-    def __init__(self,
-                 dom,
-                 url,
-                 rule,
-                 spider_name='',
-                 rule_number=-1,
-                 fid=None,
-                 associate=False,
-                 cookies={},
-                 headers={}):
+    def __init__(self, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
         self.__dom = dom
         self.__url = url
         self.__rule = rule
@@ -303,17 +289,11 @@ class UrlFormatExtractor(object):
         return result
 
     def _url2request(self):
-        request_args = {'method': self._method,
-                        'headers': self._headers,
-                        'cookies': self._cookies,
-                        'data': self._data,
-                        'fid': self._fid}
+        request_args = {'method': self._method, 'headers': self._headers, 'cookies': self._cookies, 'data': self._data, 'fid': self._fid}
 
         for url in self._urls:
             request = REQ.Request(
-                UTLH.replenish_url(
-                    self.__url, url), **request_args).set_spider_name(
-                        self._spider_name).set_rule_number(self._rule_number)
+                UTLH.replenish_url(self.__url, url), **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number)
             self._requests.append(request)
 
     def extract(self):
@@ -394,11 +374,17 @@ class DataExtractor(object):
 
             middle = []
 
+            #middle的数据结构
+            #[
+            #   [结果集1],[结果集2],[结果集3],[结果集4],...
+            #]
+
             if tp == 'xpath':
                 for exp in expression:
                     results = self.__dom.xpath(exp)
-                    #print results
+
                     for i_result, result in enumerate(results):
+                        #将node转换成text
                         if isinstance(result, lxml.etree.ElementBase):
                             results[i_result] = result.text
 
@@ -421,7 +407,7 @@ class DataExtractor(object):
                 if len(field) != len(expression):
                     raise TypeError('字段名称和expression必须一一对应')
 
-                #结果寄存器
+                #res_register数据结构
                 #[ 
                 #	{'xpath':[],'result':[[结果],...]},
                 #	{'xpath':[],'result':[[结果],...]},
@@ -455,26 +441,15 @@ class DataExtractor(object):
 
                             #寄存器中已经存在该次产生的结果
                             if len(res_register[exp_idx]['xpath']):
-                                for sub_xpath in res_register[exp_idx][
-                                        'xpath']:
-                                    for i_sub_xpath_num in range(len(
-                                            res_register[group_idx]['xpath'])):
-                                        for i_result in range(len(res_register[
-                                                group_idx]['result'][
-                                                    i_sub_xpath_num])):
-                                            sub_xpath = re.sub(
-                                                self._group_regex, '[%d]' %
-                                                (i_result + 1), sub_xpath)
+                                for sub_xpath in res_register[exp_idx]['xpath']:
+                                    for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                        for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                            sub_xpath = re.sub(self._group_regex, '[%d]' % (i_result + 1), sub_xpath)
                                             sub_xpathes.append(sub_xpath)
                             else:
-                                for i_sub_xpath_num in range(len(res_register[
-                                        group_idx]['xpath'])):
-                                    for i_result in range(len(res_register[
-                                            group_idx]['result'][
-                                                i_sub_xpath_num])):
-                                        sub_xpath = re.sub(self._group_regex,
-                                                           '[%d]' %
-                                                           (i_result + 1), exp)
+                                for i_sub_xpath_num in range(len(res_register[group_idx]['xpath'])):
+                                    for i_result in range(len(res_register[group_idx]['result'][i_sub_xpath_num])):
+                                        sub_xpath = re.sub(self._group_regex, '[%d]' % (i_result + 1), exp)
                                         sub_xpathes.append(sub_xpath)
 
                             res_register[exp_idx]['xpath'] = sub_xpathes
@@ -489,52 +464,67 @@ class DataExtractor(object):
                         result = self.__dom.xpath(xpath)
 
                         for i_res, res in enumerate(result):
-                            if isinstance(res, lxml.etree.ElementBase):
+                           if isinstance(res, lxml.etree.ElementBase):
                                 result[i_res] = res.text
 
                         results.append(result)
 
                     res_register[exp_idx]['result'] = results
 
-                import json
-                #print json.dumps(res_register,ensure_ascii = False)
-
-                #构造完整的数据,res_regiser中的result的顺序为文档查找顺序
-                #url抽取也应该是文档查找顺序，这样才能对应上
-                """
-                最终构造的数据结构为
-                {   
-                    'field1':'data1',
-                    'field2':'data2',
-                    'field3':'data3',
-                    ....
-                }
-                """
                 register_len = len(res_register)
                 middle = res_register[0]['result'][0]
+                import json
+                print 'res_register'
+                print json.dumps(res_register, ensure_ascii=False)
 
                 for i_field in range(register_len):
                     if i_field < register_len - 1:
                         middle_res = []
 
                         for i_mid, mid in enumerate(middle):
-                            items = [item
-                                     for item in itertools.product(
-                                         [mid], res_register[i_field + 1][
-                                             'result'][i_mid])]
-                            middle_res += items
-                            #print json.dumps(items,ensure_ascii = False)
-                            #print '+++++++++++++++++++++++'
+                            if not mid:
+                                middle_res += res_register[i_field + 1]['result'][i_mid]
+                            else:
+                                items = [item for item in itertools.product([mid], res_register[i_field + 1]['result'][i_mid])]
+                                middle_res += items
+                                #print json.dumps(items,ensure_ascii = False)
+                                #print '+++++++++++++++++++++++'
                         middle = middle_res
 
+            #构造完整的数据,res_regiser中的result的顺序为文档查找顺序
+            #url抽取也应该是文档查找顺序，这样才能对应上
+            """
+            最终构造的数据结构为
+            {   
+                'field1':'data1',
+                'field2':'data2',
+                'field3':'data3',
+                ....
+            }
+            """
             #构造DATA
             datas = []
             raw_data = {}
+            import json
+            print 'middle'
+            print json.dumps(middle, ensure_ascii=False)
 
             for mid in middle:
                 for i_f, f in enumerate(field):
+                    print 'multiple:' + str(multiple)
                     if multiple:
-                        raw_data[f] = mid[i_f]
+                        if tp == 'group_xpath':
+                            raw_data[f] = mid[i_f]
+                        else:
+                            for m in mid:
+                                raw_data[f] = m
+
+                                data = DT.Data(**raw_data)
+                                data.rule_number = self._rule_number
+                                #print 'DATA'
+                                #print json.dumps(raw_data,ensure_ascii = False)
+                                datas.append(data)
+                                raw_data = {}
                     else:
                         if f not in raw_data.keys():
                             raw_data[f] = []
@@ -542,11 +532,11 @@ class DataExtractor(object):
                         else:
                             raw_data[f].append(mid)
 
-                if multiple:
+                if multiple and tp == 'group_xpath':
                     data = DT.Data(**raw_data)
                     data.rule_number = self._rule_number
-                    #print 'DATA'
-                    #print json.dumps(raw_data,ensure_ascii = False)
+                    print 'DATA'
+                    print json.dumps(raw_data,ensure_ascii = False)
                     datas.append(data)
                     raw_data = {}
 
@@ -614,16 +604,7 @@ class DataExtractor(object):
 
 
 class FileExtractor(UrlExtractor):
-    def __init__(self,
-                 dom,
-                 url,
-                 rule,
-                 spider_name='',
-                 rule_number=-1,
-                 fid=None,
-                 associate=False,
-                 cookies={},
-                 headers={}):
+    def __init__(self, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
         self._field = rule.get('field')
 
         if not self._field:
@@ -631,9 +612,7 @@ class FileExtractor(UrlExtractor):
 
         self._files = []
 
-        super(FileExtractor,
-              self).__init__(dom, url, rule, spider_name, rule_number, fid,
-                             associate, cookies, headers)
+        super(FileExtractor, self).__init__(dom, url, rule, spider_name, rule_number, fid, associate, cookies, headers)
 
     def _url2file(self):
         file_args = {'method': self._method,
@@ -647,8 +626,7 @@ class FileExtractor(UrlExtractor):
         for url in self._allow_urls:
             file_name = hashlib.md5(url).hexdigest()
             file_args['file_name'] = file_name
-            file_obj = FILE.File(
-                UTLH.replenish_url(self.url, url), **file_args)
+            file_obj = FILE.File(UTLH.replenish_url(self.url, url), **file_args)
             data = DT.Data(**{'%s_download' % self._field: file_name})
 
             self._files.append((data, file_obj))
@@ -657,9 +635,9 @@ class FileExtractor(UrlExtractor):
         self._url2file()
         return self._files
 
+
 #  通过参数替换生成最终 URL
 class UrlSubstituteExtractor(object):
-
     def __init__(self, rule):
         self.__rule = rule
         self.__name = 'substitute_urls'
@@ -716,13 +694,14 @@ class UrlSubstituteExtractor(object):
             for i in range(0, xpath_count):
                 value = dom_content.xpath(regular_rule['extract_xpath'][i])
 
-                if value[0] and value[0] is not '' :
+                if value[0] and value[0] is not '':
                     sub_format = '\[\$' + str(i) + '\]'
                     current_url = re.sub(sub_format, value[0], current_url)
 
             return current_url
         else:
             return current_url
+
 
 if __name__ == '__main__':
     from requests import get
@@ -734,16 +713,13 @@ if __name__ == '__main__':
     dom = UTLC.response2dom(response)
     rule = {
         'format_url': '%(url)s&pageSize=20&showPage=%(page)s',
-        'format_data': OrderedDict(
-            [('url', {'type': 'constant',
-                      'expression': '@host_url'}),
-             ('@pages', {'type': 'xpath',
-                         'expression':
-                         r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}
-              ), ('@max_page', {'type': 'function',
-                                'expression': 'max(@pages)'}
-                  ), ('page', {'type': 'function',
-                               'expression': 'range(2,@max_page+1)'})]),
+        'format_data': OrderedDict([('url', {'type': 'constant',
+                                             'expression': '@host_url'}), ('@pages', {'type': 'xpath',
+                                                                                      'expression':
+                                                                                      r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}),
+                                    ('@max_page', {'type': 'function',
+                                                   'expression': 'max(@pages)'}), ('page', {'type': 'function',
+                                                                                            'expression': 'range(2,@max_page+1)'})]),
     }
 
     url_fromat_extractor = UrlFormatExtractor(dom, url, rule)

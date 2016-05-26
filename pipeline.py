@@ -53,9 +53,7 @@ class MongoDataPipeline(BaseDataPipeline):
         self._db = None
         self._collection = None
 
-        mongo_config = {'host': args['host'],
-                        'port': int(args['port']),
-                        'connectTimeoutMS': int(args['timeout'])}
+        mongo_config = {'host': args['host'], 'port': int(args['port']), 'connectTimeoutMS': int(args['timeout'])}
 
         try:
             self._mongo = MongoClient(**mongo_config)
@@ -90,10 +88,8 @@ class MongoDataPipeline(BaseDataPipeline):
     def update(self, filter, data):
         try:
             filter = {'_id': ObjectId(filter)}
-            update_id = str(self._collection.update_one(
-                filter=filter, update={'$set': data}).upserted_id)
-            Plog('Mongo update -- filter[%s] -- data[%s] -- upserted id[%s]' %
-                 (filter, data, update_id))
+            update_id = str(self._collection.update_one(filter=filter, update={'$set': data}).upserted_id)
+            Plog('Mongo update -- filter[%s] -- data[%s] -- upserted id[%s]' % (filter, data, update_id))
             return update_id
         except PyMongoError as e:
             raise TypeError(e)
@@ -110,9 +106,9 @@ class MongoDataPipeline(BaseDataPipeline):
     def collection_names(self, system=False):
         return self._db.collection_names(include_system_collections=system)
 
+
 ###############################################   MongoTreeTitleDataPipeline   ###############################################
 class MongoTreeTitleDataPipeline(MongoDataPipeline):
-
     def __init__(self, **kwargs):
         super(MongoTreeTitleDataPipeline, self).__init__(**kwargs)
 
@@ -127,7 +123,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
                           (collection, filePath, "->".join(node_route)))
 
         for i in range(listSize):
-            temp = self._collection.find_one({'node_route' : "->".join(node_route[:i+1])})
+            temp = self._collection.find_one({'node_route': "->".join(node_route[:i + 1])})
 
             if temp is None:
                 temp = {}
@@ -135,7 +131,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
                 temp['children'] = []
                 temp['parent'] = ""
                 temp['level'] = i
-                temp['node_route'] = "->".join(node_route[:i+1])
+                temp['node_route'] = "->".join(node_route[:i + 1])
 
                 # self.logger.info('add new Title[%s], Route[%s], Level[%d]' % \
                 #                  temp['title'], temp['node_route'], temp['level'])
@@ -144,11 +140,11 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
 
         for i in range(listSize):
             needUpdate = False
-            temp = self._collection.find_one({'node_route' : "->".join(node_route[:i+1])})
+            temp = self._collection.find_one({'node_route': "->".join(node_route[:i + 1])})
 
             if i > 0:  #  Only non-root node has 'parent' attribute
                 if temp['parent'] == "":
-                    parent = self._collection.find_one({'node_route' : "->".join(node_route[:i])})
+                    parent = self._collection.find_one({'node_route': "->".join(node_route[:i])})
                     temp['parent'] = parent['_id']
 
                     # self.logger.debug('ID[%s], Title[%s], Route[%s], Parent[%s]' % \
@@ -157,7 +153,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
                     needUpdate = True
 
             if i < listSize - 1:  #  Only non-leaf node has 'children' attribute
-                child = self._collection.find_one({'node_route' : "->".join(node_route[:i+2])})
+                child = self._collection.find_one({'node_route': "->".join(node_route[:i + 2])})
 
                 if not isinstance(temp['children'], list):
                     temp['children'] = []
@@ -183,7 +179,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
                                   (temp['node_route'], temp['title'], filePath))
 
     def __find_by_id(self, object_id, result_list):
-        temp = self._collection.find_one({'_id' : object_id})
+        temp = self._collection.find_one({'_id': object_id})
 
         if temp is None:
             return
@@ -199,7 +195,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
         pass
 
     def find_by_route(self, node_route):
-        temp = self._collection.find_one({'node_route' : node_route})
+        temp = self._collection.find_one({'node_route': node_route})
         result_list = []
 
         if temp is None:
@@ -216,6 +212,7 @@ class MongoTreeTitleDataPipeline(MongoDataPipeline):
                       (result['_id'], result['title'], result['node_route'], result['level'])
 
             return result_list
+
 
 MYSQL_RETRY_TIMES = 10
 
@@ -295,19 +292,14 @@ class Mysql(object):
                 self._sql = ''
             except MySQLdb.OperationalError, e:
                 self.reconnect()
-                ERROR(
-                    'Mysql Error -- SQL[%s] -- msg[Mysql Gone Away or Operate Error!%s]'
-                    % (sql, str(e)))
+                ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Gone Away or Operate Error!%s]' % (sql, str(e)))
                 continue
             except MySQLdb.Error, e:
                 self._event_flag = False
-                ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Execute Failed!%s]'
-                      % (sql, str(e)))
+                ERROR('Mysql Error -- SQL[%s] -- msg[Mysql Execute Failed!%s]' % (sql, str(e)))
                 raise MysqlException('Mysql Execute Failed')
             except:
-                ERROR(
-                    'Mysql Error -- msg[Sql Format Failed!] -- SQL[%s] -- Data[%s]'
-                    % (sql, kwds))
+                ERROR('Mysql Error -- msg[Sql Format Failed!] -- SQL[%s] -- Data[%s]' % (sql, kwds))
                 raise MysqlException('Sql Format Failed')
 
             effect = self._cur.rowcount
@@ -387,8 +379,7 @@ class Redis(object):
     def sismember(self, name, value):
         try:
             ret = self._redis.sismember(name, value)
-            INFO('Redis sismember -- redis command[sismember %s %s]' %
-                 (name, value))
+            INFO('Redis sismember -- redis command[sismember %s %s]' % (name, value))
 
         except RedisError:
             raise RedisException
@@ -428,8 +419,7 @@ class Redis(object):
     def hmset(self, name, arg_dict):
         try:
             ret = self._redis.hmset(name, arg_dict)
-            INFO('Redis hmset -- redis command[hmset %s %s]' %
-                 (name, arg_dict))
+            INFO('Redis hmset -- redis command[hmset %s %s]' % (name, arg_dict))
 
         except RedisError:
             raise RedisException
@@ -439,8 +429,7 @@ class Redis(object):
     def hset(self, name, key, value):
         try:
             ret = self._redis.hset(name, key, value)
-            INFO('Redis hset -- redis command[hset %s %s %s]' %
-                 (name, key, value))
+            INFO('Redis hset -- redis command[hset %s %s %s]' % (name, key, value))
 
         except RedisError:
             raise RedisException
@@ -491,8 +480,7 @@ class Redis(object):
     def setex(self, name, time, value):
         try:
             ret = self._redis.setex(name, time, value)
-            INFO('Redis setex -- redis command[setex %s %d %s]' %
-                 (name, time, value))
+            INFO('Redis setex -- redis command[setex %s %d %s]' % (name, time, value))
 
         except ReidsError:
             raise RedisExceptions
@@ -540,8 +528,7 @@ def generate_pipeline(**args):
     pipeline_type = args.get('type', DEFAULT_PIPELINE_TYPE).lower()
 
     #后续可以支持更多种类
-    option_type = {'mongo':'MongoDataPipeline',
-                   'mongo_tree':'MongoTreeTitleDataPipeline'}
+    option_type = {'mongo': 'MongoDataPipeline', 'mongo_tree': 'MongoTreeTitleDataPipeline'}
 
     pipeline_obj = None
 
@@ -549,6 +536,6 @@ def generate_pipeline(**args):
         raise TypeError('不支持该类型pipeline，目前只支持mongo')
     else:
         pipeline_module = import_module('Araneae.pipeline')
-        pipeline_obj = getattr(pipeline_module,option_type[pipeline_type])(**args)
+        pipeline_obj = getattr(pipeline_module, option_type[pipeline_type])(**args)
 
     return pipeline_obj

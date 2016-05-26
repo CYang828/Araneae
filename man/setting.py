@@ -32,24 +32,13 @@ MIDDLE_DATA_COLLECTION = 'rule'
 #合并后结果集前缀
 MERGE_DATA_COLLECTION = 'merge_result'
 #持久化存储配置
-LASTING = {
-    'type': 'mongo',
-    'host': '172.18.4.52',
-    'port': '27017',
-    'password': '',
-    'timeout': 5
-}
+LASTING = {'type': 'mongo', 'host': '172.18.4.52', 'port': '27017', 'password': '', 'timeout': 5}
 
 #登录的headers
-LOGIN_HEADER = {
-    'Cookie':
-    'DWRSESSIONID=JIvEqVolOFF8u2H2XTxcG4LJ5il; JSESSIONID=abcE071wq2xkD_FDBT-rv; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F'
-}
+LOGIN_HEADER = {'Cookie': 'DWRSESSIONID=JIvEqVolOFF8u2H2XTxcG4LJ5il; JSESSIONID=abcE071wq2xkD_FDBT-rv; jsessionid=D3E2ACF771A9E3D050E97A1F4D09F39F'}
 
 #爬虫初始地址
-FIRST_URLS = [
-    'http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm'
-]
+FIRST_URLS = ['http://czy.jtyhjy.com/Jty/tbkt/getTbkt_currentBitCode_001001.shtm']
 #页面爬取规则
 PAGE1 = {
     #只能生成一种类型的数据,不能生成多种
@@ -67,14 +56,12 @@ PAGE1 = {
             'group_expression':
             '//*[@id="mainContent"]/form/table[2]/tbody/tr/td/table/tbody/tr[2]/td/table/tbody/',
             'expression':
-            ['tr[*]/td/table/tbody/tr/td[1]/a',
-             'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'
-             ],  #?只能匹配其父级的个数
+            ['tr[*]/td/table/tbody/tr/td[1]/a', 'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/text()'],  #?只能匹配其父级的个数
             #'extract_urls':'tr[?0]/td/table/tbody/tr/td[2]/table/tbody/tr[*]/td[*]/a/href()',
             'field': ['grade', 'edition'],  #想要抽取的数据必须有字段名,否则没法存储
             'parent': 0,
             'multiple': True,
-            'associate': True  #默认为False
+            'associate': True  #默认为False,是否关联下个链接的数据
         }
         #这里的列表可以产生多级数据
     ],

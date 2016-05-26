@@ -37,8 +37,7 @@ class Setting(object):
             if value.lower() in self._options[name]:
                 return value
             else:
-                raise TypeError('错误的配置项 -- key[%s] -- option[%s]' %
-                                (name, value))
+                raise TypeError('错误的配置项 -- key[%s] -- option[%s]' % (name, value))
         else:
             return value
 

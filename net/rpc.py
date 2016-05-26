@@ -69,11 +69,7 @@ class RPCProxyManager(object):
             print e
             return None
 
-    def buildRPCProxy(self,
-                      remoteInfo,
-                      proxyType,
-                      proxyName,
-                      packet_name='Araneae.rpc', ):
+    def buildRPCProxy(self, remoteInfo, proxyType, proxyName, packet_name='Araneae.rpc', ):
 
         _module_home = __import__(packet_name, globals(), locals(), [proxyType])
         bpBinder = getattr(_module_home, proxyType)(remoteInfo, proxyName)

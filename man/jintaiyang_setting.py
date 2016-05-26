@@ -13,26 +13,12 @@ RUNNING_TYPE = 'singleton'
 #调度器的类路径
 SCHEDULER = 'Araneae.scheduler.RedisScheduler'
 #调度器配置
-SCHEDULER_CONF = {
-    'host': '172.18.4.52',
-    'port': 6379,
-    'db': 8,
-    'password': None,
-    'timeout': 5,
-    'charset': 'utf8'
-}
+SCHEDULER_CONF = {'host': '172.18.4.52', 'port': 6379, 'db': 8, 'password': None, 'timeout': 5, 'charset': 'utf8'}
 #去重器
 #去重器类路径
 DUPEFILTER = 'Araneae.dupefilter.RedisDupeFilter'
 #去重器配置
-DUPEFILTER_CONF = {
-    'host': '172.18.4.52',
-    'port': 6379,
-    'db': 8,
-    'password': None,
-    'timeout': 5,
-    'charset': 'utf8'
-}
+DUPEFILTER_CONF = {'host': '172.18.4.52', 'port': 6379, 'db': 8, 'password': None, 'timeout': 5, 'charset': 'utf8'}
 
 #调度器重试次数
 SCHEDULER_RETRY_TIME = 5
@@ -61,19 +47,10 @@ MIDDLE_DATA_COLLECTION = 'rule'
 #合并后结果集前缀
 MERGE_DATA_COLLECTION = 'merge_result'
 #持久化存储配置
-LASTING = {
-    'type': 'mongo',
-    'host': '172.18.4.52',
-    'port': '27017',
-    'password': '',
-    'timeout': 5
-}
+LASTING = {'type': 'mongo', 'host': '172.18.4.52', 'port': '27017', 'password': '', 'timeout': 5}
 
 #登录的headers
-LOGIN_HEADER = {
-    'Cookie':
-    'DWRSESSIONID=tZ56UZNvjzrmcllZbdZm1Uuk9jl; JSESSIONID=abcIZey1zYnTu7K793htv; jsessionid=5F85C23AE025113931546CA80B37239E'
-}
+LOGIN_HEADER = {'Cookie': 'DWRSESSIONID=tZ56UZNvjzrmcllZbdZm1Uuk9jl; JSESSIONID=abcIZey1zYnTu7K793htv; jsessionid=5F85C23AE025113931546CA80B37239E'}
 
 #爬虫初始地址
 FIRST_URLS = [
@@ -90,31 +67,11 @@ FIRST_URLS = [
 ]
 
 #页面爬取规则
-PAGE1 = {
-    'extract_urls':
-    {
-        'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{12}.shtm',
-    }
-}
+PAGE1 = {'extract_urls': {'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{12}.shtm', }}
 
-PAGE2 = {
-    'extract_urls':
-    {
-        'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm',
-    }
-}
-PAGE3 = {
-    'extract_urls':
-    {
-        'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm',
-    }
-}
-PAGE4 = {
-    'extract_urls':
-    {
-        'allow': r'/Jty/tbkt/getTbkt2.action\?currentBitCode=\d{21}',
-    }
-}
+PAGE2 = {'extract_urls': {'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{15}.shtm', }}
+PAGE3 = {'extract_urls': {'allow': r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm', }}
+PAGE4 = {'extract_urls': {'allow': r'/Jty/tbkt/getTbkt2.action\?currentBitCode=\d{21}', }}
 PAGE5 = {
     'extract_urls':
     {
@@ -125,14 +82,12 @@ PAGE5 = {
         'format_url': '%(url)s&pageSize=20&showPage=%(page)s',
         'format_data': OrderedDict([
             ('url', {'type': 'constant',
-                     'expression': '@host_url'}
-             ), ('@pages', {'type': 'xpath',
-                            'expression':
-                            r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}
-                 ), ('@max_page', {'type': 'function',
-                                   'expression': 'max(@pages)'}
-                     ), ('page', {'type': 'function',
-                                  'expression': 'range(2,@max_page+1)'})
+                     'expression': '@host_url'}), ('@pages', {'type': 'xpath',
+                                                              'expression':
+                                                              r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}
+                                                   ), ('@max_page', {'type': 'function',
+                                                                     'expression': 'max(@pages)'}), ('page', {'type': 'function',
+                                                                                                              'expression': 'range(2,@max_page+1)'})
         ]),
     }
 }

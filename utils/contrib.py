@@ -3,20 +3,17 @@
 生成类函数
 """
 
+import json
 import lxml.html
 import lxml.html.soupparser
 
+from hashlib import md5
 from importlib import import_module
 
 
 def response2dom(response):
-    #try:
-    #    dom = lxml.html.fromstring(response.content)
-    #except UnicodeDecodeError:
-    dom = lxml.html.soupparser.fromstring(response.content, features='html5lib')
-
-    return dom
-
+    #decode('utf8')转换成utf8，否则会报错
+    return lxml.html.soupparser.fromstring(response.content.decode('utf8'), features='html5lib')
 
 def load_class(class_path, *targs, **kvargs):
     try:
@@ -29,6 +26,17 @@ def load_class(class_path, *targs, **kvargs):
         raise TypeError('确保类路径和参数正确')
 
     return obj
+
+def printfinger_request(request):
+    try:
+        request = json.loads(request)
+        spider_name = request['spider_name']
+        url = request['url']
+        method = request['method']
+        return md5(spider_name + url + method).hexdigest()
+    except ValueError:
+        return md5(request)
+
 
 
 if __name__ == '__main__':

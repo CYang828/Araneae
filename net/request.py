@@ -27,18 +27,6 @@ class Request(object):
     associate:是否关联
     """
 
-    __spider_name = ''
-    __url = ''
-    __method = 'get'
-    __data = {}
-    __cookies = {}
-    __auth = {}
-    __proxies = {}
-    __callback = None
-    __fid = None
-    __rule_number = None
-    __associate = False
-
     def __init__(self, url, **args):
         if not url:
             raise EXP.RequestException('request对象必须有url')
@@ -120,20 +108,22 @@ class Request(object):
         self.__headers['User-Agent'] = user_agent
         return self
 
-    def set_http_proxy(self,proxy):
-        self.__proxies = {'http':proxy}
+    def set_http_proxy(self, proxy):
+        self.__proxies = {'http': proxy}
         return self
 
-    def set_https_proxy(self,proxy):
-        self.__proxies = {'https':proxy}
+    def set_https_proxy(self, proxy):
+        self.__proxies = {'https': proxy}
         return self
 
-    def set_associate(self,associate):
+    def set_associate(self, associate):
         self.__associate = associate
         return self
 
-    def add_headers(self,header_dict):
-        self.__headers = dict(self._headers,**header_dict)
+    def add_headers(self, header_dict):
+        if not header_dict:
+            self.__headers = dict(self._headers, **header_dict)
+
         return self
 
     def set_headers(self, header_dict):
@@ -162,13 +152,13 @@ class Request(object):
                                                         cookies=self.__cookies,
                                                         timeout=timeout)
         except requests.exceptions.ConnectionError:
-            raise EXP.RequestConnectionException('DNS查询失败或者拒绝连接')
+            raise EXP.RequestConnectionError('DNS查询失败或者拒绝连接')
         except requests.exceptions.HTTPError:
-            raise EXP.RequestErrorException('无效HTTP响应')
+            raise EXP.RequestErrorError('无效HTTP响应')
         except requests.exceptions.Timeout:
-            raise EXP.RequestTimeoutException('请求超时')
+            raise EXP.RequestTimeoutError('请求超时')
         except requests.exceptions.TooManyRedirects:
-            raise EXP.RequestTooManyRedirectsException('超过最大重定向次数')
+            raise EXP.RequestTooManyRedirectsError('超过最大重定向次数')
 
         return response
 
@@ -237,7 +227,7 @@ class Request(object):
     def title_route(self):
         return self.__title_route[:]
 
-    def get_title(self, ind = -1):
+    def get_title(self, ind=-1):
 
         lastIndex = len(self.__title_route) - 1
 
@@ -249,10 +239,10 @@ class Request(object):
         else:
             return "None"
 
-def json2request(request_json):
-    """
-    json串转换成request对象
-    """
-    request_json = json.loads(request_json)
-    request = Request(**request_json)
-    return request
+    @classmethod
+    def instance(cls,request_json):
+        """
+        json串转换成request对象
+        """
+        request_json = json.loads(request_json)
+        return cls(**request_json) 
