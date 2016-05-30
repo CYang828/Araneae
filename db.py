@@ -1,18 +1,19 @@
 # *-* coding:utf-8 *-*
+"""
+数据库操作
+"""
 
 from copy import deepcopy
 
 try:
     import MySQLdb
 except ImportError:
-    #ERROR('MySQLdb moudle not in os')
     pass
 
 try:
     import redis
     from redis.exceptions import RedisError
 except ImportError:
-    #ERROR('reids moudle not in os')
     pass
 
 try:
@@ -20,7 +21,6 @@ try:
     from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, PyMongoError
     from pymongo.cursor import CursorType
 except ImportError:
-    #ERROR('pymongo moudle not in os')
     pass
 
 MYSQL_RETRY_TIMES = 10

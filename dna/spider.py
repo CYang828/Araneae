@@ -112,6 +112,7 @@ class BaseSpider(object):
         self._file_middleware = []
 
         for request_middleware in chromesome.request_middleware:
+            print request_middleware
             request_middleware = UTLC.load_class(request_middleware)
 
             if not isinstance(request_middleware, MID.RequestMiddleware):
@@ -154,7 +155,7 @@ class BaseSpider(object):
             try:
                 response = request.fetch(self._request_timeout)
                 break
-            except (EXP.RequestConnectionError, EXP.RequestErrorError, EXP.RequestTimeoutError, EXP.RequestTooManyRedirectsError) as e:
+            except (EXP.RequestConnectionError, EXP.RequestError, EXP.RequestTimeoutError, EXP.RequestTooManyRedirectsError) as e:
                 self.recorder('ERROR', str(e))
                 retry_time -= 1
                 continue
@@ -285,10 +286,6 @@ class BaseSpider(object):
                 continue
 
             request = REQ.Request.instance(request_json)
-
-            #下载前停止
-            if request.rule_number == 6:
-                break
 
             request.set_headers(self.__chromesome.login_header)
             self.fetch(request)
@@ -503,10 +500,7 @@ class RuleLinkSpider(BaseSpider):
         #yield downloader
         #下载后的存储信息和data结合
         if page_rule.extract_file_element:
-            data_files = EXT.FileExtractor(
-                dom, url, page_rule.extract_file_element,
-                spider_name=spider_name, cookies=cookies,
-                headers=headers).extract()
+            data_files = EXT.FileExtractor(response,dom, url, page_rule.extract_file_element,spider_name=spider_name, cookies=cookies,headers=headers).extract()
 
         #数据抽取
         #如果上一规则为关联,数据中才记录fid
@@ -537,7 +531,7 @@ class RuleLinkSpider(BaseSpider):
                                         cookies, headers).extract()
 
         elif page_rule.extract_url_type == PR.FORMAT_URL_TYPE:
-            requests = EXT.UrlFormatExtractor(dom, url, page_rule.extract_url_element, spider_name, next_rule_number, fid, next_associate, cookies,
+            requests = EXT.UrlFormatExtractor(response,dom, url, page_rule.extract_url_element, spider_name, next_rule_number, fid, next_associate, cookies,
                                               headers).extract()
         elif page_rule.extract_url_type == PR.NONE_URL_TYPE:
             pass
@@ -556,10 +550,10 @@ class RuleLinkSpider(BaseSpider):
 
         #下一页链接抽取和普通抽取的唯一区别是page_rule的number
         if page_rule.next_page_url_type == PR.EXTRACT_URL_TYPE:
-            next_page_requests = EXT.UrlExtractor(dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, associate, cookies,
+            next_page_requests = EXT.UrlExtractor(response,dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, associate, cookies,
                                                   headers).extract()
         elif page_rule.next_page_url_type == PR.FORMAT_URL_TYPE:
-            next_page_requests = EXT.UrlFormatExtractor(dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, next_associate,
+            next_page_requests = EXT.UrlFormatExtractor(response,dom, url, page_rule.next_page_url_element, spider_name, rule_number, fid, next_associate,
                                                         cookies, headers).extract()
         elif page_rule.next_page_url_type == PR.NONE_URL_TYPE:
             pass

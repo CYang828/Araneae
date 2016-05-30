@@ -46,8 +46,8 @@ if __name__ == '__main__':
     from gevent import monkey
     monkey.patch_all()
 
-    #c = DNA('Araneae.man.jintaiyang_setting')
-    c = DNA('Araneae.man.jintaiyang_gaozhong_setting')
+    c = DNA('Araneae.man.jintaiyang_setting')
+    #c = DNA('Araneae.man.jintaiyang_gaozhong_setting')
     spider = c.generator()
     spider.start()
     spider.end()

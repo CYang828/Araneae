@@ -12,7 +12,7 @@ import Araneae.utils.http as UTLH
 import Araneae.man.exception as EXP
 
 DEFAULT_DOWNLOADER_TIMEOUT = 30
-DEFAULT_DOWNLOADER_SLEEP_TIME = 5
+DEFAULT_DOWNLOADER_SLEEP_TIME = 3
 DEFAULT_DOWNLOADER_POOL_SIZE = 10
 DEFAULT_DOWNLOADER_SCHEDULER_TIMEOUT = 5
 
@@ -95,7 +95,9 @@ class BaseDownloader(object):
 
     def _download(self, file_obj):
         method = UTLH.validate_method(file_obj.method)
-
+               
+        print '下载文件结构体' 
+        print file_obj.json
         response = getattr(requests, method)(file_obj.url,
                                              proxies=file_obj.proxies,
                                              headers=file_obj.headers,
@@ -118,7 +120,7 @@ class WorkerDownloader(BaseDownloader):
     """
 
     def push(self, file_json):
-        self._scheduler.push(file_json)
+        return self._scheduler.push(file_json)
 
 
 class DistributedDownloader(BaseDownloader):
@@ -127,7 +129,7 @@ class DistributedDownloader(BaseDownloader):
     """
 
     def push(self, file_json):
-        self._scheduler.push(file_json)
+        return self._scheduler.push(file_json)
 
 
 if __name__ == '__main__':

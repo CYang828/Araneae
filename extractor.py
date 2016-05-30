@@ -28,11 +28,10 @@ class UrlExtractor(object):
     """
 
     def __init__(self, response, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
-        self.__response = response
+        self._response = response
         self.__dom = dom
         self.__url = url
         self.__page_rule = rule
-
         self._allow_regexes = [re.compile(regex, re.I) for regex in SET.revise_value(rule.get('allow', []))]
         self._deny_regexes = [re.compile(regex, re.I) for regex in SET.revise_value(rule.get('deny', []))]
         self._headers = rule.get('headers', {})
@@ -130,7 +129,7 @@ class UrlExtractor(object):
 
         for url in self._allow_urls:
             request = REQ.Request(
-                UTLH.replenish_url(self.__response, url),
+                UTLH.replenish_url(self._response, url),
                 **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number).set_associate(self._associate)
 
             self._allow_requests.append(request)
@@ -181,7 +180,8 @@ class UrlFormatExtractor(object):
     抽取格式化的url
     """
 
-    def __init__(self, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
+    def __init__(self, response, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
+        self._response = response
         self.__dom = dom
         self.__url = url
         self.__rule = rule
@@ -293,7 +293,7 @@ class UrlFormatExtractor(object):
 
         for url in self._urls:
             request = REQ.Request(
-                UTLH.replenish_url(self.__url, url), **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number)
+                UTLH.replenish_url(self._response, url), **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number)
             self._requests.append(request)
 
     def extract(self):
@@ -604,7 +604,7 @@ class DataExtractor(object):
 
 
 class FileExtractor(UrlExtractor):
-    def __init__(self, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
+    def __init__(self, response, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
         self._field = rule.get('field')
 
         if not self._field:
@@ -612,7 +612,7 @@ class FileExtractor(UrlExtractor):
 
         self._files = []
 
-        super(FileExtractor, self).__init__(dom, url, rule, spider_name, rule_number, fid, associate, cookies, headers)
+        super(FileExtractor, self).__init__(response, dom, url, rule, spider_name, rule_number, fid, associate, cookies, headers)
 
     def _url2file(self):
         file_args = {'method': self._method,
@@ -626,7 +626,7 @@ class FileExtractor(UrlExtractor):
         for url in self._allow_urls:
             file_name = hashlib.md5(url).hexdigest()
             file_args['file_name'] = file_name
-            file_obj = FILE.File(UTLH.replenish_url(self.url, url), **file_args)
+            file_obj = FILE.File(UTLH.replenish_url(self._response, url), **file_args)
             data = DT.Data(**{'%s_download' % self._field: file_name})
 
             self._files.append((data, file_obj))

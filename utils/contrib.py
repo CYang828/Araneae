@@ -13,7 +13,7 @@ from importlib import import_module
 
 def response2dom(response):
     #decode('utf8')转换成utf8，否则会报错
-    return lxml.html.soupparser.fromstring(response.content.decode('utf8'), features='html5lib')
+    return lxml.html.soupparser.fromstring(response.text, features='html5lib')
 
 def load_class(class_path, *targs, **kvargs):
     try:
@@ -30,10 +30,9 @@ def load_class(class_path, *targs, **kvargs):
 def printfinger_request(request):
     try:
         request = json.loads(request)
-        spider_name = request['spider_name']
         url = request['url']
         method = request['method']
-        return md5(spider_name + url + method).hexdigest()
+        return md5(url + method).hexdigest()
     except ValueError:
         return md5(request)
 

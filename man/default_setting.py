@@ -69,7 +69,7 @@ LOGIN_HEADER = {}
 #爬虫初始地址
 FIRST_URLS = []
 #request中间件
-REQUEST_MIDDLEWARE = ['Araneae.middleware.UserAgentMiddleware']
+REQUEST_MIDDLEWARE = ['Araneae.middleware.UserAgentMiddleware','Araneae.middleware.ProxyMiddleware']
 #data中间件
 DATA_MIDDLEWARE = []
 #file中间件

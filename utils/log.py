@@ -8,9 +8,11 @@ import inspect
 from Araneae.net.rpc import RPCNativeBase
 from termcolor import colored
 
-
 def set_logging(level, filename, fmt, datefmt):
-    logging.basicConfig(level=level, format=fmt, datefmt=datefmt, filename=filename)
+    logging.basicConfig(level=level,
+                        format=fmt,
+                        datefmt=datefmt,
+                        filename=filename)
 
 
 #更换颜色
@@ -41,7 +43,6 @@ def error(msg, color=None):
 def critical(msg, color=None):
     msg = color_string(msg, color=color) if color else msg
     logging.critical(msg)
-
 
 #  实现基本的 Logger 类，使用 logging.getLogger(logger_name) 获取对象
 #  当构造函数 name 参数字符串以 '.log' 结尾时，写入文件。否则直接打印在 console 上

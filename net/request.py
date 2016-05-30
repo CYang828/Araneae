@@ -108,12 +108,8 @@ class Request(object):
         self.__headers['User-Agent'] = user_agent
         return self
 
-    def set_http_proxy(self, proxy):
-        self.__proxies = {'http': proxy}
-        return self
-
-    def set_https_proxy(self, proxy):
-        self.__proxies = {'https': proxy}
+    def set_proxy(self, proxy):
+        self.__proxies = proxy
         return self
 
     def set_associate(self, associate):

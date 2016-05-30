@@ -62,13 +62,14 @@ class UserAgentMiddleware(RequestMiddleware, RandomMiddleWare):
 
 
 class ProxyMiddleware(RequestMiddleware, RandomMiddleWare):
-    def __init__(self, module):
-        super(ProxyMiddleware, self).__init__('')
+    def __init__(self):
+        super(ProxyMiddleware, self).__init__('Araneae.man.proxy')
         self.set_key('PROXY_IP')
 
     def transport(self, request):
         proxy = self.random()
         request.set_proxy(proxy)
+        print request.json
         return request
 
 
