@@ -473,9 +473,9 @@ class DataExtractor(object):
 
                 register_len = len(res_register)
                 middle = res_register[0]['result'][0]
-                import json
-                print 'res_register'
-                print json.dumps(res_register, ensure_ascii=False)
+                #import json
+                #print 'res_register'
+                #print json.dumps(res_register, ensure_ascii=False)
 
                 for i_field in range(register_len):
                     if i_field < register_len - 1:
@@ -506,8 +506,8 @@ class DataExtractor(object):
             datas = []
             raw_data = {}
             import json
-            print 'middle'
-            print json.dumps(middle, ensure_ascii=False)
+            #print 'middle'
+            #print json.dumps(middle, ensure_ascii=False)
 
             for mid in middle:
                 for i_f, f in enumerate(field):
