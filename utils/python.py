@@ -3,6 +3,18 @@
 import six
 
 
+def unique(list_, key=lambda x: x):
+    """efficient function to uniquify a list preserving item order"""
+    seen = set()
+    result = []
+    for item in list_:
+        seenkey = key(item)
+        if seenkey in seen:
+            continue
+        seen.add(seenkey)
+        result.append(item)
+    return result
+
 def to_bytes(text, encoding=None, errors='strict'):
     """Return the binary representation of `text`. If `text`
     is already a bytes object, return it as-is."""

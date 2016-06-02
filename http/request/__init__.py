@@ -92,7 +92,6 @@ class Request(LiveObject):
 
         return cache[include_headers] 
             
-    @classmethod
     def replace(self, *args, **kwargs):
         for x in ['url','callback','method','encoding','proxies','priority','headers',
                   'data','params','auth','cookies','json','dont_filter','errback']:
