@@ -50,7 +50,7 @@ MERGE_DATA_COLLECTION = 'merge_result'
 LASTING = {'type': 'mongo', 'host': '172.18.4.52', 'port': '27017', 'password': '', 'timeout': 5}
 
 #登录的headers
-LOGIN_HEADER = {'Cookie': 'DWRSESSIONID=mAUMO8vo8Uvr1vbiRI68BZRt5kl; Hm_lvt_acbe332524305cf7430995bc4404a862=1464232093; JSESSIONID=abcFQNItJngAZbnPK9-tv; jsessionid=0AEA67AC6C8EF4A88A88EE69A41E2018'}
+LOGIN_HEADER = {'Cookie': 'DWRSESSIONID=Kjb7hqCX8nlcaQtHiahgrtrzzkl; Hm_lvt_acbe332524305cf7430995bc4404a862=1464232093; JSESSIONID=abcRWxbe5O4ZN-fArFFuv; jsessionid=9914E09256A883A414600D3EA32A7F57'}
 
 #爬虫初始地址
 FIRST_URLS = [

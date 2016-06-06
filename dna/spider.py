@@ -21,6 +21,7 @@ import Araneae.extractor as EXT
 import Araneae.utils.log as UTLL
 import Araneae.middleware as MID
 import Araneae.net.request as REQ
+import Araneae.utils.http as UTLH
 import Araneae.man.exception as EXP
 import Araneae.utils.contrib as UTLC
 import Araneae.dna.chromesome as CHM
@@ -156,7 +157,7 @@ class BaseSpider(object):
                 response = request.fetch(self._request_timeout)
                 break
             except (EXP.RequestConnectionError, EXP.RequestError, EXP.RequestTimeoutError, EXP.RequestTooManyRedirectsError) as e:
-                self.recorder('ERROR', str(e))
+                self.recorder('ERROR', e)
                 retry_time -= 1
                 continue
 
@@ -481,7 +482,8 @@ class RuleLinkSpider(BaseSpider):
         """
         self.recorder('INFO', '规则号码【%d】' % (page_rule.number))
 
-        dom = UTLC.response2dom(response)
+        html = UTLH.escape_jsonp(response.text)
+        dom = UTLC.html2dom(html)
         url = response.url
         headers = self._login_header
         cookies = response.cookies
@@ -499,8 +501,10 @@ class RuleLinkSpider(BaseSpider):
         #如果有就进行下载       
         #yield downloader
         #下载后的存储信息和data结合
-        if page_rule.extract_file_element:
+        if page_rule.extract_file_type == PR.EXTRACT_FILE_TYPE:
             data_files = EXT.FileExtractor(response,dom, url, page_rule.extract_file_element,spider_name=spider_name, cookies=cookies,headers=headers).extract()
+        elif page_rule.extract_file_type == PR.FORMAT_FILE_TYPE:
+            data_files = EXT.FileFormatExtractor(response,dom, url, page_rule.extract_file_element, spider_name=spider_name,cookies=cookies,headers=headers).extract()
 
         #数据抽取
         #如果上一规则为关联,数据中才记录fid

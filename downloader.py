@@ -27,7 +27,7 @@ class DownloadProcessor(object):
     """
 
     def __init__(self, file_path, response, file_obj):
-        content_type_dict = {'application/octet-stream': self.octet_stream, 'image/jpeg': self.image_jpeg}
+        content_type_dict = {'application/octet-stream': self.octet_stream, 'image/jpeg': self.image_jpeg,'video/mp4':self.mp4}
 
         content_type = response.headers['Content-Type']
         method = content_type_dict.get(content_type)
@@ -35,7 +35,8 @@ class DownloadProcessor(object):
         if method:
             method(file_path, response, file_obj)
         else:
-            raise EXP.DownloaderError('没有%s类型的content处理器' % content_type)
+            print '没有%s类型的content处理器' % content_type.encode('utf8')
+            #raise EXP.DownloaderError('没有%s类型的content处理器' % content_type.encode('utf8'))
 
     def octet_stream(self, file_path, response, file_obj):
         header_context = response.headers['Content-Disposition']
@@ -50,10 +51,16 @@ class DownloadProcessor(object):
                 f.write(response.content)
         else:
             raise EXP.DownloaderError('HTTP协议中没有文件名')
-
+       
     def image_jpeg(self, content):
         pass
 
+    def mp4(self,file_path,response,file_obj):
+        file_type = '.mp4'        
+        file_path = file_path + file_obj.file_name + file_type
+
+        with open(file_path, "wb") as f:
+            f.write(response.content)
 
 class BaseDownloader(object):
     """
@@ -74,6 +81,7 @@ class BaseDownloader(object):
         self._scheduler = SCH.DupeScheduler(scheduler, dupefilter)
         self._pool = GEVP.Pool(pool_size)
         download_threads = GEVT.start_new_thread(self._processor)
+        self._pool.join()
 
     def _processor(self):
         while True:
@@ -98,11 +106,15 @@ class BaseDownloader(object):
                
         print '下载文件结构体' 
         print file_obj.json
+        print '正在下载'
         response = getattr(requests, method)(file_obj.url,
                                              proxies=file_obj.proxies,
                                              headers=file_obj.headers,
                                              cookies=file_obj.cookies,
-                                             timeout=DEFAULT_DOWNLOADER_TIMEOUT)
+                                             timeout=DEFAULT_DOWNLOADER_TIMEOUT,
+                                             stream=True)
+
+        print '下载完成:%d字节' % len(response.content)
 
         DownloadProcessor(self._file_path, response, file_obj)
 

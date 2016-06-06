@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<title>2016年希望杯全国数学邀请赛真题解析(六年级)-新东方在线网络课堂</title>
+<meta name="keywords" content=""/>
+<meta name="description" content="新东方在线奥数名师第一时间视频解析2016第十四届希望杯四年级复赛真题答案，帮助考生和家长第一时间了解考试情况!"/>
+	
+<link rel="stylesheet" type="text/css" href="http://img.koolearn.com/gkk/css/base.css"/>
+<link rel="stylesheet" type="text/css" href="http://img.koolearn.com/gkk/css/content.css"/>
+<script type="text/javascript" src="http://images.koolearn.com/www/subject/script/jquery-1.8.2.min.js"></script>
+<script type="text/javascript" src="http://images.koolearn.com/www/subject/public/common.js"></script>
+<script type="text/javascript" src="http://img.koolearn.com/gkk/js/jquery.SuperSlide.2.1.1.js"></script>
+<script type="text/javascript" src="http://img.koolearn.com/v2/img/public_video/js/addload.js"></script> 
+<script type="text/javascript" src="http://images.koolearn.com/www/subject/script/publicLayer.js"></script>
+
+<script type="text/javascript" src="http://img.koolearn.com/gkk/js/isLogin.js"></script>
+
+
+<script type="text/javascript" src="http://img.koolearn.com/gkk/js/tupg.js"></script> 
+
+<script src="http://img.koolearn.com/gkk/js/jquery.pagination.js" type="text/javascript"></script> 
+
+<script src="http://img.koolearn.com/gkk/js/gundong.js" type="text/javascript"></script>
+<script src="http://img.koolearn.com/gkk/js/gundong1.js" type="text/javascript"></script>
+
+
+<script type="text/javascript" src="http://img.koolearn.com/gkk/js/DD_belatedPNG_0.0.8a-min.js"></script>
+<script>
+	DD_belatedPNG.fix(".nodup");
+	DD_belatedPNG.fix(".nodleft");
+	DD_belatedPNG.fix(".am_1");
+	DD_belatedPNG.fix(".am_2");
+	DD_belatedPNG.fix(".bds_qzone1");
+	DD_belatedPNG.fix(".bds_sqq1");
+	DD_belatedPNG.fix(".bds_tsina1");
+	DD_belatedPNG.fix(".bds_weixin1");
+	DD_belatedPNG.fix(".next");
+	DD_belatedPNG.fix(".prev");
+	DD_belatedPNG.fix(".Zao1");
+	DD_belatedPNG.fix(".gd_span");
+	
+</script>
+
+
+
+<script type="text/javascript">
+
+$(function() {
+	//课程滚动内容的切换
+	$(".tab").ontabs("#nav_content li",".publick","active","click");   //点击切换内容
+	/*hover事件*/
+	$("a[name = 'hover']").hover(function() {
+		$(this).append("<img id='showHover' src='images/icon/iconfont-hover.png' />");
+		$("#showHover").css({
+			"position" : "absolute",
+			"left" : "0",
+			"top" : "0",
+			"width" : "80px",
+			"height" : "80px",
+			"z-index" : 100
+		});
+
+	}, function() {
+		$("#showHover").remove();
+	});
+				
+});
+</script>
+
+
+
+
+
+
+<!-- 登录 -->
+
+<script>
+	var _auth=0;
+	var _uname=0;
+	var _uid=0;
+	function abc(obj){
+		_auth =obj.auth.len;
+		_uname = obj.auth.name;
+		_uid = obj.auth.id;
+	}
+$(function(){
+	check_login();
+});
+	function check_login(){
+		if(_auth){
+			$('#no_lgon').hide();
+			$('#commend_area').removeAttr("disabled ","disabled ")
+
+		}else{
+			$('#no_lgon').show();
+			$('#commend_area').attr('disabled','disabled');
+		}
+	}
+</script>
+
+<script type="text/javascript">
+$(function(){
+	var boxw=$(".vlist").width();
+	$(".nodup").click(function(){
+		$(".vlist,.titm2").stop().animate({width:'26px'},"slow",
+		function(){$(".titm2").hide()});
+		$(".video").animate({marginLeft:'125px'},'slow');
+		$(".nodup").hide();
+		$(".nodleft").show();		
+	});
+	$(".nodleft").click(function(){
+			$(".titm2").show();
+			$(".vlist,.titm2").stop().animate({width:'360px'},"slow");
+			$(".video").animate({marginLeft:'0'},'slow');
+			$(".nodup").show();
+			$(".nodleft").hide();		
+	});
+
+	function sizeLt1200(){
+		var w = $(window).width();
+		if(w<1200){
+		$(".vlist,.titm2").stop().animate({width:'26px'},"slow",
+			function(){$(".titm2").hide()});
+			$(".video").stop(true).animate({marginLeft:'125px'},'slow');
+			$(".nodup").hide();
+			$(".nodleft").show();
+		}else{
+			$(".titm2").show();
+			$(".vlist,.titm2").stop().animate({width:'360px'},"slow");
+			$(".video").stop(true).animate({marginLeft:'0'},'slow');
+			$(".nodup").show();
+			$(".nodleft").hide();	
+		}
+
+	}
+	sizeLt1200();
+	$(window).resize(sizeLt1200);
+
+	
+	
+	
+	//登陆--点击登录的时候判断是否在其他地方登录，如果登陆，就不显示登录框
+	$('.lgon').click(function(){
+		// window.login();
+		$.ajax({
+			   type:"GET",
+			   url:"http://www.koolearn.com/common_lms/public_top.jsp?callback=?",
+			   dataType:"jsonp",
+			   success:function(re){
+					//alert(re.auth.len);
+				   var _auth = re.auth.len;
+				   if(_auth==1){
+					   _uname = re.auth.name;
+				       _uid = re.auth.id;
+					   $('#no_lgon').hide();
+					   $('#commend_area').removeAttr("disabled ","disabled ")
+				   }else{
+					//alert(2);
+					   window.login();
+				   }
+				},
+				error: function(){
+					window.login();
+				}
+		});
+			
+	});
+});
+</script>
+
+<script type="text/javascript">
+$(function(){
+	//gd2 遮罩
+
+	$('.Mben').hover(function(){
+		$(this).find(".Zao1").css("display","block");
+		$(this).find(".gd_span").css("display","block");
+		},function(){
+			$(this).find(".Zao1").css("display","none");
+			$(this).find(".gd_span").css("display","block");
+			});
+});
+	
+</script>
+
+<script src="http://www.koolearn.com/common_lms/public_top.jsp?callback=abc"></script>
+
+		<!--http://www.koolearn.com/common_lms/public_top.jsp?callback=abc  -->
+</head>
+
+<body>
+<!--顶部-->
+<div class="public_top" data-width="1200"></div>
+<script type="text/javascript" src="http://www.koolearn.com/img/js/sea.js" data-main="http://www.koolearn.com/js/public_top"></script>
+<!--搜索公共头部-->
+
+<script>
+$(function(){
+    //导航上全部课程显隐
+    $(".search2014_snav").hover(function(){
+        $(this).find("h2").addClass("h2bgs");
+        $(this).find(".search2014_snavbx").show();
+    },function(){
+        $(this).find("h2").removeClass("h2bgs");
+        $(this).find(".search2014_snavbx").hide();
+    });
+    $(".search2014_snavbx").each(function(){
+        $(this).hover(function(){
+            var pageHeight2=document.documentElement.clientHeight;
+            var scrollHeight2=document.documentElement.scrollTop || document.body.scrollTop;
+            var childTop=$(this).offset().top-scrollHeight2+$(this).find(".search2014_snav_child").height()+14;
+            $(this).addClass("search2014_snavsel");
+            if(childTop>=pageHeight2){
+                $(this).find(".search2014_snav_child").css("top",pageHeight2-childTop);
+            }else{
+                $(this).find(".search2014_snav_child").css("top","0px");
+            }
+            $(this).find(".search2014_snav_child").show();  
+        },function(){
+            $(".search2014_snavbx").removeClass("search2014_snavsel");
+            $(".search2014_snavbx").find(".search2014_snav_child").hide();
+        })
+    });
+})
+</script>
+<style>
+/* 浮动及定位样式 */
+.fc:after{content:".";display:block;height:0;clear:both;visibility:hidden;}
+.fc{display:inline-block;*zoom:1;}
+/* Hides from IE-mac */ 
+* html .fc{height:1%;}
+.fc{display: block;} 
+/* End hide from IE-mac */
+.fl{float:left;display:inline;}
+.fr{float:right;}
+.pos_a{position:absolute;}
+.pos_r{position:relative;}
+.ft14{font:normal 14px "微软雅黑";}
+.ft16{font:normal 16px "微软雅黑";}
+.fwb{font-weight:bold;}
+.white a,.white a:link,.white a:visited,.white a:active,a.white,a.white:link,a.white:visited,a.white:active{color:#fff;}
+a.green_hover:hover,.green_hover a:hover{color:#0DBBA1;} /*经过绿色*/
+.search2014_bgs,.search2014_snav_ico,.search2014_arrow_ico{background:url(http://img.koolearn.com/www/img/bgs_gb.png) no-repeat;_background:url(http://www.koolearn.com/img/img/bgs.gif) no-repeat;}
+.search2014_icobx,.search2014_snav_ico,.search2014_arrow_ico{display:inline-block;overflow:hidden;vertical-align:middle;}
+/*第一部分样式*/
+.search2014_logo{padding:29px 0 34px;}
+.search2014_search_t{height:39px;border:2px solid #0DBBA1;border-right:none;}
+.search2014_search_ico{width:18px;height:19px;margin:10px 15px;background-position:-226px -94px;}
+.search2014_search_t input{height:22px;border:none 0px;line-height:22px;color:#b6b6b6;vertical-align:middle;}
+.search2014_search_btn{position:absolute;right:0;top:0;:0height:43px;margin:-2px 0 0 0;background-color:#0DBBA1;line-height:43px; font:bold 16px/43px "微软雅黑";text-align:center;}
+.search2014_search_btn:hover{background-color:#268b0a;text-decoration:none;}
+.search2014_search_b a{line-height:28px;padding-right:6px;font-size:12px;font-family:"宋体";}
+.search2014_search_b a.active_btn{padding-right:22px;background:url(http://www.koolearn.com/img/img/award.gif) no-repeat right center;}
+.search2014_search_b a.active_btn:hover{color:#FD8712;}
+.search2014_hrtel{margin-top:42px;}
+/* 第一部分主导航 */
+.search2014_navwp{width:100%;height:40px;background:#0DBBA1;}
+#search2014_nav{margin:0 auto;}
+#search2014_nav a{display:inline-block;height:40px;line-height:40px;}
+#search2014_nav a:hover{background:#0B9F89;text-decoration:none;}
+/* 侧导航 */
+.search2014_brwp{z-index:99;}
+.search2014_snav{position:absolute;z-index:99;left:0;top:-39px;width:218px;background:#fff;}
+.search2014_snav h2{position:relative;z-index:99;width:220px;height:40px;_height:32px;_padding-top:8px;margin:-1px 0 0 -1px;background:#0B9F89;color:#fff;line-height:40px; background:#0B9F89 url(http://www.koolearn.com/search/images_new/arr1.png) no-repeat 195px 18px;}
+.search2014_snav h2.h2bgs{background:#0B9F89 url(http://www.koolearn.com/search/images_new/arr2.png) no-repeat 195px 18px;}
+.search2014_snavbx{display:none;position:relative;z-index:99;width:202px;padding:10px 8px 0;margin-top:-1px;line-height:22px;}
+.search2014_snavsel{width:202px;border-left:2px solid #0DBBA1;margin-left:-1px;padding-left:7px;background-color:#eafbe5;}
+.search2014_snavbx h3{padding:0 4px;}
+.search2014_snavbx p{padding:3px 4px 4px;border-bottom:1px dotted #e1e1e1;font-size:12px;}
+.search2014_snavbx p a,.search2014_snavbx h3 a{display:inline-block;padding-right:6px;font-family:"微软雅黑",Arial;}
+.search2014_snavbx p a{font-family:Arial,"宋体";}
+.search2014_snavbx p span{color:#d8d8d8;}
+.search2014_snavbx h3{font-size:14px;font-family:"微软雅黑";}
+.search2014_snavbx p a.pr0{padding-right:0;}
+.search2014_snav_icox{width:14px;height:17px;margin:0 10px 0 14px;_margin-top:4px;background-position:-373px -94px;}
+.search2014_snav_ico{width:18px;height:20px;margin-right:5px;}
+.search2014_snav_ico1{background-position:0 -57px;}
+.search2014_snav_ico2{background-position:-34px -57px;}
+.search2014_snav_ico3{background-position:-68px -57px;}
+.search2014_snav_ico4{background-position:-102px -57px;}
+.search2014_snav_ico5{background-position:-136px -57px;}
+.search2014_snav_ico6{background-position:-170px -57px;}
+.search2014_snav_ico7{background-position:-204px -57px;}
+.search2014_snav_ico8{background-position:-238px -57px;}
+.search2014_snav_child{position:absolute;z-index:95;left:218px;top:0;width:495px;padding:5px 20px 5px 27px;background:#fff;border:1px solid #e5e5e5;box-shadow:0 0 8px #ccc;}
+.search2014_snav_child dt{height:40px;margin-bottom:5px;border-bottom:1px solid #d8d8d8;line-height:40px;_height:30px;_padding-top:10px;_line-height:30px;}
+.search2014_snav_child dt a{padding-right:23px;}
+.search2014_snav_child dd a,.search2014_snav_child dd span{padding-right:15px;}
+.search2014_snav_child dd{padding:8px 0;border-bottom:1px dotted #e1e1e1;}
+.search2014_arrow_ico{width:9px;height:11px;margin-right:5px;background-position:-254px -94px;}
+.search2014_snav_child p{border:none;padding:0;}
+.search2014_snav_child em{font-style:normal;font-weight:bold;line-height:22px;color:#575757;}
+.search2014_snavbx p.nobr,.search2014_snav_child dd.nobr,.search2014_snavsel p{border-color:#fff;}
+.search2014_hotico{height:18px;padding:0 5px 0 8px;margin-left:5px;background:url(http://www.koolearn.com/img/img/ico1.png) no-repeat left top;font:normal 12px/16px "宋体";color:#fff;}
+.search2014_hotico a,.search2014_hotico a:link,.search2014_hotico a:visited,.search2014_hotico a:active{padding-right:0;color:#fff;font-family:"宋体";}
+.search2014_sidebtn1{width:45px;}
+a.search2014_topbtn1,a.search2014_topbtn2,a.search2014_topbtn3{width:45px;height:45px;margin-bottom:10px;background-color:#676767;background-position:-444px -42px;display:block;opacity:0.9;filter:alpha(opacity=90);}
+a.search2014_topbtn2{background-position:-339px -120px;}
+a.search2014_topbtn3{width:41px;height:38px;padding:7px 0 0 4px;color:#fff;line-height:16px;letter-spacing:3px;}
+a.search2014_topbtn1:hover,a.search2014_topbtn2:hover,a.search2014_topbtn3:hover{opacity:1;filter:alpha(opacity=100);text-decoration:none;}
+
+/* 1200屏样式 */
+#search2014_hr,.search2014_brwp{width:1200px;margin:0 auto;}
+.search2014_search{width:481px;margin:43px 0 0 100px;}
+.search2014_search_t{width:606px;}
+.search2014_search_t input{width:448px;}
+.search2014_search_btn{width:98px;}
+#search2014_nav{width:960px;padding-left:240px;}
+#search2014_nav a{padding:0 13px;}
+/* 1000屏样式 */
+@media(max-width:1200px){
+    #search2014_hr,.search2014_brwp{width:1000px;margin:0 auto;}
+    .search2014_search{width:481px;margin:43px 0 0 87px;}
+    .search2014_search_t{width:470px;}
+    .search2014_search_t input{width:312px;}
+    .search2014_search_btn{width:98px;}
+    #search2014_nav{width:775px;padding-left:225px;}
+    #search2014_nav a{padding:0 7px;}
+}
+</style>
+<!-- IE9以下样式 -->
+<!--[if lt IE 9]>
+<style>
+.search2014_w1000{min-width:1000px;}
+.search2014_w1000,.search2014_w1000 .search2014_brwp{width:1000px;margin:0 auto;}
+.search2014_w1000 .search2014_search{width:481px;margin:43px 0 0 87px;}
+.search2014_w1000 .search2014_search_t{width:470px;}
+.search2014_w1000 .search2014_search_t input{width:312px;}
+.search2014_w1000 .search2014_search_btn{width:98px;}
+.search2014_w1000 #search2014_nav{width:775px;padding-left:225px;}
+.search2014_w1000 #search2014_nav a{padding:0 7px;}
+</style>
+<script>
+    $(window).bind("load resize",function(){if($(window).width()<1200){$("#search2014_hr").addClass("search2014_w1000");}else{$("#search2014_hr").removeClass("search2014_w1000");}
+    })
+</script>
+<![endif]--> 
+</style>
+<div id="search2014_hr" class="fc">
+
+    <div class="search2014_logo pos_r fl"><a title="新东方在线" target="_self" href="http://www.koolearn.com"><img alt="新东方在线" src="http://www.koolearn.com/img/img/logo.jpg"></a></div>
+    <div class="search2014_search fl">
+        <form name="search" id="subme" method="get" action="http://www.koolearn.com/query">
+            <div class="search2014_search_t pos_r">
+                <em class="search2014_search_ico search2014_bgs search2014_icobx"></em>
+                <input type="hidden" value="queryCourse" name="_method">
+                <input type="text" autocomplete="off" tit="搜索您感兴趣的课程" onkeyup="keyWordMemory()" value="2015在职硕士" name="keyword" id="kookeyword" style="color: rgb(0, 0, 0);">
+                <a class="search2014_search_btn search2014_icobx white" href="javascript:;" onclick="$('#subme').submit();return false;" target="_self">课程搜索</a>
+                </div>
+        </form>
+        <p class="search2014_search_b green_hover"><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E8%80%83%E7%A0%94%E8%8B%B1%E8%AF%AD" class="green">考研英语</a><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E8%80%83%E7%A0%94%E6%94%BF%E6%B2%BB">考研政治</a><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E8%81%8C%E7%A7%B0%E8%8B%B1%E8%AF%AD">职称英语</a><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E6%96%B0%E6%A6%82%E5%BF%B5">新概念</a><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E9%9B%85%E6%80%9D">雅思</a><a target="_blank" href="http://www.koolearn.com/query?_method=queryCourse&amp;keyword=%E6%89%98%E7%A6%8F">托福</a><a target="_blank" href="http://cet4.koolearn.com/zhenti/">四级真题</a><a target="_blank" href="http://english.koolearn.com/zhuanti/yingyujiao/" class="green">免费英语角</a><a target="_blank" href="http://bbs.koolearn.com/t-4082574-1-1.html" class="active_btn yellow">和老师聊美剧</a></p>
+    </div>
+    <a href="http://help.koolearn.com/" class="search2014_hrtel search2014_icobx fr"><img width="168" height="38" src="http://img.koolearn.com/v2/img/tel.png"></a>
+    </div>
+    <div class="search2014_navwp">
+        <div class="fwb ft14 white" id="search2014_nav"><a target="_self" href="http://www.koolearn.com">首页</a><a href="http://zhibo.koolearn.com/">直播课堂</a><a href="http://toefl.koolearn.com/">托福</a><a href="http://ielts.koolearn.com/">雅思</a><a href="http://kaoyan.koolearn.com/">考研</a><a href="http://cet4.koolearn.com/">四级</a><a href="http://cet6.koolearn.com/">六级</a><a href="http://zhongkao.koolearn.com">初中</a><a href="http://gaokao.koolearn.com">高中</a><a href="http://nce.koolearn.com/">新概念</a><a href="http://www.koolearn.com/kouyu/">外教1对1</a><a href="http://zhicheng.koolearn.com/">职称英语</a><a href="http://language.koolearn.com/jp/">日语</a><a href="http://shuoshi.koolearn.com/tdxl/">同等学力</a><a href="http://yixue.koolearn.com/">医学</a></div>
+    </div>
+</div>
+<div class="search2014_brwp pos_r">
+    <!-- 侧导航 -->
+    <div class="search2014_snav green_hover">
+        <h2 class="ft16"><em class="search2014_bgs search2014_snav_icox search2014_icobx"></em>全部课程分类</h2>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico1"></em>出国留学</h3>
+            <p><a href="http://toefl.koolearn.com">托福</a><a href="http://ielts.koolearn.com">雅思</a><a href="http://gre.koolearn.com">GRE</a><a href="http://gmat.koolearn.com">GMAT</a><a href="http://sat.koolearn.com">SAT</a><a href="http://liuxue.koolearn.com/ap/" class="pr0">AP</a></p>
+            <dl style="top: -34px; display: none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://toefl.koolearn.com/"><em class="search2014_arrow_ico"></em>托福</a> <a href="http://ielts.koolearn.com/"><em class="search2014_arrow_ico"></em>雅思</a> <a href="http://gre.koolearn.com/"><em class="search2014_arrow_ico"></em>GRE</a> <a href="http://gmat.koolearn.com/"><em class="search2014_arrow_ico"></em>GMAT</a> <a href="http://sat.koolearn.com/"><em class="search2014_arrow_ico"></em>SAT</a> <a href="http://liuxue.koolearn.com/ap/"><em class="search2014_arrow_ico"></em>AP</a></dt>
+                <dd>
+                    <em>英联邦留学</em>
+                    <p><a href="http://ielts.koolearn.com/vip/">雅思外教旗舰VIP</a><span>|</span><a href="http://ielts.koolearn.com/chongfen/">雅思33天限时冲分</a><span>|</span><a href="http://ielts.koolearn.com/">雅思考前急训VIP</a><span>|</span><a href="http://ielts.koolearn.com/yimin/">雅思移民</a></p>
+                </dd>
+                <dd>
+                    <em>北美留学</em>
+                    <p><a href="http://toefl.koolearn.com/chongfen/">托福目标冲分</a><span>|</span><a href="http://toefl.koolearn.com/quancheng/">托福精品全程班</a><span>|</span><a href="http://toefl.koolearn.com/tingli/">托福听力</a><span>|</span><a href="http://toefl.koolearn.com/yuedu/">托福阅读</a><span>|</span><a href="http://toefl.koolearn.com/kouyu/">托福口语</a><br><a href="http://toefl.koolearn.com/xiezuo/">托福写作</a><span>|</span><a href="http://toefl.koolearn.com/cihui/">托福词汇</a><span>|</span><a href="http://sat.koolearn.com/">SAT</a><span>|</span><a href="http://liuxue.koolearn.com/ap/">AP</a><span>|</span><a href="http://gre.koolearn.com/">GRE</a><span>|</span><a href="http://gmat.koolearn.com/">GMAT</a></p>
+                </dd>
+                <dd>
+                    <em>日韩留学</em>
+                    <p><a href="http://language.koolearn.com/jp/">日语能力考（N1~N5）</a><span>|</span><a href="http://language.koolearn.com/kr/">韩语能力考（初级、中级、高级）</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em>欧洲留学</em>
+                    <p><a href="http://language.koolearn.com/">德福考试</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico2"></em>研究生<span class="icobx search2014_hotico"><a href="http://kaoyan.koolearn.com">考研</a></span></h3>
+            <p><a href="http://kaoyan.koolearn.com">考研</a><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA</a><a href="http://kaobo.koolearn.com">考博</a><a href="http://shuoshi.koolearn.com/zzlk/">在职联考</a><a href="http://shuoshi.koolearn.com/tdxl/" class="pr0">同等学力</a></p>
+            <dl style="top: -179.083px; display: none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://kaoyan.koolearn.com"><em class="search2014_arrow_ico"></em>2015考研</a> <a href="http://kaoyan.koolearn.com/zhuanti/mba/"><em class="search2014_arrow_ico"></em>MBA</a> <a href="http://kaobo.koolearn.com/"><em class="search2014_arrow_ico"></em>考博</a> <a href="http://shuoshi.koolearn.com/zzlk/"><em class="search2014_arrow_ico"></em>在职联考</a> <a href="http://shuoshi.koolearn.com/tdxl/"><em class="search2014_arrow_ico"></em>同等学力</a></dt>
+                <dd>
+                    <em><a href="http://kaoyan.koolearn.com">2015考研</a> <a href="http://www.koolearn.com/product/30267_1.html">2014考研复试通用课程</a> <a href="http://www.koolearn.com/product/30450_1.html">MPAcc会计硕士专项复试班</a></em>
+                    <p><a href="http://kaoyan.koolearn.com/">考研全科</a><span>|</span><a href="http://kaoyan.koolearn.com/yingyu/">考研英语</a><span>|</span><a href="http://kaoyan.koolearn.com/zhengzhi/">考研政治</a><span>|</span><a href="http://kaoyan.koolearn.com/shuxue/">考研数学</a><span>|</span><a href="http://kaoyan.koolearn.com/zhuanyeke/">考研专业课</a><span>|</span><a href="http://kaoyan.koolearn.com/zhuanshuo/">专业硕士</a><br><a href="http://kaoyan.koolearn.com/zhuanti/xy/">西医综合</a><span>|</span><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA</a><span>|</span><a href="http://kaoyan.koolearn.com/yishu/">艺术考研</a><span>|</span><a href="http://kaoyan.koolearn.com/vip/">考研直通车</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://kaobo.koolearn.com/">考博</a></em>
+                    <p><a href="http://www.koolearn.com/product/26368_1.html">通用考博英语</a><span>|</span><a href="http://www.koolearn.com/product/26369_1.html">医学考博英语</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA</a></em>
+                    <p><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA提前面试</a><span>|</span><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA笔试</a><span>|</span><a href="http://kaoyan.koolearn.com/zhuanti/mba/">MBA复试</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://shuoshi.koolearn.com/zzlk/">十月在职联考</a></em>
+                    <p><a href="http://shuoshi.koolearn.com/zzlk/">联考英语</a><span>|</span><a href="http://shuoshi.koolearn.com/zzlk/">GCT</a><span>|</span><a title="法律硕士 J.M" href="http://shuoshi.koolearn.com/zzlk/">法律硕士</a><span>|</span><a href="http://shuoshi.koolearn.com/zzlk/">工商管理硕士</a><span>|</span><a href="http://shuoshi.koolearn.com/zzlk/">公共管理硕士</a><br><a href="http://shuoshi.koolearn.com/zzlk/">会计硕士</a><span>|</span><a href="http://shuoshi.koolearn.com/zzlk/">教育硕士</a><span>|</span><a href="http://shuoshi.koolearn.com/zzlk/">艺术硕士</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://shuoshi.koolearn.com/tdxl/">五月同等学力</a></em>
+                    <p><a href="http://shuoshi.koolearn.com/tdxl/">英语</a><span>|</span><a href="http://shuoshi.koolearn.com/tdxl/">临床医学综合</a><span>|</span><a href="http://shuoshi.koolearn.com/tdxl/">法学综合</a><span>|</span><a href="http://shuoshi.koolearn.com/tdxl/">经济学综合</a><span>|</span><a href="http://shuoshi.koolearn.com/tdxl/">工商管理</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico3"></em>大学</h3>
+            <p><a href="http://cet4.koolearn.com">英语四级</a><a href="http://cet6.koolearn.com">英语六级</a><a href="http://tem.koolearn.com">专四专八</a><a href="http://english.koolearn.com/zhuanti/2014toeic/" class="pr0">托业</a></p>
+            <dl style="top: -136.167px; display: none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://cet4.koolearn.com/"><em class="search2014_arrow_ico"></em>英语四级</a> <a href="http://cet6.koolearn.com/"><em class="search2014_arrow_ico"></em>英语六级</a> <a href="http://tem.koolearn.com/tem4/"><em class="search2014_arrow_ico"></em>专业四级</a> <a href="http://tem.koolearn.com/tem8/"><em class="search2014_arrow_ico"></em>专业八级</a> <a href="http://english.koolearn.com/zhuanti/2014toeic/"><em class="search2014_arrow_ico"></em>托业</a></dt>
+                <dd>
+                    <em><a href="http://cet4.koolearn.com">英语四级</a></em>
+                    <p><a href="http://cet4.koolearn.com/">四级vip全程</a><span>|</span><a href="http://cet4.koolearn.com">四级短期通关</a><span>|</span><a href="http://cet4.koolearn.com">四级单项突破</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://cet6.koolearn.com/">英语六级</a></em>
+                    <p><a href="http://cet6.koolearn.com/">六级vip全程</a><span>|</span><a href="http://cet6.koolearn.com/">六级短期通关</a><span>|</span><a href="http://cet6.koolearn.com/">六级单项突破</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://tem.koolearn.com">专四专八</a></em>
+                    <p><a href="http://tem.koolearn.com/tem4/">专业四级</a><span>|</span><a href="http://tem.koolearn.com/tem8/">专业八级</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://english.koolearn.com/zhuanti/2014toeic/">托业</a></em>
+                    <p><a href="http://english.koolearn.com/zhuanti/2014toeic/">新托业精讲班</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico4"></em>中学</h3>
+            <p><a href="http://gaokao.koolearn.com">高考</a><a href="http://gaokao.koolearn.com/gaoer/">高二</a><a href="http://gaokao.koolearn.com/gaoyi/">高一</a><a href="http://zhongkao.koolearn.com/">中考</a><a href="http://zhongkao.koolearn.com/chuer/">初二</a><a href="http://zhongkao.koolearn.com/chuyi/" class="pr0">初一</a></p>
+            <dl style="top: -77.25px; display: none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://gaokao.koolearn.com"><em class="search2014_arrow_ico"></em>高考</a> <a href="http://zhongkao.koolearn.com/"><em class="search2014_arrow_ico"></em>中考</a></dt>
+                <dd>
+                    <em><a href="http://gaokao.koolearn.com/">高中</a></em>
+                    <p><a href="http://gaokao.koolearn.com/gaokao/">高考课程</a><span>|</span><a href="http://gaokao.koolearn.com/gaoer/">高二课程</a><span>|</span><a href="http://gaokao.koolearn.com/gaoyi/">高一课程</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://zhongkao.koolearn.com/">初中</a></em>
+                    <p><a href="http://zhongkao.koolearn.com/zhongkao/">中考课程</a><span>|</span><a href="http://zhongkao.koolearn.com/chuer/">初二课程</a><span>|</span><a href="http://zhongkao.koolearn.com/chuyi/">初一课程</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico5"></em>英语<span class="icobx search2014_hotico"><a href="http://www.koolearn.com/kouyu/">外教1对1</a></span></h3>
+            <p><a href="http://nce.koolearn.com/">新概念</a><a href="http://www.koolearn.com/kouyu/">外教口语1对1</a><a href="http://english.koolearn.com/kouyi/" class="pr0">口译</a></p>
+            <dl style="top: -343.333px; display: none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://nce.koolearn.com/"><em class="search2014_arrow_ico"></em>新概念英语</a> <a href="http://www.koolearn.com/kouyu/"><em class="search2014_arrow_ico"></em>外教口语1对1</a> <a href="http://english.koolearn.com/zhuanti/yyky/"><em class="search2014_arrow_ico"></em>倍学口语</a></dt>
+                <dd>
+                    <em><a href="http://nce.koolearn.com/">新概念英语</a></em>
+                    <p><a href="http://nce.koolearn.com/">初中新概念</a><span>|</span><a href="http://nce.koolearn.com/">高中新概念</a><span>|</span><a href="http://nce.koolearn.com/">大学新概念</a><span>|</span><a href="http://nce.koolearn.com/">职场新概念</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://www.koolearn.com/kouyu/">外教口语1对1</a></em>
+                    <p><a href="http://www.koolearn.com/kouyu/">外教1对1进阶（成人版）</a><span>|</span><a href="http://www.koolearn.com/kouyu/">外教1对1进阶（青少版）</a><br><a href="http://www.koolearn.com/kouyu/">外教1对1定制（生存|商务|面试）</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://english.koolearn.com/zhuanti/yyky/">倍学口语</a></em>
+                    <p><a href="http://english.koolearn.com/zhuanti/yyky/">倍学口语1级</a><span>|</span><a href="http://english.koolearn.com/zhuanti/yyky/">倍学口语2级</a><span>|</span><a href="http://english.koolearn.com/zhuanti/yyky/">倍学口语3级</a><span>|</span><a href="http://english.koolearn.com/zhuanti/yyky/">倍学口语4级</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://english.koolearn.com/bec/">商务英语BEC</a></em>
+                    <p><a href="http://english.koolearn.com/bec/">BEC初级</a><span>|</span><a href="http://english.koolearn.com/bec/">BEC中级</a><span>|</span><a href="http://english.koolearn.com/bec/">BEC高级</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://english.koolearn.com/kouyi/">口译</a></em>
+                    <p><a href="http://english.koolearn.com/kouyi/">基础口译</a><span>|</span><a href="http://english.koolearn.com/kouyi/">中级口译</a><span>|</span><a href="http://english.koolearn.com/kouyi/">高级口译</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico7"></em>多语种</h3>
+            <p><a href="http://language.koolearn.com/jp/">日语</a><a href="http://language.koolearn.com/kr/">韩语</a><a href="http://language.koolearn.com">德语</a><a href="http://language.koolearn.com/">法语</a><a href="http://language.koolearn.com" class="pr0">西班牙语</a></p>
+            <dl style="display:none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://language.koolearn.com/jp/"><em class="search2014_arrow_ico"></em>日语</a> <a href="http://language.koolearn.com/kr/"><em class="search2014_arrow_ico"></em>韩语</a> <a href="http://language.koolearn.com"><em class="search2014_arrow_ico"></em>德语</a> <a href="http://language.koolearn.com/"><em class="search2014_arrow_ico"></em>法语</a> <a href="http://language.koolearn.com"><em class="search2014_arrow_ico"></em>西班牙语</a></dt>
+                <dd>
+                    <em><a href="http://language.koolearn.com/jp/">日语</a></em>
+                    <p><a href="http://language.koolearn.com/jp/">日语能力考（N1~N5）</a><span>|</span><a href="http://language.koolearn.com/jp/">新标准日本语</a><span>|</span><a href="http://language.koolearn.com/jp/">新编日语</a><span>|</span><a href="http://language.koolearn.com/jp/">实用日语</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://language.koolearn.com/kr/">韩语</a></em>
+                    <p><a href="http://language.koolearn.com/kr/">韩语能力考（初级、中级、高级）</a><span>|</span><a href="http://language.koolearn.com/kr/">标准韩国语</a><span>|</span><a href="http://language.koolearn.com/kr/">实用韩语</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://language.koolearn.com/">德语</a></em>
+                    <p><a href="http://www.koolearn.com/product/30146_1.html">德语欧标直通车</a><span>|</span><a href="http://www.koolearn.com/product/22788_1.html">实用德语</a><span>|</span><a href="http://www.koolearn.com/product/32091_1.html">德语零基础语音入门</a><span>|</span><a href="http://www.koolearn.com/product/9080_1.html">德福考试</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://language.koolearn.com/">法语</a></em>
+                    <p><a href="http://www.koolearn.com/product/30492_1.html">法语欧标直通车</a><span>|</span><a href="http://www.koolearn.com/product/30412_1.html">语音入门</a><span>|</span><a href="http://www.koolearn.com/product/23067_1.html">实用法语</a><span>|</span><a href="http://www.koolearn.com/product/31538_1.html">专四语法精讲</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico6"></em>医学教育<span class="icobx search2014_hotico"><a href="http://yixue.koolearn.com/zhiyehushi/">护士资格</a></span></h3>
+            <p><a href="http://yixue.koolearn.com/lczy/">执业医师</a><a href="http://yixue.koolearn.com/zyyaoshi/">执业药师</a><a href="http://yixue.koolearn.com/yxzhicheng/" class="pr0">卫生职称</a></p>
+            <dl style="display:none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://yixue.koolearn.com/lczy/"><em class="search2014_arrow_ico"></em>执业医师</a> <a href="http://yixue.koolearn.com/zyyaoshi/"><em class="search2014_arrow_ico"></em>执业药师</a> <a href="http://yixue.koolearn.com/zhiyehushi/"><em class="search2014_arrow_ico"></em>护士资格</a> <a href="http://yixue.koolearn.com/chuji/"><em class="search2014_arrow_ico"></em>初级护师</a> <a href="http://yixue.koolearn.com/yxzhicheng/"><em class="search2014_arrow_ico"></em>药学职称</a></dt>
+                <dd>
+                    <em><a href="http://yixue.koolearn.com/lczy/">执业医师</a></em>
+                    <p><a href="http://yixue.koolearn.com/lczy/">临床执业医师</a><span>|</span><a href="http://yixue.koolearn.com/lczl/">临床助理医师</a><span>|</span><a href="http://yixue.koolearn.com/zyzy/">中医执业医师</a><span>|</span><a href="http://yixue.koolearn.com/zyzl/">中医助理医师</a><br><a href="http://yixue.koolearn.com/zxy/">中西医执业医师</a><span>|</span><a href="http://yixue.koolearn.com/zxyzl/">中西医助理医师</a><span>|</span><a href="http://yixue.koolearn.com/kqzyys/">口腔执业医师</a><span>|</span><a href="http://yixue.koolearn.com/kqzyzlys/">口腔执业助理医师</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://yixue.koolearn.com/zyyaoshi/">执业药师</a></em>
+                    <p><a href="http://yixue.koolearn.com/zyyaoshi/">执业药师</a><span>|</span><a href="http://yixue.koolearn.com/zyyaoshi/">执业中药师</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://yixue.koolearn.com/zhiyehushi/">护士资格</a></em>
+                    <p><a href="http://yixue.koolearn.com/zhiyehushi/">护士执业资格</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em><a href="http://yixue.koolearn.com/yxzhicheng/">卫生职称</a></em>
+                    <p><a href="http://yixue.koolearn.com/chuji/">初级护师</a><span>|</span><a href="http://yixue.koolearn.com/zghs/">主管护师</a><span>|</span><a href="http://yixue.koolearn.com/yxzhicheng/">初级药士</a><span>|</span><a href="http://yixue.koolearn.com/yxzhicheng/">初级药师</a><span>|</span><a href="http://yixue.koolearn.com/yxzhicheng/">中级主管药师</a><br><a href="http://yixue.koolearn.com/yxzhicheng/">初级中药士</a><span>|</span><a href="http://yixue.koolearn.com/yxzhicheng/">初级中药师</a><span>|</span><a href="http://yixue.koolearn.com/yxzhicheng/">中级主管中药师</a></p>
+                </dd>
+            </dl>
+        </div>
+        <div class="search2014_snavbx" style="display: none;">
+            <h3 class="fwb black"><em class="search2014_snav_ico search2014_snav_ico8"></em>职业教育</h3>
+            <p class="nobr"><a href="http://zhicheng.koolearn.com">职称英语</a><a href="http://zhicheng.koolearn.com/zcry/">职称日语</a><a href="http://sifa.koolearn.com" class="pr0">司法考试</a></p>
+            <dl style="display:none;" class="search2014_snav_child">
+                <dt class="green fs14"><a href="http://zhicheng.koolearn.com"><em class="search2014_arrow_ico"></em>职称英语</a> <a href="http://zhicheng.koolearn.com/zcry/"><em class="search2014_arrow_ico"></em>职称日语</a> <a href="http://gwy.koolearn.com/"><em class="search2014_arrow_ico"></em>公务员</a> <a href="http://english.koolearn.com/pets/"><em class="search2014_arrow_ico"></em>PETS</a> <a href="http://sifa.koolearn.com/"><em class="search2014_arrow_ico"></em>司法考试</a></dt>
+                <dd>
+                    <em><a href="http://zhicheng.koolearn.com">职称英语</a></em>
+                    <p><a href="http://zhicheng.koolearn.com">综合类</a><span>|</span><a href="http://zhicheng.koolearn.com">理工类</a><span>|</span><a href="http://zhicheng.koolearn.com">卫生类</a><span>|</span><a href="http://zhicheng.koolearn.com/zhuanti/2014zsy/">中石油系统</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://zhicheng.koolearn.com/zcry/">职称日语</a></em>
+                    <p><a href="http://zhicheng.koolearn.com/zcry/">A级</a><span>|</span><a href="http://zhicheng.koolearn.com/zcry/">B级</a><span>|</span><a href="http://zhicheng.koolearn.com/zcry/">C级</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://gwy.koolearn.com/">公务员</a></em>
+                    <p><a href="http://gwy.koolearn.com/">国家公务员</a><span>|</span><a href="http://gwy.koolearn.com/gwy_course/">地方公务员</a><span>|</span><a href="http://v.koolearn.com/gwy/vlist_34160_1_0.html">其它公职类考试</a></p>
+                </dd>
+                <dd>
+                    <em><a href="http://english.koolearn.com/pets/">PETS</a></em>
+                    <p><a href="http://english.koolearn.com/pets/">PETS2</a><span>|</span><a href="http://english.koolearn.com/pets/">PETS3</a><span>|</span><a href="http://english.koolearn.com/pets/">PETS4</a><span>|</span><a href="http://english.koolearn.com/pets/">PETS5</a></p>
+                </dd>
+                <dd>
+                    <em>其它职业类考试</em>
+                    <p><a href="http://sifa.koolearn.com/">司法考试</a><span>|</span><a href="http://english.koolearn.com/sanji/">成人英语三级</a></p>
+                </dd>
+                <dd class="nobr">
+                    <em>职场英语证书</em>
+                    <p><a href="http://english.koolearn.com/bec/">商务英语BEC</a><span>|</span><a href="http://english.koolearn.com/kouyi/">上海口译证书</a></p>
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div><style>#search2014_nav a{padding:0px 12px;}</style>
+
+	<div class="Wrapper2">
+    	<div class="Nav_1">
+            <ul>
+				<li class="left"><p>公开课</P></li>
+                											<li class="left"><a href="http://v.koolearn.com/c/2188.html">出国留学</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2189.html">研究生</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2190.html">大学</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2191.html">中小学</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2192.html">小语种</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2193.html">职业教育</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2194.html">医学</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2195.html">综合英语</a></li>
+											<li class="left"><a href="http://v.koolearn.com/c/2196.html">口语大赛</a></li>
+									               
+                                <li class="right"><span>2799</span>个视频</li> 
+                                                <li class="right">共<span>305</span>位老师</li>    
+                            </ul>
+        </div> 
+         <div class="ley"><p><a href="http://v.koolearn.com/">公开课   </a> &gt;   <a href="http://v.koolearn.com/c/2191-0.html"> 中小学 </a>   >  <a href="http://v.koolearn.com/c/2249-0.html"> 小学 </a>   > 2016年希望杯全国数学邀请赛真题解析(六年级)</p></div>
+       
+        <h4 class="h4ed">视频：2016年希望杯全国数学邀请赛真题解析(六年级)</h4>
+        <div class="memo">
+        	<div class="sold">
+                <div name="video_creat" class="video" img_src="http://file.koolearn.com/2016/0410/20160410110937934.png" dir_mp4="http://vedio.koolearn.com/upload/vedio/material/dashijiangtang/2016.4/gaokao/xwb6nj.mp4" ></div>
+                
+                <div class="vlist">
+                	<a class="nodup" href="javascript:;"></a>
+               		<a class="nodleft" style="display:none;" href="javascript:;"></a>
+                   <div class="slideTxtBox3">
+                       <div class="hd titm2">
+                           <ul>
+                               <li>相关付费课程</li>
+                               <li>公开课相关视频</li>
+                           </ul>
+                       </div>
+                       <div class="bd">
+                       	  <!-- 查询父级分类id -->
+                       	                                                                                   <!--相关公开课视频 ajax注入  -->
+                           
+                           <div class="nemt_1" id="related_video">
+                            
+                           </div>
+                       </div><!--bd-->
+                   </div><!--slideTxtBox3-->	 
+                </div><!--VLIST-->
+            </div><!--sold-->
+        </div><!--memo-->
+        
+    	
+        <div class="share_1">
+        	<ul class="sre_1">
+                <li><a class="am_2" href="javascript:void(0);" onclick="javascript:addFavorite2()" title="点击收藏"></a></li>
+                
+                <li><p><span id="bofang_num"></span>次播放</p></li>
+                
+            </ul>
+            
+            <div class="bdsharebuttonbox">
+            	<p>分享到：</p>
+                <a href="#" class="bds_qzone1" data-cmd="qzone" title="分享到QQ空间"></a>
+                <a href="#" class="bds_sqq1" data-cmd="sqq" title="分享到QQ好友"></a>
+                <a href="#" class="bds_tsina1" data-cmd="tsina" title="分享到新浪微博"></a>
+                <a href="#" class="bds_weixin1" data-cmd="weixin" title="分享到微信"></a>
+            </div>
+            <script>window._bd_share_config={"common":{"bdSnsKey":{
+            	'tsina' : '3297384058',
+            	'tqq' : 'ba36faf481494730bccc2c58de9f6cf9'
+            },"bdText":"2016年希望杯全国数学邀请赛真题解析(六年级)","bdDesc":"2016年希望杯全国数学邀请赛真题解析(六年级)","bdPic":"http://file.koolearn.com/2016/0410/20160410110937934.png","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+            <style>
+            .bdshare-button-style1-24 a.bds_qzone1{width:30px;height:24px; display:block; background:url(http://img.koolearn.com/gkk/images/kj.png); no-repeat; padding-left:0px;float:Left;}
+			.bdshare-button-style1-24 a.bds_sqq1{width:30px;height:24px; display:block; background:url(http://img.koolearn.com/gkk/images/qq.png); no-repeat; padding-left:0px;float:Left;}
+			.bdshare-button-style1-24 a.bds_tsina1{width:30px;height:24px; display:block; background:url(http://img.koolearn.com/gkk/images/wb.png); no-repeat; padding-left:0px;float:Left;}
+			.bdshare-button-style1-24 a.bds_weixin1{width:30px;height:24px; display:block; background:url(http://img.koolearn.com/gkk/images/wx.png); no-repeat; padding-left:0px;float:Left;}
+			.bdshare-button-style1-24 a.bds_qzone1:hover{background:url(http://img.koolearn.com/gkk/images/kj1.png); no-repeat;}
+			.bdshare-button-style1-24 a.bds_sqq1:hover{background:url(http://img.koolearn.com/gkk/images/qq1.png); no-repeat;}
+			.bdshare-button-style1-24 a.bds_tsina1:hover{background:url(http://img.koolearn.com/gkk/images/wb1.png); no-repeat;}
+			.bdshare-button-style1-24 a.bds_weixin1:hover{background:url(http://img.koolearn.com/gkk/images/wx1.png); no-repeat;}
+            </style>
+        </div>
+        
+        <div class="Content">
+        	<div class="conlt">
+        	  <!-- 获取老师的id -->
+        	        	  <!-- 老师详情页的主键id -->
+        		<!-- 8331  $data[0]['teacher_id'] -->
+       		       			                                             <h5 class="h5d1" id="pingl">最受欢迎</h5>
+                <div class="keep">
+                	<div class="fely">
+                    	<h2 class="ty_1">当季热点</h2>
+                        <ul>
+							<li><a href="http://yixue.koolearn.com/">医学</a></li>
+                        	<li><a href="http://kaoyan.koolearn.com/">考研</a></li>
+                            <li><a href="http://gaokao.koolearn.com/">高考</a></li>
+                            <li><a href="http://cet4.koolearn.com/">英语四级</a></li>
+                            <li><a href="http://cet6.koolearn.com/">英语六级</a></li>
+                            <li><a href="http://toefl.koolearn.com/">托福</a></li>
+                            <li><a href="http://ielts.koolearn.com/">雅思</a></li>
+                            <li><a href="http://zhicheng.koolearn.com/">职称英语</a></li>
+                        </ul>
+                    </div>
+                    <div class="fely2">
+                    	<h2 class="ty_2">最新优惠</h2>
+                        <ul>
+                        	<li><a href="http://bbs.koolearn.com/t-4368496-1-1.html">下载2015司法新大纲 领取50元优惠劵</a></li>
+                            <li><a href="http://winning.koolearn.com/ielts/">致赢雅思一对一九折优惠限时领取中！</a></li>
+                        </ul>
+                    </div>
+                    <div class="fely3">
+                    	<h2 class="ty_3">热点专题</h2>
+                        <ul>
+                        	<li><a href="http://gaokao.koolearn.com/zhuanti/2015gaokaodaan/">2015高考试题及答案</a></li>
+                            <li><a href="http://kaoyan.koolearn.com/zhuanti/2016kyfd/">剑桥雅思名师解析剑十</a></li>
+                        </ul>
+                    </div>
+                    <div class="icon"><a href="http://zhicheng.koolearn.com/" target="_blank"><img src="http://images.koolearn.com/fe_upload/2015_6_7_1433645626369.png" alt="" /></a></div>
+                </div>                <!--keep-->
+                
+                <div class="logn">
+                	<img class="peo" src="http://img.koolearn.com/gkk/images/peo.png" alt="" />
+                    <div class="gn_rt">
+                    	<form class="fom">
+                        	<div class="tex">
+                            	<textarea id = "commend_area"></textarea>
+                            	<div id="no_lgon" class="lgon"><a href="javascript:;">登录</a>/<a href="javascript:;">注册</a><span>后可以评论</span></div>
+                            </div>
+                            <input class="but" type="button" onclick="inscom()" value="发布评价" />
+                        </form>
+                       
+                    </div>
+                </div>
+                
+                <div class="comment">
+                	<h4>全部评论（<span id="totalnum">0</span>）</h4>
+                    <ul class="pinglun" id="pinglun">
+                         
+                    </ul>
+                    <div class="pg">
+	                    <div class="pgbar" id="page">
+							
+	                    </div>
+					</div>
+				<!--comment-->
+              </div> 
+            </div><!--conlt-->
+           	
+	            <div  class="conrt">
+	        	<div class="my_1">
+	            	<h3 class="h3y">视频信息</h3>
+	                <p class="yp1" title="2016年希望杯全国数学邀请赛真题解析(六年级)">2016年希望杯全国数学邀请赛真题解析(六年级)</p>
+	                <div class="sas">
+	                    <span>评 分：</span>
+	                    <div id="xx" style="position: relative;">
+	                        <ul class="studyplay_starBg" style="width: 115px;">
+	                            <li class="studyplay_starovering" style="width: 85%; z-index: 0; display: list-item;" id="studyplay_current"></li>
+	                            <li class="studyplay_starON" style="width:11.5px;z-index:10;"></li>
+	                            <li class="studyplay_starON" style="width:23px;z-index:9;"></li>
+	                            <li class="studyplay_starON" style="width:34.5px;z-index:8;"></li>
+	                            <li class="studyplay_starON" style="width:46px;z-index:7;"></li>
+	                            <li class="studyplay_starON" style="width:57.5px;z-index:6;"></li>
+	                            <li class="studyplay_starON" style="width:69px;z-index:5;"></li>
+	                            <li class="studyplay_starON" style="width:80.5px;z-index:4;"></li>
+	                            <li class="studyplay_starON" style="width:92px;z-index:3;"></li>
+	                            <li class="studyplay_starON" style="width:103.5px;z-index:2;"></li>
+	                            <li class="studyplay_starON" style="width:115px;z-index:1;"></li>
+	                        </ul>
+	                    </div>
+	                    <i class="ft1" id="score"><strong id="avgScore">10</strong><em>分</em></i>
+	                    <input type="hidden" value="" id="hideVal"> 
+	                    <i class="ft2" id="scoreNum">(1人 )</i>
+	       
+	                </div>
+	                
+	                <p>上线：2016-04-10 11:10:12</p>
+	                	               
+	               	<p>主讲：<a href="http://v.koolearn.com/t/.html">  </a></p>
+	                	                <p>类型： 中小学/小学</p>
+	                <p>时长： 1时08分56秒</p>
+	                <p style="margin-top:10px;" title="新东方在线奥数名师第一时间视频解析2016第十四届希望杯四年级复赛真题答案，帮助考生和家长第一时间了解考试情况!">视频简介：新东方在线奥数名师第一时间视频解析2016第十四届希望杯四年级复赛真题答案，帮助考生和家长第一时间了解考试情况!</p>
+	
+	            </div>
+	            
+	            
+	           
+	             
+	            
+	           	
+		            		           
+										            <div class="my_2">
+            	<h3 class="h3y">中小学网络课堂 </h3>
+                <ul>
+                	<li><p>高考理科全科特惠联报</p><a href="http://www.koolearn.com/product/40405_1.html#m">免费试听</a></li>
+                    <li><p>高考文科全科特惠联报</p><a href="http://www.koolearn.com/product/40442_1.html#m">免费试听</a></li>
+                    <li><p>2016中考名师特训营</p><a href="http://www.koolearn.com/product/43633_1.html#m">免费试听</a></li>
+                    <li style="border-bottom:none;"><p>2016中考名师全能突破</p><a href="http://www.koolearn.com/product/43637_1.html#m">免费试听</a></li>
+                </ul>
+            </div>		            
+		           	<div class="my_3">
+            	<h3 class="h3y">公开课相关名师</h3>
+                <div class="slideTxtBox2">
+                	<div class="hd titm1">	
+                    	<ul>
+                        	<li>高中</li>
+                            <li>初中</li>
+                        </ul>
+                    </div>
+                    <div class="bd">
+                    	<div class="bem_1">
+                        	<ul>
+                            	<li><a href="http://www.koolearn.com/teacher/6944.html">国家玮</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/2170.html">赵丽</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/6942.html">陶然</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/6943.html">周帅</a></li>
+                            </ul>
+                            <ul>
+                                <li><a href="http://www.koolearn.com/teacher/7687.html">李辉</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/7305.html">杨洋</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/7674.html">张雯</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/7304.html">邵轶辰</a></li>
+                            </ul>
+                            <ul>
+                                <li><a href="http://www.koolearn.com/teacher/6963.html">张艳平</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/6962.html">郑关飞</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/6945.html">关也</a></li>
+                            </ul>
+                            <a href="http://gaokao.koolearn.com/zhuanti/2016hancu/"><img src="http://images.koolearn.com/fe_upload/2016/1/2016-1-7-1452134019690.jpg" alt="2016高中课程寒假大放价" /></a>
+                        </div>
+                        <div class="bem_1">
+                        	<ul>
+                            	<li><a href="http://www.koolearn.com/teacher/8491.html">范士闯</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/8509.html">李琳琳</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/7995.html">李娜</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/8389.html">张丹丹</a></li>
+                            </ul>
+                            <ul>
+                                <li><a href="http://www.koolearn.com/teacher/8392.html">方侃</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/5462.html">焦磊</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/6182.html">齐磊</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/5442.html">杨国星</a></li>
+                            </ul>
+                            <ul>
+                                <li><a href="http://www.koolearn.com/teacher/6203.html">张钦</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/8577.html">张杰</a></li>
+                                <li><span>|</span></li>
+                                <li><a href="http://www.koolearn.com/teacher/8388.html">王冰</a></li>
+                            </ul>
+                            <a href="http://zhongkao.koolearn.com/zhuanti/czhjbcx/"><img src="http://images.koolearn.com/fe_upload/2016/1/2016-1-7-1452134023216.jpg" alt="2016初中课程寒假大放价" /></a>
+                        </div>
+                    </div>
+                </div>
+            </div>	           	
+	           		           
+	            <!--my_3-->
+	         </div>
+	            
+            </div><!--Content-->
+        
+    </div>
+  
+<!--回复-->
+<script type="text/javascript"> 
+	function displaySubMenu(li) { 
+		var subMenu = li.getElementsByTagName("ul")[0]; 
+		subMenu.style.display = "block"; 
+	} 
+	function hideSubMenu(li) { 
+		var subMenu = li.getElementsByTagName("ul")[0]; 
+		subMenu.style.display = "none"; 
+	} 
+
+	$(function(){
+		var boxw=$(".vlist").width();
+		$(".nodup").click(function(){
+			$(".vlist,.titm2").stop().animate({width:'26px',},"slow",
+					function(){
+				$(".titm2").hide();
+					});
+			$(".video").animate({marginLeft:'125px'},'slow');
+			$(".nodup").hide();
+			$(".nodleft").show();		
+		});
+		$(".nodleft").click(function(){
+				$(".titm2").show();
+				$(".vlist,.titm2").stop().animate({width:'363px'},"slow");
+				$(".video").animate({marginLeft:'0'},'slow');
+				$(".nodup").show();
+				$(".nodleft").hide();		
+		});
+		
+		
+	});
+
+	 $(document).ready(function () {
+	     $("#showfile").click(showFile);
+	 })
+	 function showFile() {
+	     if ($("#file").css("display") == "none") {
+	         $("#file").css("display", "inline");
+	         $("#status").text("收起");
+	     } else {
+	         $("#file").css("display", "none");
+	         $("#status").text("全部");
+	     }
+	 }
+       
+</script>
+<script>jQuery(".slideTxtBox2").slide({trigger:"click"});</script>
+<script>jQuery(".slideTxtBox3").slide({trigger:"click"});</script>
+
+<!-- ajax分页 -->
+<script>
+//分页
+var id = 2847;
+var catid = 2249;
+var tid = 0;  //老师id
+//定义全局变量-api接口地址
+
+var app_url = "http://cmsapp.koolearn.com/gongkaike.php";
+function initPagination(num_entries) {
+	// 创建分页
+	$("#page").pagination(num_entries, {
+		num_edge_entries: 1, //边缘页数
+		num_display_entries: 4, //主体页数
+		callback: pageselectCallback,
+		items_per_page: 5, //每页显示1项
+		prev_text: "前一页",
+		next_text: "后一页"
+	});
+ }
+ 
+function pageselectCallback(page_index, jq){
+	ajax_get_comment(id,page_index,5);
+}
+//获取评论数量
+function get_comment_total(){
+	var total = 0;
+	$.ajax({
+			   type:"GET",
+			   url:app_url+"?a=ajnum&showid="+id+"&callback=?",
+			   //async: false,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+						initPagination(re);
+						$("#totalnum").html(re);
+						
+						if(re<5){
+							$("#page").hide(); //当评论少于一页的时候分页隐藏
+						}else{
+							$("#page").show();
+						}
+				}
+	});
+}
+
+//获取评论
+	function ajax_get_comment(id,page_index,pagesize){
+		page_index = parseInt(page_index)+parseInt(1);
+		$.ajax({
+			   type:"GET",
+			   url:app_url+"?a=ajlist&showid="+id+"&pageSize="+pagesize+"&pageNo="+page_index+"&callback=?",
+			   //async: false,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   $("#pinglun").html(re);
+				}
+		 }); 
+	}
+	
+	$(function(){
+		get_comment_total();
+		ajax_get_comment(id,1,5);
+		ajax_score();
+		ajax_related_video();
+		bofang();   //播放次数+1
+		impress();  //获取老师印象
+		changeVideo();
+		
+	})
+//发表评论
+function real_inscom(){
+		
+		var des = $("#commend_area").val().replace('#','').replace('&','');
+		var catid = 2249;
+		
+		var leg =  des.length;
+		if(leg >500){
+			alert('输入字数过长，请修改后提交');return false;
+		}
+		
+		if(_auth != 0){
+			$.ajax({
+				   type:"GET",
+				   url:app_url+"?a=addcomment&showid="+id+"&content="+des+"&uname="+_uname+"&uid="+_uid+"&callback=?",
+				   async: false,
+				   data:null,
+				   dataType:"jsonp",
+				   success:function(re){
+					   ajax_get_comment(id,1,5);  //重新加载分页
+					   get_comment_total();
+					   $("#commend_area").val('');//清空
+					}
+			 }); 
+		}else{
+			$('#no_lgon').show();
+			
+		}
+		
+}
+
+//发表评论前，先判断是否登录
+function inscom(){
+	//先判断是否登录，如果登陆，调用发布评论方法
+	$.ajax({
+		   type:"GET",
+		   url:"http://www.koolearn.com/common_lms/public_top.jsp",
+		   async: false,
+		   data:null,
+		   dataType:"jsonp",
+		   success:function(re){
+			   _auth = re.auth.len;
+			   _uname = re.auth.name;
+			   _uid = re.auth.id;
+			   if(_auth==1){
+				   real_inscom();
+			   }else{
+				   $('#no_lgon').show();
+				   $('#commend_area').attr('disabled','disabled');
+				   $("#commend_area").val('');//清空
+			   }
+			}
+	});
+	
+}
+	//ajax获取评分
+	function ajax_score(){
+		var url = app_url+"?a=ajax_score&id="+id+"&callback=?";
+		$.ajax({
+			   type:"GET",
+			   url:url,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				  $("#avgScore").html(re['score']);
+				  $("#scoreNum").html("("+re['totalnum']+"人)");
+				  $("#hideVal").val(re['score']);
+				  if(re['cookie']){
+					  document.getElementById('xx').innerHTML="<div style='width:105px;border:1px solid #ccc;padding:3px;' id='cache'>您的打分已提交。</div>";
+				  }
+				}
+		 }); 
+	}
+	
+	//ajax获取公开课相关视频
+	function ajax_related_video(){
+		var url = app_url+"?a=related_video&id="+id+"&catid="+catid+"&callback=?";
+		$.ajax({
+			   type:"GET",
+			   url:url,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   $("#related_video").html(re);
+				}
+		 }); 
+	}
+
+	//点赞
+	function p_zan(id){
+		var url = app_url+"?a=dianzan&id="+id+"&callback=?";
+		$.ajax({
+			   type:"GET",
+			   url:url,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   if(re){
+					   var original_num = parseInt($("#zan_num_"+id).html());
+					   var now_num = original_num+re;
+					   $("#zan_num_"+id).html(now_num);
+				   }
+				}
+		 }); 		
+	}
+	//播放+1
+	function bofang(){
+		var url = app_url+"?a=bofang&id="+id+"&callback=?";
+		$.ajax({
+			   type:"GET",
+			   url:url,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   if(re){
+					   $("#bofang_num").html(re);
+				   }
+				}
+		 }); 
+		
+	}
+	
+	//老师印象
+	function impress(){
+		var url = app_url+"?a=ajax_get_info&id="+tid+"&callback=?";
+		$.ajax({
+			   type:"GET",
+			   url:url,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   if(re){
+					   if(re){
+						   $("#love_num").html("喜欢  ("+re[0]['love_num']+")");
+						   if(re['impress']){
+							   $("#impress").append('<li class="yinxiang">印象:</li>'+re['impress']);
+						   }
+						   
+					   }
+				   }
+				}
+		 }); 
+	}
+	
+	
+	//加入收藏
+	function addFavorite2() {
+		
+	    var sURL = window.location;
+	    var sTitle = document.title;
+	    try
+	    {
+	        window.external.addFavorite(sURL, sTitle);
+	    }
+	    catch (e)
+	    {
+	        try
+	        {
+	            window.sidebar.addPanel(sTitle, sURL, "");
+	        }
+	        catch (e)
+	        {
+	            alert("加入收藏失败，请使用Ctrl+D进行添加");
+	        }
+	    }
+	}
+	
+	function changeVideo(){
+		var video = $('.video');
+		audio_public_creat.charactor.plug(video,{
+			autoplay: "autoplay",//自动播放
+			loop: "loop"//循环播放
+		})
+	}
+	
+	/*
+	*老师详情页老师课程动态获取
+	*/
+	function ajax_teacher_product(teacherId,categoryId,number,ttid){
+		$.ajax({
+			   type:"GET",
+			   url:app_url+'?a=ajax_teacher_product&callback=?&teacherId='+teacherId+'&categoryId='+categoryId+'&number='+number+'&ttid='+ttid,
+			   async:false,
+			   data:null,
+			   dataType:"jsonp",
+			   success:function(re){
+				   $(".Nonbet").html(re);
+			   }
+		 });
+	}
+	$("#nav_content .active a").click();
+</script>
+
+
+<script type="text/javascript" src="http://img.koolearn.com/gkk/js/star.js"></script> 
+
+<div class="clear"></div>
+<style>
+/* 页尾样式 */
+#ft{margin-top:60px;background:#f4f4f4;font-size:12px;padding:30px 0;}
+#ft .ftmn{padding:20px 0 0 0;}
+#ft .ftmn dl{width:18%;}
+#ft .ftmn dl.w1{width:28%;}
+#ft .ftmn dt{padding-top:10px;font:normal 20px/36px "微软雅黑";color:#666;}
+#ft .ftmn dd{line-height:22px;}
+#ft .ftlink{padding:15px 0 40px;margin-top:15px;border-top:1px solid #ebebeb;}
+#ft .ftlink a{padding-right:12px;line-height:22px;}
+#ft .ftlink strong{padding-right:5px;color:#666;}
+#ft .copyright{width:1000px;padding:15px 0 30px;background:#f4f4f4;text-align:center;line-height:22px;color:#666;margin:0 auto;}
+#ft .copyright_txt{float:left;width:740px;text-align:left;}
+#ft .ft_link{padding:7px 0 15px 0;color:#959595;font-size:12px;}
+#ft .ft_link a,#ft .ft_link a:visited{margin-right:7px;color:#313131;font-size:12px;}
+#ft .ft_link2,#ft .ft_link2 a,#ft .ft_link2 a:visited{color:#959595;font-size:12px;}
+#ft .ft_left{float:left;margin-right:10px;padding-top:2px;}
+#ft .ft_logo{position:relative;padding-top:10px;width:230px;float:right;font-size:12px;}
+#ft .ft_logo img{vertical-align:top;margin:0 0 8px 0;}
+#ft .kooxin{position:absolute;right:100px;top:-40px;}
+#ft .m-line{width:10px;height:35px;display:inline-block;margin-right:10px;border-right:#c2c2c2 solid 1px;margin-top:4px;}
+</style>
+<div id="ft">
+		<div class="copyright">
+			<div class="copyright_txt">
+			<p class="ft_link"><a rel="nofollow" href="http://www.koolearn.com/about/" target="_blank">关于我们</a><a rel="nofollow" href="http://www.koolearn.com/about/shangwu/" target="_blank">商务合作</a><a rel="nofollow" href="http://www.koolearn.com/about/guanggao/" target="_blank">广告服务</a><a rel="nofollow" href="http://agent.koolearn.com" target="_blank">代理商区域</a><a rel="nofollow" href="http://help.koolearn.com/" target="_blank">客服中心</a><a rel="nofollow" href="http://help.koolearn.com/zxzx/" target="_blank">在线留言</a><a rel="nofollow" href="http://help.koolearn.com/20131125/4.html" target="_blank">退换货说明</a><a rel="nofollow" href="http://www.koolearn.com/about/hezuo/" target="_blank">合作伙伴</a><a rel="nofollow" href="http://www.koolearn.com/about/lianxi/" target="_blank">联系我们</a><a rel="nofollow" href="http://www.koolearn.com/about/zhaopin/" target="_blank">人员招聘</a><a href="http://www.koolearn.com/sitemap/" target="_blank">网站地图</a><a href="http://www.koolearn.com/zt/" target="_blank">热点关注</a><a href="http://lc.koolearn.com/" target="_blank">寓乐优学</a></p>
+			<a rel="nofollow" href="http://www.itrust.org.cn/yz/pjwx.asp?wm=177256341X" target="_blank"><img class="ft_left" alt="中国信用企业" src="http://img.koolearn.com/v2/img/flogo3.jpg"></a>
+			<p class="ft_link2"><a rel="nofollow" href="http://www.miibeian.gov.cn/">京ICP证050421号</a> <a rel="nofollow" href="http://www.miibeian.gov.cn/">京ICP备05067669号</a> 京公网安备11010802017616号 <a rel="nofollow" href="http://news.koolearn.com/20140623/1017723.html">网络视听许可证0110531号</a><br>
+			Copyright (C) 2000-2014 <a href="http://www.koolearn.com/"><strong>koolearn.com</strong></a> Inc. All rights reserved. 新东方在线 版权所有</p>
+			</div>
+			<div class="ft_logo"><a rel="nofollow" href="http://www.xdf.cn/" target="_blank"><img alt="新东方官网" src="http://img.koolearn.com/v2/img/xdf.jpg"></a><span class="m-line"></span><a href="http://www.koolearn.com/"><img alt="新东方在线" src="http://img.koolearn.com/v2/img/koolearn.jpg"></a><p>新东方在线：新东方旗下网络教育品牌</p></div><div style="clear:both"></div>
+	</div>
+</div><!--统计代码-->
+<script type="text/javascript" src="http://images.koolearn.com/www/subject/script/tongji.js" charset="utf-8"></script>
+<!--统计代码  End-->
+</body>
+</html>

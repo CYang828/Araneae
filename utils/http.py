@@ -1,8 +1,21 @@
 #*-*coding:utf8*-*
 
+import re
 import urlparse
 from w3lib import html
+import HTMLParser
 
+def escape_jsonp(jsonp_string):
+    html = jsonp_string
+    json_exp = r'jsonp\d*\(([\s\S]*)\)'
+
+    match = re.match(json_exp,jsonp_string)
+    
+    if match:
+        html = match.group(1)
+    
+    return html.replace('\\"','"').replace('\\n','').replace('\\t','').replace('\\/','/')
+    
 
 def revise_url(url):
     if not urlparse.urlparse(url).scheme:
@@ -40,3 +53,16 @@ def validate_method(method):
         return method
     else:
         raise TypeError('http请求方法错误')
+
+if __name__ == '__main__':
+    from Araneae.utils.contrib import html2dom
+    from requests import get
+    url = 'http://cmsapp.koolearn.com/gongkaike.php?a=catlist_page&catid=2191&ord=1&page_num=4&callback=jsonp1464924936263'
+    response = get(url)
+
+    html = escape_jsonp(response.content)
+    print html
+    dom = html2dom(html)
+    for e in dom.iterlinks():
+        #print e
+        pass

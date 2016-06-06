@@ -48,6 +48,7 @@ if __name__ == '__main__':
 
     c = DNA('Araneae.man.jintaiyang_setting')
     #c = DNA('Araneae.man.jintaiyang_gaozhong_setting')
+    #c = DNA('Araneae.man.xdf_gongkaike')
     spider = c.generator()
     spider.start()
     spider.end()
