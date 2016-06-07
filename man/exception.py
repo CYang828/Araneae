@@ -9,8 +9,7 @@ class AraneaeException(Exception):
         self._msg = msg
 
     def __str__(self):
-        return repr(self._msg.encode('utf8'))
-
+        return self._msg
 
 class MiddlewareError(AraneaeException):
     """中间件错误"""

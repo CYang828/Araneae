@@ -13,7 +13,11 @@ from importlib import import_module
 
 def response2dom(response):
     #decode('utf8')转换成utf8，否则会报错
-    return lxml.html.soupparser.fromstring(response.text, features='html5lib')
+    return lxml.html.soupparser.fromstring(response.content.decode('gbk'), features='html5lib')
+
+def html2dom(html):
+    #decode('utf8')转换成utf8，否则会报错
+    return lxml.html.soupparser.fromstring(html, features='html5lib')
 
 def load_class(class_path, *targs, **kvargs):
     try:

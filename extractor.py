@@ -63,6 +63,7 @@ class UrlExtractor(object):
         for url in iter_urls:
             if url[1] == 'href':
                 urls.append(url[2])
+                
 
         self._urls = sorted(set(urls), key=urls.index)
 
@@ -131,7 +132,7 @@ class UrlExtractor(object):
             request = REQ.Request(
                 UTLH.replenish_url(self._response, url),
                 **request_args).set_spider_name(self._spider_name).set_rule_number(self._rule_number).set_associate(self._associate)
-
+            print UTLH.replenish_url(self._response, url)
             self._allow_requests.append(request)
 
     def extract(self):
@@ -473,9 +474,9 @@ class DataExtractor(object):
 
                 register_len = len(res_register)
                 middle = res_register[0]['result'][0]
-                import json
-                print 'res_register'
-                print json.dumps(res_register, ensure_ascii=False)
+                #import json
+                #print 'res_register'
+                #print json.dumps(res_register, ensure_ascii=False)
 
                 for i_field in range(register_len):
                     if i_field < register_len - 1:
@@ -506,8 +507,8 @@ class DataExtractor(object):
             datas = []
             raw_data = {}
             import json
-            print 'middle'
-            print json.dumps(middle, ensure_ascii=False)
+            #print 'middle'
+            #print json.dumps(middle, ensure_ascii=False)
 
             for mid in middle:
                 for i_f, f in enumerate(field):
@@ -627,7 +628,7 @@ class FileExtractor(UrlExtractor):
             file_name = hashlib.md5(url).hexdigest()
             file_args['file_name'] = file_name
             file_obj = FILE.File(UTLH.replenish_url(self._response, url), **file_args)
-            data = DT.Data(**{'%s_download' % self._field: file_name})
+            data = DT.Data(**{('%s_download'%self._field):file_name})
 
             self._files.append((data, file_obj))
 
@@ -635,6 +636,40 @@ class FileExtractor(UrlExtractor):
         self._url2file()
         return self._files
 
+class FileFormatExtractor(UrlFormatExtractor):
+
+    def __init__(self, response, dom, url, rule, spider_name='', rule_number=-1, fid=None, associate=False, cookies={}, headers={}):
+        print rule
+        self._field = rule.get('field')
+
+        if not self._field:
+            raise TypeError('下载文件必须有field字段')
+
+        self._files = []
+
+        super(FileFormatExtractor, self).__init__(response, dom, url, rule, spider_name, rule_number, fid, associate, cookies, headers)
+
+    def _url2file(self):
+        file_args = {'method': self._method,
+                     'headers': self._headers,
+                     'cookies': self._cookies,
+                     'data': self._data,
+                     'fid': self._fid,
+                     'auth': self._auth,
+                     'proxies': self._proxies}
+
+        for url in self._urls:
+            file_name = hashlib.md5(url).hexdigest()
+            file_args['file_name'] = file_name
+            file_obj = FILE.File(UTLH.replenish_url(self._response, url), **file_args)
+            print 'File.url:%s' % file_obj.url
+            data = DT.Data(**{('%s_download'%self._field):file_name})
+
+            self._files.append((data, file_obj))
+
+    def extract(self):
+        self._url2file()
+        return self._files
 
 #  通过参数替换生成最终 URL
 class UrlSubstituteExtractor(object):

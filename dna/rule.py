@@ -5,6 +5,10 @@ NONE_URL_TYPE = 0
 EXTRACT_URL_TYPE = 1
 FORMAT_URL_TYPE = 2
 
+NONE_FILE_TYPE = 0
+EXTRACT_FILE_TYPE = 1
+FORMAT_FILE_TYPE = 2
+
 
 class PageRule(object):
     """
@@ -14,6 +18,7 @@ class PageRule(object):
     def __init__(self, map):
         self.__number = None
         self.__extract_url_type = NONE_URL_TYPE
+        self.__extract_file_type = NONE_FILE_TYPE
         self.__extract_url_element = None
         self.__extract_file_element = None
         self.__next_page_url_type = NONE_URL_TYPE
@@ -37,7 +42,11 @@ class PageRule(object):
             self.__extract_url_element = map['format_urls']
 
         if 'extract_files' in map.keys():
+            self.__extract_file_type = EXTRACT_FILE_TYPE
             self.__extract_file_element = map['extract_files']
+        elif 'format_files' in map.keys():
+            self.__extract_file_type = FORMAT_FILE_TYPE
+            self.__extract_file_element = map['format_files']
 
         if 'extract_next_page' in map.keys():
             self.__next_page_url_type = EXTRACT_URL_TYPE
@@ -101,6 +110,10 @@ class PageRule(object):
     @property
     def extract_url_element(self):
         return self.__extract_url_element
+
+    @property
+    def extract_file_type(self):
+        return self.__extract_file_type
 
     @property
     def extract_file_element(self):
