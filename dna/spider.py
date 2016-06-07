@@ -157,7 +157,8 @@ class BaseSpider(object):
                 response = request.fetch(self._request_timeout)
                 break
             except (EXP.RequestConnectionError, EXP.RequestError, EXP.RequestTimeoutError, EXP.RequestTooManyRedirectsError) as e:
-                self.recorder('ERROR', e)
+                print e
+                #self.recorder('ERROR', e)
                 retry_time -= 1
                 continue
 
