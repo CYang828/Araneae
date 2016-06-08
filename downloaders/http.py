@@ -16,12 +16,18 @@ DEFAULT_POOLBLOCK = False
 DEFAULT_POOL_TIMEOUT = None
 DEFAULT_CONCURENT_REQUESTS = 10
 
-class HttpAgent(Agent):
+class HttpDownloader(Agent):
 
     def __init__(self,pool_connections=DEFAULT_POOLSIZE, pool_maxsize=DEFAULT_POOLSIZE, max_retries=DEFAULT_RETRIES, 
                  pool_block=DEFAULT_POOLBLOCK,concurent_requests = DEFAULT_CONCURENT_REQUESTS):
         self._set_session(pool_connections,pool_maxsize,max_retries)
         self._set_asyn_pool(concurent_requests)
+
+    @classmethod
+    def from_spider(self, spider):
+        settings = spider.settings
+        pool_connections = settings.getint('')
+        return cls()
 
     def _set_session(self,pool_connections,pool_maxsize,max_retries):
         self._session = requests.Session()

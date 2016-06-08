@@ -48,3 +48,4 @@ def to_native_str(text, encoding=None, errors='strict'):
         return to_bytes(text, encoding, errors)
     else:
         return to_unicode(text, encoding, errors)
+
