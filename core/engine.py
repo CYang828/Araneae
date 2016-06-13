@@ -6,6 +6,7 @@ import os
 import time
 from psutil import Process
 
+from Araneae.downloader import DownloaderAgent
 from Araneae.man.excepitons import SchedulerEmpty
 from Araneae.utils.protocol import protocl_string_to_object
 
@@ -40,13 +41,9 @@ class Engine(object):
     def set_downloader(self):
         """设置网络访问组件,根据不同的协议区分
         不同协议的区分在downloader中区分,就像一个真正的浏览器一样"""                                                                                                                   
-        http_downloader_cls = load_object(self.settings,get('HTTP_DOWNLOADER'))
-        #file_downloader_cls = load_object(self.settings,get('FILE_DOWNLOADER'))
-        #ftp_downloader_cls = load_object(self.settings,get('ftp_DOWNLOADER'))
-        self._http_downloader = http_downloader_cls.from_spider(self)
-        #self._file_downloader = file_downloader_cls.from_spider(self)
-        #self._ftp_downloader = ftp_downloader_cls.from_spider(self)
-    
+        downloader_cls = load_object(self.settings,get('DOWNLOADER_AGENT'))
+        self.downloader = downloader_cls.from_spider(spider)
+
     def set_pipeline(self):
         """设置数据管道,数据管道为多个时数据按顺序呢进入多个管道中"""
 
