@@ -62,5 +62,8 @@ class MiddlewareManager(object):
 
     def open_spider(self):
         return self._process_chain(self.middleware_method['open_spider'])
-        
+ 
+    def close_spider(self):
+        return self._process_chain(self.middleware_method['close_spider'])
+
     #所有类型的方法
