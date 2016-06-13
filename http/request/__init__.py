@@ -9,7 +9,7 @@ from w3lib.url import safe_url_string
 from Araneae.compat import json as Json
 from Araneae.utils.livetracker import LiveObject
 from Araneae.utils.python import to_bytes
-from Araneae.utils.url import (escape_ajax,guess_scheme,canonicalize_url)
+from Araneae.utils.url import (escape_ajax,guess_scheme,canonicalize_url,get_scheme)
 
 DEFAULT_REQUEST_METHOD = 'GET'
 
@@ -24,6 +24,7 @@ class Request(LiveObject):
         self._encoding = encoding
         self.method = str(method).upper()
         self._set_url(url)
+        self._set_scheme(url)
         self.data = data
         self.proxies = proxies or {}
         self.params = params or {}
@@ -58,11 +59,14 @@ class Request(LiveObject):
         if ':' not in self.url:
             self.url = guess_scheme(self.url)
 
+    def _set_scheme(self,url):
+        self.scheme = get_scheme(url)
+
     def copy(self):
         return self.replace()
 
     def to_json(self):
-        return {'url':self.url,'method':self.method,'encoding':self._encoding,'callback':self.callback,
+        return {'url':self.url,'scheme':self.scheme,'method':self.method,'encoding':self._encoding,'callback':self.callback,
                 'proxies':self.proxies,'headers':self.headers,'data':self.data,'params':self.params,
                 'auth':self.auth,'cookies':self.cookies,'json':self.json,
                 'dont_filter':self.dont_filter,'errback':self.errback}

@@ -11,6 +11,10 @@ class AraneaeException(Exception):
     def __str__(self):
         return self._msg
 
+class SchedulerEmpty(AraneaeException):
+    """调度器为空"""
+    pass
+
 class MiddlewareError(AraneaeException):
     """中间件错误"""
     pass

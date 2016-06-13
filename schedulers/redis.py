@@ -3,6 +3,7 @@
 import redis
 
 from Araneae.schedulers import Scheduler
+from Araneae.man.exceptions import SchedulerEmpty
 from Araneae.constant import (DEFAULT_SCHEDULER_PULL_TIMEOUT,DEFAULT_SCHEDULER_PULL_COUNT)
 
 
@@ -31,7 +32,7 @@ class RedisScheduler(Scheduler):
         if data:
             return data[1]
         else:
-            return None
+            raise SchedulerEmpty
 
     def clear(self):
         self._redis.delete(self._scheduler_key)

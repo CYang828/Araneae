@@ -5,6 +5,7 @@ from gevent.queue import (Queue, Empty)
 
 from Araneae.schedulers import Scheduler
 from Araneae.constant import (DEFAULT_SCHEDULER_PULL_TIMEOUT,DEFAULT_SCHEDULER_PULL_COUNT)
+from Araneae.man.exceptions import SchedulerEmpty
 
 class MemoryScheduler(Scheduler):
 
@@ -27,5 +28,4 @@ class MemoryScheduler(Scheduler):
         try:
             return self._queue.get(timeout=timeout)
         except Empty:
-            pass
-
+            raise SchedulerEmpty

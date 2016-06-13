@@ -2,6 +2,7 @@
 
 import os
 
+from Araneae.core.engine import Engine
 from Araneae.utils.log import get_logger
 from Araneae.utils.settings import Settings
 from Araneee.utils.loader import load_object
@@ -22,19 +23,16 @@ class Spider(LiveObject):
 
     def __init__(self, setting_path, distributed=False):
         self._pid = os.getpid()
-        self.settings = Settings(setting_path)
+        settings = Settings(setting_path)
+        self.settings = settings
+        self.engine = Engine(settings)
         self._initialize(distributed)
 
     def _initialize(self,distributed):
         """初始化spider组件"""
 
         self.set_spider_name()
-        self.set_running_type(distributed)
-        self.set_downloader()
         self.set_logger()
-        self.set_pipeline()
-        self.set_middleware()
-        self.set_statscol()
 
     def reset(self,distributed):
         """重新加载配置文件,构建spider"""
@@ -67,16 +65,6 @@ class Spider(LiveObject):
             self._scheduler = SchedulerFactory(self._scheduler, self._dupefilter)            
             self._rpc = self._scheudler
 
-    def set_downloader(self):
-        """设置网络访问组件,根据不同的协议区分"""
-
-        http_downloader_cls = load_object(self.settings,get('HTTP_DOWNLOADER'))
-        #file_downloader_cls = load_object(self.settings,get('FILE_DOWNLOADER'))
-        #ftp_downloader_cls = load_object(self.settings,get('ftp_DOWNLOADER'))
-        self._http_downloader = http_downloader_cls.from_spider(self)
-        #self._file_downloader = file_downloader_cls.from_spider(self)
-        #self._ftp_downloader = ftp_downloader_cls.from_spider(self)
-
     def set_logger(self):
         """设置日志格式及路径"""
 
@@ -86,34 +74,4 @@ class Spider(LiveObject):
         self.logger = get_logger(log_path)
         self.logger.setLevel(log_level)
 
-    def set_pipeline(self):
-        """设置数据管道,数据管道为多个时数据按顺序呢进入多个管道中"""
 
-        pass
-
-    def set_middleware(self):
-        """设置中间件"""
-
-        mw_manager_cls = load_object(self.settings,get('MIDDLEWARE_MANAGER'))
-        self._mw_manager = mw_manager_cls.from_spider(self)
-
-    def set_statscol(self):
-        """设置统计收集器"""
-
-        statscol_cls = load_object(self.settings,get('STATS_COLLECTION'))
-        self._statscol = statscol_cls.from_spider(self)
-
-    def get_pid(self):
-        """获取当前进程id"""
-
-        return self._pid
-
-    def pull_next_request(self):
-        """从调度器中获取下一个request"""
-    
-        pass
-
-    def push_request(self):
-        """将request送入调度器"""
-
-    def 

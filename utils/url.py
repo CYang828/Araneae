@@ -7,6 +7,8 @@ from six.moves.urllib.parse import (ParseResult,urlunparse,urldefrag,urlparse,qu
 
 from Araneae.utils.python import (to_bytes,to_unicode,to_native_str)
 
+def get_scheme(url):
+    return urlparse(url).scheme
 
 def escape_ajax(url):
     """
