@@ -25,10 +25,10 @@ class Spider(LiveObject):
         self._pid = os.getpid()
         settings = Settings(setting_path)
         self.settings = settings
-        self.engine = Engine(settings)
-        self._initialize(distributed)
+        self.engine = Engine(spider)
+        self._initialize()
 
-    def _initialize(self,distributed):
+    def _initialize(self):
         """初始化spider组件"""
 
         self.set_spider_name()
@@ -49,22 +49,7 @@ class Spider(LiveObject):
         """设置爬虫名"""
 
         self.name = self.setttings.get('SPIDER_NAME', dont_empty=True)
-
-    def set_running_type(self,distributed):
-        """设置运行类型
-        singleton和distributed有不同的处理逻辑"""
-
-        scheduler_cls = load_object(self.settings.get('SCHEDULER'))
-        self._scheduler = scheulder_cls.from_spider(self)
-
-        if distributed:
-            pass
-        else:
-            dupefiler = load_object(self.settings.get('DUPEFILTER'))
-            self._dupefilter = dupefilter.from_spider(self)
-            self._scheduler = SchedulerFactory(self._scheduler, self._dupefilter)            
-            self._rpc = self._scheudler
-
+    
     def set_logger(self):
         """设置日志格式及路径"""
 
@@ -74,4 +59,21 @@ class Spider(LiveObject):
         self.logger = get_logger(log_path)
         self.logger.setLevel(log_level)
 
+    def set_parse_rule(self):
+        
 
+
+    def start(self):
+        self.engine.start()
+
+    def stop(self):
+        self.engine.stop()
+
+    def pause(self):
+        self.engine.pause()
+
+    def resume(self):
+        self.engine.resume()
+
+    def parse_response(self):
+        pass

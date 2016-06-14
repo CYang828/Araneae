@@ -65,7 +65,6 @@ class Settings(object):
     def getdict(self, name, default={}, dont_empty=False,options=None):
         return dict(self.get(name, default))
 
-
     def set_from_dict(self, values):
         for key, value in six.iteritems(values):
             self.set_from_value(key, value)
@@ -77,12 +76,9 @@ class Settings(object):
     def keys(self):
         return self._attributes.keys()
 
-    def set_essential_keys(self, *keys):
-        for key in keys:
-            key = key.upper()
-            if key not in self.keys():
-                raise TypeError('必要的键%s' % key)
-
+    def iterater(self):
+        return self._attributes.iteritems()
+        
 
 if __name__ == '__main__':
     import time

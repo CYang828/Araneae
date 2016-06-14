@@ -125,24 +125,22 @@ PAGE3 = {
     #                           'allow':r'/Jty/tbkt/getTbkt2_currentBitCode_\d{18}.shtm',
     #                       }
 }
-"""
-PAGE4           =   {
+PAGE900           =   {
                         'extract_urls':
                         {
                             'allow':r'/Jty/tbkt/getTbkt2.action?currentBitCode=\d{21}',
                         }
                     }
-PAGE5           =   {
+PAGE100           =   {
                         'extract_urls':
                         {
                             'allow':r'/jty/tbkt/showDetail.action?articleId=\d*',
                         }
                     }
-PAGE6           =   {
+PAGE99           =   {
                         'extract_data':
                         {
                             'type':'xpath',
                             'expression':'//*[@id="mainContent"]/table[1]/tbody/tr/td'
                         }
                     }
-"""

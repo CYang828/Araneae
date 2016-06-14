@@ -6,7 +6,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 import requests
 
-from Araneae.downloaders import Agent
+from Araneae.downloaders import Downloader
 from Araneae.http.response import Response
 
 
@@ -16,7 +16,7 @@ DEFAULT_POOLBLOCK = False
 DEFAULT_POOL_TIMEOUT = None
 DEFAULT_CONCURENT_REQUESTS = 10
 
-class HttpDownloader(Agent):
+class HttpDownloader(Downloader):
 
     def __init__(self,pool_connections=DEFAULT_POOLSIZE, pool_maxsize=DEFAULT_POOLSIZE, max_retries=DEFAULT_RETRIES, 
                  pool_block=DEFAULT_POOLBLOCK,concurent_requests = DEFAULT_CONCURENT_REQUESTS):
@@ -34,7 +34,6 @@ class HttpDownloader(Agent):
         adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize,max_retries=max_retries)
         self._session.mount('http://',adapter)
         self._session.mount('https://',adapter)
-        self._session.mount('ftp://',adapter)
 
     def _set_asyn_pool(self,concurent_requests):
         self._request_pool = gevent.pool.Pool(concurent_requests)
@@ -50,15 +49,10 @@ class HttpDownloader(Agent):
 
         response.ok and request.callback and (request.callback(protocol,response) or self._empty_callback(protocol,response))
         not response.ok and request.errback and (resuest.errback(protocol,response) or self._default_errback(protocol,response))
-
+           
+        #send后,根据返回情况交付给相应的handler进行处理
+        #比如文件保存，视频转码，图片转换等操作
         return Response(response)
-
-    def download(self, protocol, stream=False, timeout=None, verify=True, cert=None, proxies=None):
-        #文件request放到调度器中，调用download进行下载处理
-        pass
-
-    def _download(self):
-        pass
 
     def _empty_callback(self,protocol,response):
         print '抽取内容为空'

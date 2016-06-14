@@ -4,17 +4,24 @@
 
 import os 
 import time
+from enum import Enum
 from psutil import Process
 
 from Araneae.downloader import DownloaderAgent
 from Araneae.man.excepitons import SchedulerEmpty
-from Araneae.utils.protocol import protocl_string_to_object
+from Araneae.utils.protocol import protocol_string_to_object
 
+
+class EngineStatus(Enum):
+    stop = 0
+    running = 1
+    pause = 2
+    idle = 3
 
 class Engine(object):
 
     def __init__(self, spider):
-        self.runing = Flase
+        self.status = EngineStatus.stop
         self.spider_name = spider.name
         self.spider_logger = spider.logger
         self.settings = spider.settings
@@ -45,7 +52,7 @@ class Engine(object):
         self.downloader = downloader_cls.from_spider(spider)
 
     def set_pipeline(self):
-        """设置数据管道,数据管道为多个时数据按顺序呢进入多个管道中"""
+        """设置数据管道,数据管道为多个时数据按顺序进入多个管道中"""
 
         pass
 
@@ -63,19 +70,23 @@ class Engine(object):
 
     
     def start(self):
-        assert not self.running, 'Spider engine already running'
-        self.runing = True
+        assert self.status==EngineStatus.stop, 'Spider engine already running'
+        self.status = EngineStatus.start
         self.start_time = time.time()
 
     def stop(self):
-        assert self.running,'Spider engine already stop'
-        self.running = False
+        assert self.status!=EngineStatus.stop,'Spider engine already stop'
+        self.status = EngineStatus.stop
 
     def pause(self):
+        assert self.status!=EngineStatus.stop,'Spider engine already stop'
         self._process.suspend()
+        self.status = EngineStatus.pause
 
     def resume(self):
+        assert self.status==EngineStatus.pause,'Spider engine dont pause'
         self._process.resume()
+        self.status = EngineStatus.running
 
     def pull_request_from_scheduler(self):
         try:
@@ -99,7 +110,7 @@ class Engine(object):
         pass
 
     def next_response(self):
-        """下一个请求响应体,response中包含很多解析需要的信息"""
+        """下一个请求响应体,response中包含很多分析网页信息需要的信息"""
         
         request,protocol = self.pull_request_from_sheduler()
         return  self._downloader.send(request)
