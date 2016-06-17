@@ -2,10 +2,26 @@
 
 import re
 import six
-from w3lib.url import (add_or_replace_parameter,any_to_uri,_safe_chars)
+from w3lib.url import *
 from six.moves.urllib.parse import (ParseResult,urlunparse,urldefrag,urlparse,quote,unquote,parse_qsl,urlencode)
 
 from Araneae.utils.python import (to_bytes,to_unicode,to_native_str)
+
+
+def url_is_from_any_domain(url, domains):
+    """Return True if the url belongs to any of the given domains"""
+    host = parse_url(url).netloc.lower()
+    if not host:
+        return False
+    domains = [d.lower() for d in domains]
+    return any((host == d) or (host.endswith('.%s' % d)) for d in domains)
+
+def url_has_any_extension(url, extensions):
+    return posixpath.splitext(parse_url(url).path)[1].lower() in extensions
+
+def rel_has_nofollow(rel):
+    """Return True if link rel attribute has nofollow type"""
+    return True if rel is not None and 'nofollow' in rel.split() else False
 
 def get_scheme(url):
     return urlparse(url).scheme

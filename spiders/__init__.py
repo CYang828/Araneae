@@ -4,8 +4,9 @@ import os
 
 from Araneae.core.engine import Engine
 from Araneae.utils.log import get_logger
+from Araneae.rules.picker import RulePicker
 from Araneae.utils.settings import Settings
-from Araneee.utils.loader import load_object
+from Araneae.utils.loader import load_object
 from Araneae.singleton import SchedulerFactory
 from Araneae.utils.livetracker import LiveObject
 from Araneae.downloaders.http import HttpDownloader
@@ -17,21 +18,21 @@ from Araneae.core.middleware import MiddlewareManager
 logger = get_logger(__name__)
 
 class Spider(LiveObject):
-    """
-    爬虫基类
-    """
+    """爬虫基类
+    继承时必须设置rule_path类成员变量,用来指定唯一的规则类协助spider进行解析"""
 
     def __init__(self, setting_path, distributed=False):
         self._pid = os.getpid()
         settings = Settings(setting_path)
         self.settings = settings
+        self.callback = self.parse
         self.engine = Engine(spider)
         self._initialize()
 
     def _initialize(self):
         """初始化spider组件"""
 
-        self.set_spider_name()
+        self.set_name()
         self.set_logger()
 
     def reset(self,distributed):
@@ -45,7 +46,12 @@ class Spider(LiveObject):
 
         self.settings.reset()
 
-    def set_spider_name(self):
+    def set_callback(self,callback):
+        """设置回调函数名,如果不设置默认为self.parse"""
+
+        self.callback = callback
+
+    def set_name(self):
         """设置爬虫名"""
 
         self.name = self.setttings.get('SPIDER_NAME', dont_empty=True)
@@ -59,9 +65,10 @@ class Spider(LiveObject):
         self.logger = get_logger(log_path)
         self.logger.setLevel(log_level)
 
-    def set_parse_rule(self):
-        
-
+    def set_rule_picker(self):
+        """设置rule picker,用来管理页面爬取rules"""
+        assert self.rule_class_path, 'Spider must define class member variable rule_path'
+        self.rule_picker = RulePicker(self.settings, self.rule_class_path)
 
     def start(self):
         self.engine.start()
@@ -76,4 +83,7 @@ class Spider(LiveObject):
         self.engine.resume()
 
     def parse_response(self):
+        pass
+
+    def parse(self,protocol,response):
         pass

@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 
-from Araneae.loader import load_object
 from Araneae.utils.log import get_logger
+from Araneae.utils.loader import load_object
 
 
 logger = get_logger(__name__)
@@ -23,7 +23,7 @@ class MiddlewareManager(object):
         mwlist = setttings.getlist('MIDDLEWARE_LIST')
         middlewares = []
 
-        for clspath in mwlist;
+        for clspath in mwlist:
             mwcls = load_object(clspath)               
             
             if hasattr(mwcls, 'from_spider'):

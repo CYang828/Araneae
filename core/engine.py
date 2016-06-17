@@ -4,11 +4,14 @@
 
 import os 
 import time
+import types
 from enum import Enum
 from psutil import Process
 
-from Araneae.downloader import DownloaderAgent
-from Araneae.man.excepitons import SchedulerEmpty
+from Araneae.http.request import Request
+from Araneae.core.agent import DownloaderAgent
+from Araneae.man.exception import SchedulerEmpty
+from Araneae.utils.request import urls_to_requests
 from Araneae.utils.protocol import protocol_string_to_object
 
 
@@ -24,6 +27,7 @@ class Engine(object):
         self.status = EngineStatus.stop
         self.spider_name = spider.name
         self.spider_logger = spider.logger
+        self.spider_callback = spider.callback
         self.settings = spider.settings
 
     def set_process(self):
@@ -59,20 +63,24 @@ class Engine(object):
     def set_statscol(self):
         """设置统计收集器"""
 
-        statscol_cls = load_object(self.settings,get('STATS_COLLECTION'))
+        statscol_cls = load_object(self.settings,get('STATS_COLLECTION_LIST'))
         self._statscol = statscol_cls.from_spider(self)
 
     def set_middleware(self):
-        """设置中间件"""
+        """设置中间件管理器"""
 
         mw_manager_cls = load_object(self.settings,get('MIDDLEWARE_MANAGER'))
         self._mw_manager = mw_manager_cls.from_spider(self)
 
+    def restart(self):
+        pass
     
     def start(self):
         assert self.status==EngineStatus.stop, 'Spider engine already running'
         self.status = EngineStatus.start
         self.start_time = time.time()
+        self.push_first_urls_to_scheduler()
+        self.turbine()
 
     def stop(self):
         assert self.status!=EngineStatus.stop,'Spider engine already stop'
@@ -84,10 +92,25 @@ class Engine(object):
         self.status = EngineStatus.pause
 
     def resume(self):
-        assert self.status==EngineStatus.pause,'Spider engine dont pause'
+        assert self.status==EngineStatus.pause,'Spider engine arent paused'
         self._process.resume()
         self.status = EngineStatus.running
 
+    def turbine(self):
+        """引擎为running状态,循环从调度器中取出待爬取得request,并将request,protocol,response送入callback中"""
+
+        while self.status == EngineStatus.running:
+            request,protocol = self.pull_request_from_scheduler()
+            response = self.send_request(request)
+            response and request.callback(protocol,response)
+
+    def push_first_urls_to_scheduler(self):
+        """将first_urls送入调度器中统一处理"""
+
+        first_urls = self.settings['FIRST_URLS']
+        fisrt_requests = urls_to_requests(frist_urls, callback = self.spider_callback)
+        self.push_requests_to_scheduler(first_requests)
+        
     def pull_request_from_scheduler(self):
         try:
             protocol_string = self._scheduler.pull()
@@ -99,18 +122,25 @@ class Engine(object):
         request = protocol.request
         return (request,protocol)
 
-
-    def push_request_to_master(self):
-        pass
+    def push_request_to_scheduler(self, req):
+        if isinstance(reqs, Request):
+            self._scheduler.push(req)
+    
+    def push_requests_to_scheduler(self, reqs):
+        if isinstance(reqs, (list,GeneratorType)):
+            for req in reqs:
+                self.push_request_to_scheudler(req)    
 
     def push_data_to_pipeline(self):
         pass
 
-    def request_backout(self):
+    def request_backout(self,priority=None):
         pass
 
-    def next_response(self):
-        """下一个请求响应体,response中包含很多分析网页信息需要的信息"""
+    def send_request(self, req):
+        """发送请求"""
         
-        request,protocol = self.pull_request_from_sheduler()
-        return  self._downloader.send(request)
+        return  self._downloader.send(req)
+
+
+

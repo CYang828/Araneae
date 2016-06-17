@@ -3,6 +3,21 @@
 import six
 
 
+_ITERABLE_SINGLE_VALUES = dict, six.text_type, bytes
+
+def arg_to_iter(arg):
+    """Convert an argument to an iterable. The argument can be a None, single
+    value, or an iterable.
+
+    Exception: if arg is a dict, [arg] will be returned
+    """
+    if arg is None:
+        return []
+    elif not isinstance(arg, _ITERABLE_SINGLE_VALUES) and hasattr(arg, '__iter__'):
+        return arg
+    else:
+        return [arg]
+
 def unique(list_, key=lambda x: x):
     """efficient function to uniquify a list preserving item order"""
     seen = set()

@@ -6,7 +6,7 @@ from Araneae.utils.livetracker import LiveObject
 class DownloaderAgent(LiveObject):
     """downloader代理，用来管理各种下载器,每种下载器中必须指定它能够处理的协议和类型"""
         
-    def __init__(self, *downloaders, logger):
+    def __init__(self, downloaders, logger):
         self._downloaders = downloaders
         self.logger = logger
         
@@ -29,7 +29,7 @@ class DownloaderAgent(LiveObject):
 
             downloaders.append(dw)
 
-        return cls(*downloaders, logger)           
+        return cls(downloaders, logger)           
 
     def _choose_downloader(self,request):
         for dw in self.downloaders:

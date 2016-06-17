@@ -7,14 +7,14 @@ from w3lib.url import safe_url_string
 
 
 from Araneae.compat import json as Json
-from Araneae.utils.livetracker import LiveObject
 from Araneae.utils.python import to_bytes
+from Araneae.utils.livetracker import LiveObject
+from Araneae.constant import DEFAULT_REQUEST_METHOD
 from Araneae.utils.url import (escape_ajax,guess_scheme,canonicalize_url,get_scheme)
-
-DEFAULT_REQUEST_METHOD = 'GET'
 
 
 class Request(LiveObject):
+    """request对象,如果已经计算过printfinger则会在缓存中寻找,不会重新计算"""
 
     _fingerprint_cache = weakref.WeakKeyDictionary()
 
@@ -78,13 +78,13 @@ class Request(LiveObject):
         if include_headers:
             include_headers = tuple(to_bytes(header.lower()) for header in sorted(include_headers))
 
-        cache = self._fingerprint_cache.setdefault(request, {})
+        cache = self._fingerprint_cache.setdefault(self, {})
 
         if include_headers not in cache:
             fp = hashlib.sha1()
-            fp.update(to_bytes(request.method))
-            fp.update(to_bytes(canonicalize_url(request.url)))
-            fp.update(request.data or b'')
+            fp.update(to_bytes(self.method))
+            fp.update(to_bytes(canonicalize_url(self.url)))
+            fp.update(self.data or b'')
 
             if include_headers:
                 for hdr in include_headers:
