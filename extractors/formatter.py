@@ -17,30 +17,15 @@ class LinkFormatter(object):
         self.link_filter = link_filter
         self.process_value = process_value
 
-    def _prepare(self, selector):
-        """vexp结构 ('xpath | css | re | func','')"""
+    @classmethod
+    def from_setting(cls, setting)::
+        return cls()
 
-        for key,vexp in self.prepare_variable.iteritems():
-            t, e = vexp
-            
-            if t == 'xpath':
-                selector.xpath(e)
-            elif t == 'css':
-                selector.css(e)
-            elif t == 're':
-                selector.re(e)
-            elif t == 'func':
-                if isinstance(e, six.string_types):
-                    eval(e)
-                elif hasattr(e, '__call__'):
-                    e()
-            
+    def _prepare(self, selector):
+        pass 
 
     def extract_links(self, response):
         selector = response_to_selector(response)
         
-      
-
-
 class LinkFormatterExtractor(LinkFormatter):
     pass

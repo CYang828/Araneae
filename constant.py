@@ -12,5 +12,8 @@ DEFAULT_SCHEDULER_PULL_COUNT = 1
 #配置文件中规则前缀
 RULE_PREFIX = 'PAGE'
 
+#叶子配置文件中规则前缀
+LEAF_PREFIX = 'LEAF'
+
 #默认request方法
 DEFAULT_REQUEST_METHOD = 'GET'

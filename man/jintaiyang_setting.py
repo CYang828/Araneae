@@ -81,13 +81,9 @@ PAGE5 = {
     {
         'format_url': '%(url)s&pageSize=20&showPage=%(page)s',
         'format_data': OrderedDict([
-            ('url', {'type': 'constant',
-                     'expression': '@host_url'}), ('@pages', {'type': 'xpath',
-                                                              'expression':
-                                                              r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}
-                                                   ), ('@max_page', {'type': 'function',
-                                                                     'expression': 'max(@pages)'}), ('page', {'type': 'function',
-                                                                                                              'expression': 'range(2,@max_page+1)'})
+                      ('url', {'type': 'constant','expression': '@host_url'}), 
+                      ('@pages', {'type': 'xpath','expression':r'//*[@id="ddd"]/nobr/select[1]/option[@*]/text()'}), 
+                      ('@max_page', {'type': 'function','expression': 'max(@pages)'}), ('page', {'type': 'function','expression': 'range(2,@max_page+1)'})
         ]),
     }
 }
