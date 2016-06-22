@@ -1,12 +1,10 @@
 #*-*coding:utf8*-*
 
 import re
-import thread
 import logging
 from termcolor import colored
 
-from Araneae.net.rpc import RPCNativeBase
-from Araneae.utils.track import (get_meta_data,get_simple_meta_data)
+from araneae.utils.track import (get_meta_data,get_simple_meta_data)
 
 
 class Logger(logging.Logger):
@@ -53,7 +51,7 @@ class Logger(logging.Logger):
         if self.__is_file:
             self.log(logging.WARNING, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
-            colored_msg = colored(msg, color='red')
+            colored_msg = colored(msg, color='blue')
             self.log(logging.WARNING, "%s" % colored_msg, extra={'chain': chain}, *args, **kw)
 
     def error(self, msg, *args, **kw):
@@ -62,7 +60,7 @@ class Logger(logging.Logger):
         if self.__is_file:
             self.log(logging.ERROR, "%s" % msg, extra={'chain': chain}, *args, **kw)
         else:
-            colored_msg = colored(msg, color='grey')
+            colored_msg = colored(msg, color='red')
             self.log(logging.ERROR, "%s" % colored_msg, extra={'chain': chain}, *args, **kw)
 
 logging.setLoggerClass(Logger)
@@ -70,12 +68,4 @@ logging.setLoggerClass(Logger)
 def get_logger(name):
     return logging.getLogger(name)
 
-if __name__ == '__main__':
-
-    def hello():
-        logger = get_logger(__name__)
-        logger.setLevel(logging.INFO)
-        logger.debug('hello')
-
-    hello()
 

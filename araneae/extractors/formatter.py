@@ -2,8 +2,8 @@
 
 import six
 
-from Araneae.utils.python import arg_to_iter
-from Araneae.utils.extractor import response_to_selector
+from araneae.utils.python import arg_to_iter
+from araneae.utils.extractor import response_to_selector
 
 
 class LinkFormatter(object):
@@ -18,7 +18,7 @@ class LinkFormatter(object):
         self.process_value = process_value
 
     @classmethod
-    def from_setting(cls, setting)::
+    def from_setting(cls, setting):
         return cls()
 
     def _prepare(self, selector):

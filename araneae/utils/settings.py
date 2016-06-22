@@ -80,13 +80,4 @@ class Settings(object):
         return self._attributes.iteritems()
         
 
-if __name__ == '__main__':
-    import time
-    s = Settings('config')
-    print s.get('scheduler')
-    time.sleep(20)
-    s.reset()
-    print s.get('scheduler')
-    #s.get('cant_be_empty',dont_empty=True)
-    #print s.get('opt',options = ['name','age','sex'])
-    #print s.get('opt',options = ['name1','age','sex'])
+

@@ -1,10 +1,11 @@
 # coding:utf8
 
 import weakref
+from lxml import etree
 
-from Araneae.utils.url import rel_has_nofollow
-from Araneae.utils.extractor import response_to_selector
-from Araneae.utils.python import (to_native_str,arg_to_iter)
+from araneae.utils.url import rel_has_nofollow
+from araneae.utils.extractor import response_to_selector
+from araneae.utils.python import (to_native_str,arg_to_iter)
 
 
 XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
@@ -70,8 +71,8 @@ class LinkExtractor(object):
         return self._extract_links(selector, response.url, response.encoding, base_url)
 
     def _process_links(self, links):
-        """ Normalize and filter extracted links
-        The subclass should override it if neccessary"""
+        """ 个性化过滤抽取links        
+        如果有需要子类可以重载该方法"""
 
         return self._deduplicate_if_needed(links)
 

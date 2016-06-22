@@ -5,7 +5,7 @@ import six
 from w3lib.url import *
 from six.moves.urllib.parse import (ParseResult,urlunparse,urldefrag,urlparse,quote,unquote,parse_qsl,urlencode)
 
-from Araneae.utils.python import (to_bytes,to_unicode,to_native_str)
+from araneae.utils.python import (to_bytes,to_unicode,to_native_str)
 
 
 def url_is_from_any_domain(url, domains):

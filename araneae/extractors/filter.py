@@ -4,10 +4,10 @@ import re
 from six.moves.urllib.parse import urlparse
 from parsel.csstranslator import HTMLTranslator
 
-from Araneae.extractors.link import LinkExtractor
-from Araneae.utils.extractor import response_to_selector
-from Araneae.utils.python import arg_to_iter,unique as unique_list
-from Araneae.utils.ulr import  (canonicalize_url, url_is_from_any_domain, url_has_any_extension)
+from araneae.extractors.link import LinkExtractor
+from araneae.utils.extractor import response_to_selector
+from araneae.utils.python import arg_to_iter,unique as unique_list
+from araneae.utils.url import  (canonicalize_url, url_is_from_any_domain, url_has_any_extension)
 
 
 # common file extensions that are not followed if they occur in links
