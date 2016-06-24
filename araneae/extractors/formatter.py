@@ -17,15 +17,12 @@ class LinkFormatter(object):
         self.link_filter = link_filter
         self.process_value = process_value
 
-    @classmethod
-    def from_setting(cls, setting):
-        return cls()
-
     def _prepare(self, selector):
         pass 
 
     def extract_links(self, response):
-        selector = response_to_selector(response)
-        
+        selector = response.selector
+
+       
 class LinkFormatterExtractor(LinkFormatter):
     pass

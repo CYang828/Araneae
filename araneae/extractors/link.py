@@ -1,11 +1,14 @@
 # coding:utf8
 
+import six
 import weakref
 from lxml import etree
+from six.moves.urllib.parse import urljoin
 
+from araneae.link import Link
 from araneae.utils.url import rel_has_nofollow
 from araneae.utils.extractor import response_to_selector
-from araneae.utils.python import (to_native_str,arg_to_iter)
+from araneae.utils.python import (to_native_str,arg_to_iter,unique as unique_list)
 
 
 XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml"
@@ -24,7 +27,7 @@ class LinkExtractor(object):
 
     def __init__(self, tag='a', attr='href', process=None, unique=False):
         self.scan_tag = tag if callable(tag) else lambda t: t == tag
-        self.scran_attr = attr if callable(attr) else lambda a: a == attr
+        self.scan_attr = attr if callable(attr) else lambda a: a == attr
         self.process_attr = process if callable(process) else lambda v: v
         self.unique = unique
 
@@ -65,11 +68,6 @@ class LinkExtractor(object):
 
         return self._deduplicate_if_needed(links)
 
-    def extract_links(self, response):
-        selector = response_to_selector(response)   
-        base_url = response.get_base_url()
-        return self._extract_links(selector, response.url, response.encoding, base_url)
-
     def _process_links(self, links):
         """ 个性化过滤抽取links        
         如果有需要子类可以重载该方法"""
@@ -82,4 +80,20 @@ class LinkExtractor(object):
 
         return links
 
+    def extract_requests(self, response):
+        """提取request"""
+
+        pass
+
+    def extract_links(self, response):
+        """提取links"""
+
+        selector = response.selector
+        base_url = response.get_base_url()
+        return self._extract_links(selector, response.url, response.encoding, base_url)
+
+    def extract(self, response):
+        """提取url"""
+
+        pass
 

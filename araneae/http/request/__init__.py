@@ -6,11 +6,11 @@ import weakref
 from w3lib.url import safe_url_string
 
 
-from Araneae.compat import json as Json
-from Araneae.utils.python import to_bytes
-from Araneae.utils.livetracker import LiveObject
-from Araneae.constant import DEFAULT_REQUEST_METHOD
-from Araneae.utils.url import (escape_ajax,guess_scheme,canonicalize_url,get_scheme)
+from araneae.compat import json as Json
+from araneae.utils.python import to_bytes
+from araneae.utils.livetracker import LiveObject
+from araneae.constant import DEFAULT_REQUEST_METHOD
+from araneae.utils.url import (escape_ajax,guess_scheme,canonicalize_url,get_scheme)
 
 
 class Request(LiveObject):

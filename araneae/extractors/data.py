@@ -17,6 +17,8 @@ class DataExtractor(object):
         self.regulations = arg_to_iter(regulations)
 
     def get_selector(self, selector, rgl):
+        """获取selector对象"""
+
         assert rgl.get('type'), 'Extract data regulation must have `type` key'
         assert rgl.get('expression'), 'Extract data regulation must have `expression` key'
 
@@ -31,7 +33,7 @@ class DataExtractor(object):
         """返回的raw data都是iter
         raw data格式[{field:data},{},...]"""
 
-        selector = response_to_selector(response)
+        selector = response.selector
 
         assert regulation.get('type'), 'Extract data regulation must have `type` key'
         
@@ -50,6 +52,8 @@ class DataExtractor(object):
         return raw_data
 
     def _parse_regulations(self, response):
+        """多条规则解析"""
+
         all_raw_data = []
 
         for irgl, regulation in enumerate(self.regulations):
@@ -65,6 +69,8 @@ class DataExtractor(object):
         return all_raw_data
 
     def _sel_parse(self, selector, rgl):
+        """selector解析"""
+
         assert rgl.get('field'), 'Extract data regulation must have `field` key'
         f = rgl.get('field')
         m = rgl.get('mulrecord', False)
@@ -74,6 +80,8 @@ class DataExtractor(object):
         return [{f:d} for d in data] if m else arg_to_iter({f:data})
 
     def _func_parse(self, rgl):
+        """函数数据解析"""
+
         assert rgl.get('expression'), 'Extract data regulation must have `expression` key'
         assert rgl.get('field'), 'Extract data regulation must have `field` key'
         e = rgl.get('expression')
@@ -92,71 +100,74 @@ class DataExtractor(object):
         return [{f:d} for d in data] if m else [].append({f:data})
 
     def _tree_parse(self, selector, regulation):
-        assert regulation.get('root'), 'Extract tree data must have `root` key'
-        root = regulation.get('root')
+        """树状结构解析"""
 
         childs = {k:v for k,v in regulation.iteritems() if k.startswith(TREE_DATA_CHILD_PREFIX)}
         assert len(childs), 'Extract tree data must have `{}` prefix key'.format(TREE_DATA_CHILD_PREFIX)
-        
         childs = OrderedDict(sorted(childs.items(), key=lambda x:int(x[0][self._child_prefix_len:])))
-        root = self.get_selector(selector, root)
-
-        assert len(root), 'Extract tree root just have only one'
 
         expression_register = OrderedDict()
         result_register = defaultdict(list)
         field_register = []
 
+        #树形结构数据构造
         for k,v in childs.iteritems():
             assert v.get('expression'), 'Extract tree data must have `expression` key'
             assert v.get('field'), 'Extract tree data must have `field` key'
 
             e = arg_to_iter(v.get('expression'))
             f = v.get('field')
-            uk = childs.keys().index(k)-1
-        
-            if uk >= 0:
-                e = [TREE_DATA_PARENT_REGEX.sub(c, e) for c in range(len(result_register[uk]))]
+            iuk = childs.keys().index(k)-1
+            
+            if iuk >= 0:
+                uk = childs.keys()[iuk]
+                e = [TREE_DATA_PARENT_REGEX.sub(str(x), em) for em in e for c in result_register[uk] for x in range(1, len(c)+1)]
             
             for me in e:
                 vm = v
                 vm['expression'] = me
                 rm = self.get_selector(selector, vm)
-                result_register[k].append(rm.extract())              
-            
+                result_register[k].append(rm.extract())
+
             expression_register[k] = e
             field_register.append(f)
         
+        #数据和字段合并
         data = []       
+        raw_data = []
 
-        for ir in range(result_register-1):
-            cd, nd = data if data else result_register[ir], result_register[ir+1]
+        for ir in range(len(childs)-1):
+            cd, nd = data if data else result_register[childs.keys()[ir]], result_register[childs.keys()[ir+1]]
 
             for icd, scd in enumerate(cd):
                 snd = nd[icd]
 
                 if snd:
-                    data = itertools.product(arg_to_iter(scd), snd)
-
+                    data = [x for x in itertools.product(arg_to_iter(scd), snd)]
+        
         for di in data:
             dt = {}
 
             for fi,f in enumerate(field_register):
                 dt[f] = di[fi]
+            raw_data.append(dt)
 
-            data.append(dt)
-
-        return data       
+        return raw_data       
         
     def _table_parse(self, selector, regulation):
+        """表格状数据解析"""
+
         pass
 
     def extract(self, response):
+        """抽取"""
+
         all_raw_data = self._parse_regulations(response)
+        return [data for raw_data in all_raw_data if raw_data for data in raw_data]
         
-        print [data for raw_data in all_raw_data if raw_data for data in raw_data]
-        
-               
+ 
+    def extract_data(self, response):
+        pass              
         
     
 

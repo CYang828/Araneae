@@ -122,7 +122,7 @@ class LinkFilterExtractor(LinkFilter):
               canonicalize=canonicalize, deny_extensions=deny_extensions)
 
     def extract_links(self, response):
-        selector = response_to_selector(response)
+        selector = response.selector        
         base_url = response.get_base_url()
 
         if self.restrict_xpaths:

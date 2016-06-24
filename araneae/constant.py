@@ -21,6 +21,5 @@ TREE_DATA_CHILD_PREFIX = 'child'
 #树状结构数据匹配上级正则
 TREE_DATA_PARENT_REGEX = re.compile(r'!PAR')
 
-
 #默认request方法
 DEFAULT_REQUEST_METHOD = 'GET'
